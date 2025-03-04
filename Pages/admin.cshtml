@@ -1,0 +1,332 @@
+﻿@page
+@model PowerDNS_Web.Pages.adminModel
+@{
+}
+<div style="display:flex;justify-content: center;">
+    <form class="add-item-block" id="loginForm" method="post" enctype="multipart/form-data" style="text-align:center; width: 500px;">
+        <input class="form-field" name="username" id="username" type="text" placeholder="Username" required />
+        <br />
+        <label for="role">Select role:</label>
+        <select class="form-field" name="role" id="role" list="RolesList">
+            <option value="Administrator">Administrator</option>
+            <option value="ReadOnly">ReadOnly</option>
+        </select>
+        <br />
+        <input class="form-field" name="password" id="password" type="password" placeholder="Password" required />
+        <br />
+        <div style="text-align:center">
+            <button type="submit" id="btn-save" class="btn btn-save">Добавить</button>
+        </div>
+    </form>
+</div>
+
+<div style="display: flex; justify-content: center;">
+    <table class="table" id="main_table" style="width: 700px;">
+        <thead>
+            <tr>
+                <th>Логин</th>
+                <th>Роль</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.main_table != null)
+            {
+                @foreach (var item in Model.main_table)
+                {
+                    <tr id="row_@item.username">
+                        <td><a>@item.username</a></td>
+                        <td>
+                            <a id="role_old_@item.username">@item.role</a>
+                            <select hidden name="role" id="role_new_@item.username">
+                                <option value="Administrator" selected="@(item.role == "Administrator" ? "selected" : null)">Administrator</option>
+                                <option value="ReadOnly" selected="@(item.role == "ReadOnly" ? "selected" : null)">ReadOnly</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div style="display: flex">
+                                <input hidden name="password" id="password_new_@item.username" placeholder="New password">
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex">
+                                <button type="button" class="btn btn-edit" data-id="@item.username" style="margin-right: 10px;">Редактировать</button>
+                                <button hidden type="button" id="cancel_@item.username" class="btn btn-default" data-id="@item.username" style="margin-right: 10px;">Отмена</button>
+                                <button hidden type="button" class="btn btn-save btn-save-edit" data-id="@item.username" style="margin-right: 10px;">Сохранить</button>
+                                <button type="button" class="btn btn-delete" data-id="@item.username">Удалить</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <p id="confirmMessage"></p>
+        <div class="modal-buttons">
+            <button id="confirmNo" class="btn btn-default">Отмена</button>
+            <button id="confirmYes" class="btn btn-delete">Удалить</button>
+        </div>
+    </div>
+</div>
+
+<div id="notification" class="notification">
+    <span id="notification-message"></span>
+</div>
+@Html.AntiForgeryToken()
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-edit').forEach(button => {
+            button.addEventListener('click', edit);
+        });
+
+        document.querySelectorAll('.btn-save-edit').forEach(button => {
+            button.addEventListener('click', save);
+        });
+
+        document.querySelectorAll('.btn-default').forEach(button => {
+            button.addEventListener('click', cancel);
+        });
+
+        // FOR NEW ROWS
+        document.addEventListener('click', function (event) {
+            if (event.target.classList.contains('btn-delete')) {
+                deleteUser(event.target);
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (event.target.classList.contains('btn-edit')) {
+                edit.call(event.target);
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (event.target.classList.contains('btn-save-edit')) {
+                save.call(event.target);
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (event.target.classList.contains('btn-default')) {
+                cancel.call(event.target);
+            }
+        });
+    });
+
+    // ADD NEW USER
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value;
+        const role = document.querySelector("#role option:checked").textContent;
+        const password = document.getElementById('password').value;
+
+        if (password === "" || username === "") {
+            showNotification('Error. Поля логина и пароля не должны быть пустыми', 2);
+            return;
+        }
+
+        const response = await fetch('/admin?handler=add_new_user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({ username, role, password })
+        });
+
+        if (response.ok) {
+            let newModel = await response.json();
+
+            if (!newModel.success) {
+                showNotification('Ошибка при регистрации! ' + newModel.message, 2);
+                return;
+            }
+
+            showNotification('Пользователь зарегистрирован!', 1);
+
+            // Добавляем новую строку в таблицу
+            const tableBody = document.querySelector("tbody");
+            let newRow = document.createElement("tr");
+            newRow.id = `row_${username}`;
+            newRow.innerHTML = `
+                <td><a>${username}</a></td>
+                <td>
+                    <a id="role_old_${username}">${role}</a>
+                    <select hidden name="role" id="role_new_${username}">
+                        <option value="Administrator" ${role === "Administrator" ? "selected" : ""}>Administrator</option>
+                        <option value="ReadOnly" ${role === "ReadOnly" ? "selected" : ""}>ReadOnly</option>
+                    </select>
+                </td>
+                <td>
+                    <div style="display: flex">
+                        <input hidden name="password" id="password_new_${username}" placeholder="New password">
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex">
+                        <button type="button" class="btn btn-edit" data-id="${username}" style="margin-right: 10px;">Редактировать</button>
+                        <button hidden type="button" id="cancel_${username}" class="btn btn-default" data-id="${username}" style="margin-right: 10px;">Отмена</button>
+                        <button hidden type="button" class="btn btn-save btn-save-edit" data-id="${username}" style="margin-right: 10px;">Сохранить</button>
+                        <button type="button" class="btn btn-delete" data-id="${username}">Удалить</button>
+                    </div>
+                </td>
+            `;
+
+            tableBody.appendChild(newRow);
+
+            // Очистка полей формы
+            document.getElementById('username').value = "";
+            document.getElementById('password').value = "";
+            document.getElementById('role').value = "ReadOnly";
+        } else {
+            showNotification('Ошибка при добавлении пользователя.', 2);
+        }
+    });
+
+    // DELETE USER
+    async function deleteUser(button) {
+        let username = button.getAttribute('data-id');
+        let row = document.getElementById('row_' + username);
+
+        // Получаем элементы модального окна
+        let modal = document.getElementById('confirmModal');
+        let confirmMessage = document.getElementById('confirmMessage');
+        let confirmYes = document.getElementById('confirmYes');
+        let confirmNo = document.getElementById('confirmNo');
+
+        // Устанавливаем текст
+        confirmMessage.textContent = `Вы уверены, что хотите удалить пользователя "${username}"?`;
+
+        // Показываем модальное окно
+        modal.style.display = "block";
+
+        // Если нажали "Удалить"
+        confirmYes.onclick = async function () {
+            modal.style.display = "none";
+
+            let response = await fetch('/admin?handler=Delete_user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({ username: username })
+            });
+
+            if (response.ok) {
+                modal.style.display = "none";
+                let result = await response.json();
+                if (!result.success) {
+                    showNotification('Ошибка: ' + result.message, 2);
+                    return;
+                }
+
+                showNotification(`Пользователь "${username}" удалён.`, 1);
+                row.remove();
+            } else {
+                showNotification('Ошибка при удалении пользователя.', 2);
+            }
+        };
+
+        // Если нажали "Отмена"
+        confirmNo.onclick = function () {
+            modal.style.display = "none"; // Закрываем модальное окно
+        };
+    }
+
+
+    // EDIT
+    function edit() {
+        let rowId = this.getAttribute('data-id');
+        let row = document.getElementById('row_' + rowId);
+
+        row.querySelector('#password_new_' + rowId).hidden = false;
+        row.querySelector('#role_old_' + rowId).hidden = true;
+        row.querySelector('#role_new_' + rowId).hidden = false;
+
+        this.hidden = true;
+        row.querySelector('.btn-save-edit[data-id="' + rowId + '"]').hidden = false;
+        row.querySelector('#cancel_' + rowId).hidden = false;
+        row.querySelector('.btn-delete[data-id="' + rowId + '"]').hidden = true;
+    }
+
+    // UPDATE USER
+    async function save() {
+        let rowId = this.getAttribute('data-id');
+        let row = document.getElementById('row_' + rowId);
+
+        let username = rowId;
+        let role = row.querySelector('#role_new_' + rowId).value;
+        let password = row.querySelector('#password_new_' + rowId).value;
+
+        let response = await fetch('/admin?handler=Update_user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({
+                username: username,
+                role: role,
+                password: password,
+            })
+        });
+
+        if (response.ok) {
+            let newModel = await response.json();
+            if (!newModel.success) {
+                showNotification('Ошибка при сохранении: ' + newModel.message, 2);
+                return;
+            }
+
+            showNotification('Данные успешно обновлены!', 1);
+
+            row.querySelector('#password_new_' + rowId).hidden = true;
+            row.querySelector('#role_old_' + rowId).textContent = role;
+            row.querySelector('#role_old_' + rowId).hidden = false;
+            row.querySelector('#role_new_' + rowId).hidden = true;
+
+            row.querySelector('.btn-edit[data-id="' + rowId + '"]').hidden = false;
+            row.querySelector('.btn-save-edit[data-id="' + rowId + '"]').hidden = true;
+            row.querySelector('#cancel_' + rowId).hidden = true;
+            row.querySelector('.btn-delete[data-id="' + rowId + '"]').hidden = false;
+        } else {
+            showNotification('Ошибка при обновлении данных.', 2);
+        }
+    }
+
+    // CANCEL
+    function cancel() {
+        let rowId = this.getAttribute('data-id');
+        let row = document.getElementById('row_' + rowId);
+
+        row.querySelector('#password_new_' + rowId).hidden = true;
+        row.querySelector('#role_old_' + rowId).hidden = false;
+        row.querySelector('#role_new_' + rowId).hidden = true;
+
+        row.querySelector('.btn-edit[data-id="' + rowId + '"]').hidden = false;
+        row.querySelector('.btn-save-edit[data-id="' + rowId + '"]').hidden = true;
+        row.querySelector('#cancel_' + rowId).hidden = true;
+        row.querySelector('.btn-delete[data-id="' + rowId + '"]').hidden = false;
+    }
+
+    // NOTIFICATION
+    function showNotification(message, type) {
+        var notification = document.getElementById("notification");
+        var messageSpan = document.getElementById("notification-message");
+
+        messageSpan.innerText = message;
+        notification.classList.remove("notification-success", "notification-error");
+
+        notification.classList.add(type === 1 ? "notification-success" : "notification-error", "show");
+
+        setTimeout(() => notification.classList.remove("show"), 3000);
+    }
+</script>
