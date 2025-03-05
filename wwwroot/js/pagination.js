@@ -40,7 +40,7 @@ function changePage(action,btn) {
     }
 
     if (inSearch === 1) {
-        SearchTrip("");
+        SearchZone("");
         return;
     }
 

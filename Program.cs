@@ -35,6 +35,7 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AllowAnonymousToPage("/logout");
 });
 
+builder.Services.AddHttpClient();
 builder.Services.AddRazorPages();
 
 var app = builder.Build();

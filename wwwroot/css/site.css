@@ -206,3 +206,9 @@ table a:hover span {
     display: flex;
     justify-content: space-around;
 }
+
+.sidebar {
+    position: absolute;
+    left: 5vh;
+    margin-top: -16px;
+}

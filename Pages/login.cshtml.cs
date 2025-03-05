@@ -41,6 +41,46 @@ namespace PowerDNS_Web.Pages
 
         public void OnGet()
         {
+            CheckDTExist();
+        }
+
+        private void CheckDTExist() //ПРОВЕРЯЕТ СУЩЕСТВУЮТ ЛИ ТАБЛИЦЫ В БАЗЕ ДАННЫХ И ПРИ ОТСУТСТВИИ СОЗДАЁТ
+        {
+            try
+            {
+                using var connection = new MySqlConnection(SqlConnection());
+                connection.Open();
+
+                using var check_table = new MySqlCommand("SHOW TABLES LIKE 'users'", connection);
+
+                using var create_users = new MySqlCommand("CREATE TABLE `users` (" +
+                  "`id` INT NOT NULL AUTO_INCREMENT," +
+                  "`username` TEXT NOT NULL," +
+                  "`role` TEXT NOT NULL," +
+                  "`password` LONGTEXT NOT NULL," +
+                  "PRIMARY KEY(`id`)," +
+                  "UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE)", connection);
+
+                using var reader_users = check_table.ExecuteReader();
+                if (!reader_users.HasRows)
+                {
+                    reader_users.Close();
+                    create_users.Prepare();
+                    create_users.ExecuteNonQuery();
+                }
+                else reader_users.Close();
+            }
+            catch (MySqlException ex)
+            {
+                // Получаем код ошибки и её текст от MySQL
+                _logger.LogError(ex.Message, "Error occurred while send mysql command");
+                Console.WriteLine($"MySQL Error Code: {ex.Number}");
+                Console.WriteLine($"Error Message: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
 
         public async Task<IActionResult> OnPostLogin([FromBody] UserLogin loginRequest)

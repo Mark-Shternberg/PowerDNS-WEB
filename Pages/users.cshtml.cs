@@ -9,12 +9,12 @@ using Microsoft.AspNetCore.Authorization;
 namespace PowerDNS_Web.Pages
 {
     [Authorize(Roles = "Administrator")]
-    public class adminModel : PageModel
+    public class userModel : PageModel
     {
-        private readonly ILogger<adminModel> _logger;
+        private readonly ILogger<userModel> _logger;
         private readonly IConfiguration Configuration;
 
-        public adminModel(ILogger<adminModel> logger, IConfiguration configuration)
+        public userModel(ILogger<userModel> logger, IConfiguration configuration)
         {
             _logger = logger;
             Configuration = configuration;

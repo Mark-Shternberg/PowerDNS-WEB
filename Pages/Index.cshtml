@@ -1,10 +1,209 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Zones";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="modal-overlay" id="modalOverlay" onclick="hideModal()">
+    <div id="modal-form" onclick="event.stopPropagation()">
+        <form method="post" enctype="multipart/form-data" id="main_form" style="display: flex;flex-direction: column;">
+            <center style="display: flex;align-items: flex-end;justify-content: center;">
+                <h5 id="modal-name">New zone</h5><h4 id="modal-id" style="margin-left:10px"></h4>
+            </center>
+            <br />
+
+            <label for="modal-domain">Domain name: <a style="color:red;">*</a></label>
+            <input class="form-control" name="name" id="modal-domain" type="text" placeholder="example.com" required />
+
+            <label for="modal-type">Zone type: <a style="color:red;">*</a></label>
+            <select id="modal-type" class="form-select w-auto" onchange="ZoneToggle()">
+                <option value="Native">Native</option>
+                <option value="Master">Master</option>
+                <option value="Slave">Slave</option>
+            </select>
+
+            <div id="slave-div">
+                <label for="modal-mserver">Master server: <a style="color:red;">*</a></label>
+                <input class="form-control" name="name" id="modal-mserver" type="text" placeholder="ns.example.com" required />
+            </div>
+
+            <label for="modal-dnssec">DNSSEC: <a style="color:red;">*</a></label>
+            <select id="modal-dnssec" class="form-select w-auto">
+                <option value="Enabled">Enabled</option>
+                <option value="Disabled">Disabled</option>
+            </select>
+
+            <div id="serial-div">
+                <label for="modal-serial">Serial: <a style="color:red;">*</a></label>
+                <input class="form-control" name="name" id="modal-serial" type="text" placeholder="serial" required />
+                <a style="color:red;">Be careful with editing!</a>
+            </div>
+            <br />
+
+            <div id="update-buttons" style="text-align:center">
+                <button type="button" id="btn-cancel" class="btn btn-default" style="margin-right: 10px;" onclick="hideModal()">Cancel</button>
+                <button type="button" id="btn-save" class="btn btn-save btn-save" onclick="save()">Save</button>
+            </div>
+            <div id="create-buttons" style="text-align:center">
+                <button type="button" id="btn-save" class="btn btn-save btn-create">Save</button>
+            </div>
+            <div id="error-message-modal" style="color: red; display: none;text-align: center;margin-top: 10px;"></div>
+        </form>
+    </div>
 </div>
+
+<div style="text-align:center">
+    @if (User.IsInRole("Administrator"))
+    {
+        <button type="button" onclick="showModal()" class="btn btn-save" style="margin-bottom:15px">Add new zone</button>
+    }
+    <br />
+    <div id="search-div" style="display: flex; justify-content: center;margin-bottom: 10px;">
+        <input class="form-control" name="search" id="search" type="text" placeholder="Поиск"
+               style="width: 500px; padding-right: 30px;" onkeydown="handleSearchEnter(event)" oninput="toggleClearButton()" />
+        <button type="button" id="search-button" onclick="SearchTrip()" class="btn btn-default" style="margin-left: 10px;">Search</button>
+        <button type="button" id="clear-btn" onclick="clearSearch()" class="btn btn-default" style="margin-left: 10px; display: none;">Clear search</button>
+    </div>
+</div>
+
+<table class="table" id="main_table">
+    <thead>
+        <tr>
+            <th>Domain</th>
+            <th>
+                Zone type
+                <select class="form-control" name="type" id="search-type" style="width: 200px;" onchange="SearchZone()">
+                    <option value="Native">Native</option>
+                    <option value="Master">Master</option>
+                    <option value="Slave">Slave</option>
+                </select>
+            </th>
+            <th>
+                DNSSEC
+                <select class="form-control" name="dnssec" id="search-dnssec" style="width: 200px;" onchange="SearchZone()">
+                    <option value="Enabled">Enabled</option>
+                    <option value="Disabled">Disabled</option>
+                </select>
+            </th>
+            <th style="width: 100px;">Serial</th>
+            <th style="min-width: 160px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var zone in Model.Zones)
+        {
+            <tr>
+                <td>@zone.name</td>
+                <td>@zone.kind</td>
+                <td>@(zone.dnssec ? "Enabled" : "Disabled")</td>
+                <td>@zone.serial</td>
+                <td>
+                    <button class="btn btn-edit" data-id="@zone.name">Edit</button>
+                    <button class="btn btn-delete" data-id="@zone.name">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <p id="confirmMessage"></p>
+        <div class="modal-buttons">
+            <button id="confirmNo" class="btn btn-default">Cancel</button>
+            <button id="confirmYes" class="btn btn-delete">Delete</button>
+        </div>
+    </div>
+</div>
+
+<div id="notification" class="notification">
+    <span id="notification-message"></span>
+</div>
+@Html.AntiForgeryToken()
+
+<script src="~/js/search.js"></script>
+<script src="~/js/zone.js"></script>
+
+<script>
+    function showModal() {
+        document.getElementById('modal-name').textContent = "New zone";
+
+        document.getElementById('modal-domain').value = "";
+        document.getElementById('modal-serial').value = "";
+        document.getElementById('modal-type').value = "Native";
+
+        // DISPLAY BLOCKS FOR ADD
+        document.getElementById('modal-id').textContent = "";
+        document.getElementById('update-buttons').style.display = "none";
+        document.getElementById('create-buttons').style.display = "block";
+        document.getElementById('modal-id').style.display = "none";
+        document.getElementById('serial-div').style.display = "none";
+        document.getElementById('modalOverlay').classList.add('show');
+        document.getElementById('slave-div').style.display = "none";
+    }
+
+    function hideModal() {
+        document.getElementById('modalOverlay').classList.remove('show');
+        document.getElementById('error-message-modal').style.display = 'none';
+    }
+
+    // BUTTONS LISTEN
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".btn-create").forEach(btn => btn.addEventListener("click", addZone));
+        document.querySelectorAll(".btn-edit").forEach(btn => btn.addEventListener("click", () => showEditZone(btn.dataset.name, btn.dataset.kind, btn.dataset.dnssec, btn.dataset.serial)));
+        document.querySelectorAll(".btn-delete").forEach(btn => btn.addEventListener("click", () => deleteZone(btn.dataset.name)));
+    });
+
+
+    // TOGGLE ZONE SELECT
+    function ZoneToggle() {
+        const type = document.getElementById('modal-type').value;
+        if (type === "Slave") {
+            document.getElementById('slave-div').style.display = "block";
+        } else {
+            document.getElementById('slave-div').style.display = "none";
+        }
+    }
+
+    // SHOW EDIT FORM
+    async function showEditZone(rowId) {
+
+        document.getElementById('update-buttons').style.display = "block";
+        document.getElementById('create-buttons').style.display = "none";
+        document.getElementById('modal-id').style.display = "block";
+
+        let row = document.getElementById('row_' + rowId);
+
+        let person = row.querySelector('#person_old_' + rowId).innerText;
+        let place = row.querySelector('#place_old_' + rowId).innerText;
+        let comment = row.querySelector('#comment_old_' + rowId).innerText;
+
+        document.getElementById('modal-name').textContent ="Командировка №";
+        document.getElementById('modal-id').textContent = rowId;
+        document.getElementById('modal-person').value = person;
+        document.getElementById('modal-place').value = place;
+        document.getElementById('modal-comment').value = comment;
+
+        // SET DATES
+        let time_start = row.querySelector('#time_start_old_' + rowId).innerText;
+        let time_end = row.querySelector('#time_end_old_' + rowId).innerText;
+
+        let input_time_start = $('#modal-time_start');
+        let input_time_end = $('#modal-time_end');
+
+        input_time_start.val(time_start);
+        input_time_end.val(time_end);
+
+        if (input_time_start.data('daterangepicker')) {
+            input_time_start.data('daterangepicker').setStartDate(moment(time_start, "DD.MM.YYYY HH:mm"));
+            input_time_start.data('daterangepicker').setEndDate(moment(time_start, "DD.MM.YYYY HH:mm"));
+        }
+
+        if (input_time_end.data('daterangepicker')) {
+            input_time_end.data('daterangepicker').setStartDate(moment(time_end, "DD.MM.YYYY HH:mm"));
+            input_time_end.data('daterangepicker').setEndDate(moment(time_end, "DD.MM.YYYY HH:mm"));
+        }
+
+        document.getElementById('modalOverlay').classList.add('show');
+    }
+</script>
