@@ -1,7 +1,10 @@
 ﻿async function addSubdomain() {
     const subdomainName = document.getElementById("subdomainInput").value.trim();
-    if (!subdomainName) {
-        showAlertSubdomain("Please enter a subdomain name.", "danger");
+
+    const errorMessage = validateSubdomain(subdomainName);
+
+    if (errorMessage) {
+        showAlertSubdomain(errorMessage, "danger");
         return;
     }
 

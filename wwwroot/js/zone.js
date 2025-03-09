@@ -88,7 +88,7 @@ async function addZone() {
     }
 
     if (kind === "Slave") {
-        if (validateIP(master)) {
+        if (validateIPv4(master)) {
             showAlertModal(validateIP(master), "danger");
             return;
         }
@@ -240,42 +240,3 @@ document.addEventListener("hidden.bs.modal", function (event) {
     var modal = event.target;
     modal.removeAttribute("aria-hidden");
 });
-
-// ----- VALIDATION -----
-
-function validateZoneName(zoneName) {
-    const zoneRegex = /^(?!-)([a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,63}$/;
-
-    if (zoneName === "") {
-        return "Please enter a zone name.";
-    }
-
-    if (zoneName.length > 255) {
-        return "Domain name is too long (max 255 characters).";
-    }
-
-    if (zoneName.includes("..")) {
-        return "Domain name cannot contain consecutive dots.";
-    }
-
-    if (!zoneRegex.test(zoneName)) {
-        return "Invalid domain format. Use letters, numbers, and hyphens.";
-    }
-
-    return "";
-}
-
-function validateIP(ip) {
-    const ipv4Pattern = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$/;
-
-    if (ip === "") {
-        return "Please enter master server.";
-    }
-
-    if (ipv4Pattern.test(ip)) {
-        return "";
-    }
-    else return "Invalid master server IP address format.";
-}
-
-// ----- END VALIDATION -----

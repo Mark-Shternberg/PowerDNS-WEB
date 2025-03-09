@@ -46,22 +46,33 @@
         <!-- MX Fields -->
         <div class="col-md-2 d-none" id="mxPriorityField">
             <label class="form-label">Priority:</label>
-            <input type="number" id="mxPriority" class="form-control" />
+            <input type="number" id="mxPriority" class="form-control" required
+                   min="1" max="1000" step="1" value="10" />
+            <small class="form-text text-muted">Recommended: 10 (min: 1, max: 1000)</small>
         </div>
 
         <!-- SRV Fields -->
         <div class="col-md-2 d-none" id="srvPriorityField">
             <label class="form-label">Priority:</label>
-            <input type="number" id="srvPriority" class="form-control" />
+            <input type="number" id="srvPriority" class="form-control" required
+                   min="0" max="65535" step="1" value="0" />
+            <small class="form-text text-muted">Recommended: 0 (min: 0, max: 65535)</small>
         </div>
+
         <div class="col-md-2 d-none" id="srvWeightField">
             <label class="form-label">Weight:</label>
-            <input type="number" id="srvWeight" class="form-control" />
+            <input type="number" id="srvWeight" class="form-control" required
+                   min="0" max="65535" step="1" value="0" />
+            <small class="form-text text-muted">Recommended: 0 (min: 0, max: 65535)</small>
         </div>
+
         <div class="col-md-2 d-none" id="srvPortField">
             <label class="form-label">Port:</label>
-            <input type="number" id="srvPort" class="form-control" />
+            <input type="number" id="srvPort" class="form-control" required
+                   min="1" max="65535" step="1" value="443" />
+            <small class="form-text text-muted">Recommended: 443 (min: 1, max: 65535)</small>
         </div>
+
 
         <div class="col-md-2 d-flex align-items-end">
             <button type="button" class="btn btn-success w-100" onclick="addRecord()">Add</button>
@@ -131,7 +142,7 @@
                     <input type="hidden" id="editRecordType" name="Type" />
                     <input type="hidden" id="editRecordOldValue" name="OldValue" />
 
-                    <!-- DEFAULT VALUE FIELD (FOR NON-SOA RECORDS) -->
+                    <!-- DEFAULT VALUE FIELD -->
                     <div class="mb-3" id="editValueField">
                         <label class="form-label">Value:</label>
                         <input type="text" id="editRecordValue" name="Value" class="form-control" required />
@@ -140,21 +151,31 @@
                     <!-- MX PRIORITY -->
                     <div class="mb-3 d-none" id="editMxPriorityField">
                         <label class="form-label">Priority:</label>
-                        <input type="number" id="editMxPriority" name="MxPriority" class="form-control" />
+                        <input type="number" id="editMxPriority" class="form-control" required
+                               min="1" max="1000" step="1" value="10" />
+                        <small class="form-text text-muted">Recommended: 10 (min: 1, max: 1000)</small>
                     </div>
 
                     <!-- SRV FIELDS -->
                     <div class="mb-3 d-none" id="editSrvPriorityField">
                         <label class="form-label">Priority:</label>
-                        <input type="number" id="editSrvPriority" name="SrvPriority" class="form-control" />
+                        <input type="number" id="editSrvPriority" name="SrvPriority" class="form-control" required
+                               min="0" max="65535" step="1" value="0" />
+                        <small class="form-text text-muted">Recommended: 0 (min: 0, max: 65535)</small>
                     </div>
+
                     <div class="mb-3 d-none" id="editSrvWeightField">
                         <label class="form-label">Weight:</label>
-                        <input type="number" id="editSrvWeight" name="SrvWeight" class="form-control" />
+                        <input type="number" id="editSrvWeight" name="SrvWeight" class="form-control" required
+                               min="0" max="65535" step="1" value="0" />
+                        <small class="form-text text-muted">Recommended: 0 (min: 0, max: 65535)</small>
                     </div>
+
                     <div class="mb-3 d-none" id="editSrvPortField">
                         <label class="form-label">Port:</label>
-                        <input type="number" id="editSrvPort" name="SrvPort" class="form-control" />
+                        <input type="number" id="editSrvPort" name="SrvPort" class="form-control" required
+                               min="1" max="65535" step="1" value="443" />
+                        <small class="form-text text-muted">Recommended: 443 (min: 1, max: 65535)</small>
                     </div>
 
                     <!-- SOA FIELDS (VISIBLE ONLY FOR SOA RECORDS) -->
@@ -164,32 +185,50 @@
                         <div class="mb-3">
                             <label class="form-label">Primary NS:</label>
                             <input type="text" id="editSoaNs" name="SoaNs" class="form-control" required />
+                            <small class="form-text text-muted">Primary name server (e.g., ns1.example.com.)</small>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Admin Email:</label>
                             <input type="text" id="editSoaEmail" name="SoaEmail" class="form-control" required />
+                            <small class="form-text text-muted">Administrator email (e.g., admin@example.com)</small>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Refresh:</label>
-                            <input type="number" id="editSoaRefresh" name="SoaRefresh" class="form-control" required />
+                            <input type="number" id="editSoaRefresh" name="SoaRefresh" class="form-control" required
+                                   min="1200" max="86400" step="1" value="7200" />
+                            <small class="form-text text-muted">Recommended: 7200 (min: 1200, max: 86400)</small>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Retry:</label>
-                            <input type="number" id="editSoaRetry" name="SoaRetry" class="form-control" required />
+                            <input type="number" id="editSoaRetry" name="SoaRetry" class="form-control" required
+                                   min="180" max="7200" step="1" value="1800" />
+                            <small class="form-text text-muted">Recommended: 1800 (min: 180, max: 7200)</small>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Expire:</label>
-                            <input type="number" id="editSoaExpire" name="SoaExpire" class="form-control" required />
+                            <input type="number" id="editSoaExpire" name="SoaExpire" class="form-control" required
+                                   min="86400" max="2419200" step="1" value="1209600" />
+                            <small class="form-text text-muted">Recommended: 1209600 (min: 86400, max: 2419200)</small>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Minimum TTL:</label>
-                            <input type="number" id="editSoaMinimumTtl" name="SoaMinimumTtl" class="form-control" required />
+                            <input type="number" id="editSoaMinimumTtl" name="SoaMinimumTtl" class="form-control" required
+                                   min="300" max="86400" step="1" value="3600" />
+                            <small class="form-text text-muted">Recommended: 3600 (min: 300, max: 86400)</small>
                         </div>
                     </div>
 
+                    <!-- TTL -->
                     <div class="mb-3">
                         <label class="form-label">TTL:</label>
-                        <input type="number" id="editRecordTtl" name="Ttl" class="form-control" required />
+                        <input type="number" id="editRecordTtl" name="Ttl" class="form-control" required
+                               min="300" max="604800" step="1" value="3600" />
+                        <small class="form-text text-muted">Recommended: 3600 (min: 300, max: 604800)</small>
                     </div>
 
                     <div id="alertContainer-edit"></div>
@@ -201,7 +240,6 @@
     </div>
 </div>
 
-
 <!-- Add Subdomain Modal -->
 <div class="modal fade" id="addSubdomainModal" tabindex="-1" aria-labelledby="addSubdomainModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -211,19 +249,17 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="alertContainer-subdomain"></div>
                 <label for="subdomainInput" class="form-label">Subdomain Name:</label>
                 <input type="text" id="subdomainInput" class="form-control" placeholder="Enter subdomain name" required />
             </div>
             <div class="modal-footer">
+                <div id="alertContainer-subdomain" style="width: 100%;"></div>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" onclick="addSubdomain()">Add</button>
             </div>
         </div>
     </div>
 </div>
-
-
 
 <!-- Confirm delete Modal -->
 <div id="confirmModal" class="modal" style="display: none;">
@@ -238,7 +274,10 @@
 
 <script src="~/js/zonepage.js"></script>
 <script src="~/js/subdomain.js"></script>
+<script src="~/js/validation.js"></script>
+
 <script>
+    // ADD RECORD
     async function addRecord() {
         const subdomain = document.getElementById("subdomainSelect").value;
         const recordType = document.getElementById("recordType").value;
@@ -260,6 +299,35 @@
             recordData.SrvPriority = srvPriority ? parseInt(srvPriority) : 0;
             recordData.SrvWeight = srvWeight ? parseInt(srvWeight) : 0;
             recordData.SrvPort = srvPort ? parseInt(srvPort) : 0;
+        } else if (recordType === "A") {
+            const errorMessage = validateIPv4(value);
+
+            if (errorMessage) {
+                showAlert(errorMessage, "danger");
+                return;
+            }
+        } else if (recordType === "AAAA") {
+            const errorMessage = validateIPv6(value);
+
+            if (errorMessage) {
+                showAlert(errorMessage, "danger");
+                return;
+            }
+        } else if (recordType === "CNAME") {
+            if (!value.match(/^[a-zA-Z0-9.-]+$/)) {
+                showAlert("Invalid CNAME format!", "danger");
+                return;
+            }
+        } else if (recordType === "TXT") {
+            if (!value.match(/^".*"$/)) {
+                showAlert("Invalid TXT format!", "danger");
+                return;
+            }
+        } else if (recordType === "SRV") {
+            if (!value.match(/^\d{1,5} \d{1,5} \d{1,5} [a-zA-Z0-9.-]+$/)) {
+                showAlert("Invalid SRV format!", "danger");
+                return;
+            }
         }
 
         try {
@@ -305,10 +373,8 @@
             }
         }
 
-        // Показываем дополнительные поля в зависимости от типа записи
         toggleEditFields();
 
-        // Разбираем MX и SRV записи
         if (type === "MX") {
             const parts = value.split(" ");
             if (parts.length >= 2) {
@@ -330,6 +396,7 @@
         editModal.show();
     }
 
+    // DELETE BUTTON
     function deleteRecord(name, type, value, button) {
         document.getElementById("confirmMessage").textContent = `Are you sure you want to delete the ${type} ${value} record for ${name}?`;
         deleteTarget = { name, type, value, button };
@@ -377,6 +444,7 @@
         document.getElementById("confirmModal").style.display = "none";
     });
 
+    // EDIT RECORD
     async function saveRecord() {
         const name = document.getElementById("editRecordName").value;
         const oldValue = document.getElementById("editRecordOldValue").value;
@@ -434,6 +502,35 @@
 
             // FORMAT VALUE FOR POWERDNS
             recordData.Value = `${soaNs} ${soaEmail} ${soaSerial} ${soaRefresh} ${soaRetry} ${soaExpire} ${soaMinimumTtl}`;
+        } else if (type === "A") {
+            const errorMessage = validateIPv4(value);
+
+            if (errorMessage) {
+                showAlertEdit(errorMessage, "danger");
+                return;
+            }
+        } else if (type === "AAAA") {
+            const errorMessage = validateIPv6(value);
+
+            if (errorMessage) {
+                showAlertEdit(errorMessage, "danger");
+                return;
+            }
+        } else if (type === "CNAME") {
+            if (!value.match(/^[a-zA-Z0-9.-]+$/)) {
+                showAlertEdit("Invalid CNAME format!", "danger");
+                return;
+            }
+        } else if (type === "TXT") {
+            if (!value.match(/^".*"$/)) {
+                showAlertEdit("Invalid TXT format!", "danger");
+                return;
+            }
+        } else if (type === "SRV") {
+            if (!value.match(/^\d{1,5} \d{1,5} \d{1,5} [a-zA-Z0-9.-]+$/)) {
+                showAlertEdit("Invalid SRV format!", "danger");
+                return;
+            }
         }
 
         try {

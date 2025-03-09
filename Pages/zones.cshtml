@@ -1,0 +1,190 @@
+﻿@page
+@model ZonesModel
+@{
+    ViewData["Title"] = "Zones";
+}
+
+<!-- Zone Modal -->
+<div class="modal fade" id="addZoneModal" tabindex="-1" aria-labelledby="addZoneModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addZoneModalLabel">Add Zone</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="display: flex;flex-direction: column;">
+                <label for="zonenInput" class="form-label">Zone Name (domain): <a style="color:red;">*</a></label>
+                <input type="text" id="modal-domain" class="form-control" placeholder="example.com" required />
+
+                <label for="modal-type">Zone type: <a style="color:red;">*</a></label>
+                <select id="modal-type" class="form-select w-auto" onchange="ZoneToggle()">
+                    <option value="Native">Native</option>
+                    <option value="Master">Master</option>
+                    <option value="Slave">Slave</option>
+                </select>
+
+                <div id="slave-div">
+                    <label for="modal-mserver">Master server: <a style="color:red;">*</a></label>
+                    <input class="form-control ip-input" name="name" id="modal-mserver" type="text" required />
+                </div>
+
+                <label for="modal-dnssec">DNSSEC: <a style="color:red;">*</a></label>
+                <select id="modal-dnssec" class="form-select w-auto">
+                    <option value="Enabled">Enabled</option>
+                    <option value="Disabled">Disabled</option>
+                </select>
+
+            </div>
+            <div class="modal-footer">
+                <div id="alertContainer-modal" style="width: 100%;"></div>
+                <!-- UPDATE BUTTONS -->
+                <div id="update-buttons" style="text-align:center">
+                    <button type="button" id="btn-cancel" class="btn btn-default" style="margin-right: 10px;" onclick="hideModal()">Cancel</button>
+                    <button type="button" id="btn-save" class="btn btn-save btn-save" onclick="save()">Save</button>
+                </div>
+                <!-- CREATE BUTTONS -->
+                <div id="create-buttons" style="text-align:center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="addZone()">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="text-align:center">
+    @if (User.IsInRole("Administrator"))
+    {
+        <button type="button" onclick="showModal()" class="btn btn-save" style="margin-bottom:15px">Add new zone</button>
+    }
+    <br />
+    <div id="search-div" style="display: flex; justify-content: center; margin-bottom: 10px;">
+        <!-- SEARCH INPUT FIELD -->
+        <input class="form-control" name="search" id="search" type="text" placeholder="Search by domain"
+               style="width: 500px; padding-right: 30px;" />
+
+        <!-- CLEAR SEARCH BUTTON (VISIBLE ONLY IF INPUT IS NOT EMPTY) -->
+        <button type="button" id="clear-btn" onclick="clearSearch()" class="btn btn-default" style="margin-left: 10px; display: none;">
+            Clear search
+        </button>
+    </div>
+</div>
+
+<table class="table table-hover" id="main_table">
+    <thead class="table-dark">
+        <tr>
+            <th>Domain</th>
+            <th style="width: 150px;">Master server</th>
+            <th style="width: 150px;">Zone type</th>
+            <th style="width: 150px;">DNSSEC</th>
+            <th style="width: 150px;">Serial</th>
+            <th style="width: 150px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var zone in Model.Zones)
+        {
+            <tr>
+                <td><a href="/zone/@zone.name"> @zone.name</a></td>
+                <td>@zone.Master</td>
+                <td>
+                    @if (zone.kind == "Master")
+                    {
+                        <i class="fa fa-server text-primary" title="Master Zone"></i> <span>Master</span>
+                    }
+                    else if (zone.kind == "Slave")
+                    {
+                        <i class="fa fa-cloud-download-alt text-secondary" title="Slave Zone"></i> <span>Slave</span>
+                    }
+                    else if (zone.kind == "Native")
+                    {
+                        <i class="fa fa-database text-info" title="Native Zone"></i> <span>Native</span>
+                    }
+                    else
+                    {
+                        <i class="fa fa-question-circle text-warning" title="Unknown Zone Type"></i> <span>@zone.kind</span>
+                    }
+                </td>
+                <td>
+                    @if (zone.dnssec)
+                    {
+                        <i class="fa fa-key text-success" title="DNSSEC Enabled"></i> <span>Enabled</span>
+                    }
+                    else
+                    {
+                        <i class="fa fa-key text-danger fa-ban" title="DNSSEC Disabled"></i> <span>Disabled</span>
+                    }
+                </td>
+                <td>@zone.serial</td>
+                <td>
+                    <button class="btn btn-edit"
+                            onclick="openEditModal('@zone.name', '@zone.kind', '@zone.Master', '@zone.dnssec', '@zone.serial')">
+                        Edit
+                    </button>
+                    <button class="btn btn-delete" onclick="confirmDelete('@zone.name')">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Confirm delete Modal -->
+<div id="confirmModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <p id="confirmMessage"></p>
+        <div id="alertContainer-delete" style="width: 100%;"></div>
+        <div class="modal-buttons">
+            <button id="confirmNo" class="btn btn-default">Cancel</button>
+            <button id="confirmYes" class="btn btn-danger">Delete</button>
+        </div>
+    </div>
+</div>
+
+<div id="notification" class="notification">
+    <span id="notification-message"></span>
+</div>
+@Html.AntiForgeryToken()
+
+<script src="~/js/search.js"></script>
+<script src="~/js/zone.js"></script>
+<script src="~/js/validation.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById("search");
+        const clearButton = document.getElementById("clear-btn");
+
+        // DETECT INPUT CHANGES AND APPLY SEARCH
+        searchInput.addEventListener("input", function () {
+            toggleClearButton(); // SHOW OR HIDE CLEAR BUTTON
+            filterTable(); // APPLY FILTER
+        });
+
+        // FUNCTION TO FILTER TABLE BASED ON INPUT VALUE
+        function filterTable() {
+            const filter = searchInput.value.toLowerCase();
+            const table = document.getElementById("main_table");
+            const rows = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < rows.length; i++) {
+                const domainCell = rows[i].getElementsByTagName("td")[0]; // GET FIRST COLUMN (DOMAIN)
+                if (domainCell) {
+                    const domainText = domainCell.textContent.trim().toLowerCase();
+                    rows[i].style.display = domainText.includes(filter) ? "" : "none";
+                }
+            }
+        }
+
+        // FUNCTION TO SHOW OR HIDE "CLEAR SEARCH" BUTTON
+        function toggleClearButton() {
+            clearButton.style.display = searchInput.value.length > 0 ? "inline-block" : "none";
+        }
+
+        // FUNCTION TO CLEAR SEARCH INPUT AND RESET FILTER
+        window.clearSearch = function () {
+            searchInput.value = "";
+            filterTable();
+            toggleClearButton();
+        };
+    });
+
+</script>
