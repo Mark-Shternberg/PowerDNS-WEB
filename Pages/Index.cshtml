@@ -93,7 +93,7 @@
         @foreach (var zone in Model.Zones)
         {
             <tr>
-                <td>@zone.name</td>
+                <td><a href="/zone/@zone.name"> @zone.name</a></td>
                 <td>@zone.kind</td>
                 <td>@(zone.dnssec ? "Enabled" : "Disabled")</td>
                 <td>@zone.serial</td>

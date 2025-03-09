@@ -32,24 +32,24 @@
                     <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                         <ul class="navbar-nav flex-grow-1">
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/">Зоны</a>
+                                <a class="nav-link text-dark" asp-area="" asp-page="/">Zones</a>
                             </li>
                         </ul>
                         <ul class="navbar-nav">
                             @if (User.Identity.IsAuthenticated)
                             {
                                     <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-page="/users">Пользователи</a>
+                                        <a class="nav-link text-dark" asp-area="" asp-page="/users">Users</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-page="/settings">Настройки</a>
+                                        <a class="nav-link text-dark" asp-area="" asp-page="/settings">Settings</a>
                                     </li>
                                 <li>
                                     <span class="nav-link">Hello, @User.Identity.Name!</span>
                                 </li>
                                 <li class="nav-item">
                                     <form method="post" asp-page="/logout">
-                                        <button type="submit" class="btn btn-outline-danger">Выйти</button>
+                                        <button type="submit" class="btn btn-outline-danger">Logout</button>
                                     </form>
                                 </li>
                             }

@@ -32,16 +32,13 @@ namespace PowerDNS_Web.Pages
 
             try
             {
-                Console.WriteLine("try");
                 using var client = _httpClientFactory.CreateClient();
                 client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
 
                 var response = await client.GetAsync(apiUrl);
-                Console.WriteLine(response);
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine(json);
                     Zones = JsonSerializer.Deserialize<List<DnsZone>>(json, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true

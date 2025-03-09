@@ -1,0 +1,374 @@
+﻿@page "/zone/{ZoneName}"
+@model PowerDNS_Web.Pages.zone.ZonePageModel
+@{
+    ViewData["Title"] = $"Manage Zone: {Model.ZoneName}";
+}
+
+<div class="container mt-4">
+    <h2>Zone: @Model.ZoneName</h2>
+    <!-- Alert for errors -->
+    <div id="alertContainer"></div>
+
+    <!-- Quick Add Record Form -->
+    <h4 class="mt-4">Add Record</h4>
+    <form id="addRecordForm" class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">Subdomain:</label>
+            <div class="input-group">
+                <select id="subdomainSelect" class="form-select">
+                    <option value="@@" selected>(Root)</option>
+                    @foreach (var subdomain in Model.GroupedRecords.Keys.Where(k => k != "@"))
+                    {
+                        <option value="@subdomain">@subdomain</option>
+                    }
+                </select>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubdomainModal">
+                    <i class="fa fa-plus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Type:</label>
+            <select id="recordType" class="form-select" onchange="toggleFields()">
+                <option value="A">A</option>
+                <option value="AAAA">AAAA</option>
+                <option value="CNAME">CNAME</option>
+                <option value="TXT">TXT</option>
+                <option value="MX">MX</option>
+                <option value="SRV">SRV</option>
+            </select>
+        </div>
+        <div class="col-md-4" id="valueField">
+            <label class="form-label">Value:</label>
+            <input type="text" id="recordValue" class="form-control" required />
+        </div>
+
+        <!-- MX Fields -->
+        <div class="col-md-2 d-none" id="mxPriorityField">
+            <label class="form-label">Priority:</label>
+            <input type="number" id="mxPriority" class="form-control" />
+        </div>
+
+        <!-- SRV Fields -->
+        <div class="col-md-2 d-none" id="srvPriorityField">
+            <label class="form-label">Priority:</label>
+            <input type="number" id="srvPriority" class="form-control" />
+        </div>
+        <div class="col-md-2 d-none" id="srvWeightField">
+            <label class="form-label">Weight:</label>
+            <input type="number" id="srvWeight" class="form-control" />
+        </div>
+        <div class="col-md-2 d-none" id="srvPortField">
+            <label class="form-label">Port:</label>
+            <input type="number" id="srvPort" class="form-control" />
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="button" class="btn btn-success w-100" onclick="addRecord()">Add</button>
+        </div>
+    </form>
+
+    <!-- Records Table -->
+    <h4 class="mt-4">Existing Records</h4>
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Subdomain</th>
+                <th>Type</th>
+                <th>Value</th>
+                <th>TTL</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var group in Model.GroupedRecords.OrderBy(g => g.Key != "@" ? 1 : 0))
+            {
+                <tr class="zone-header" onclick="toggleZone('@group.Key')">
+                    <td colspan="5" class="fw-bold">
+                        <i class="fa fa-chevron-right me-2" id="icon-@group.Key"></i>@(group.Key == "@" ? "(Root)" : group.Key)
+                    </td>
+                </tr>
+                @foreach (var record in group.Value)
+                {
+                    @foreach (var value in record.Content) 
+                    {
+                        <tr class="zone-records @group.Key" style="display: none;">
+                            <td>@record.Name</td>
+                            <td>@record.Type</td>
+                            <td>@value</td>
+                            <td>@record.Ttl</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editRecord('@record.Name', '@record.Type', '@value', '@record.Ttl')">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteRecord('@record.Name', '@record.Type', '@value', this)">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+        </tbody>
+
+    </table>
+</div>
+
+<!-- Edit Record Modal -->
+<div class="modal fade" id="editRecordModal" tabindex="-1" aria-labelledby="editRecordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editRecordModalLabel">Edit Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editRecordForm">
+                    <input type="hidden" id="editRecordName" name="Name" />
+                    <input type="hidden" id="editRecordType" name="Type" />
+                    <input type="hidden" id="editRecordOldValue" name="OldValue" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Value:</label>
+                        <input type="text" id="editRecordValue" name="Value" class="form-control" required />
+                    </div>
+
+                    <!-- MX Priority -->
+                    <div class="mb-3 d-none" id="editMxPriorityField">
+                        <label class="form-label">Priority:</label>
+                        <input type="number" id="editMxPriority" name="MxPriority" class="form-control" />
+                    </div>
+
+                    <!-- SRV Fields -->
+                    <div class="mb-3 d-none" id="editSrvPriorityField">
+                        <label class="form-label">Priority:</label>
+                        <input type="number" id="editSrvPriority" name="SrvPriority" class="form-control" />
+                    </div>
+                    <div class="mb-3 d-none" id="editSrvWeightField">
+                        <label class="form-label">Weight:</label>
+                        <input type="number" id="editSrvWeight" name="SrvWeight" class="form-control" />
+                    </div>
+                    <div class="mb-3 d-none" id="editSrvPortField">
+                        <label class="form-label">Port:</label>
+                        <input type="number" id="editSrvPort" name="SrvPort" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">TTL:</label>
+                        <input type="number" id="editRecordTtl" name="Ttl" class="form-control" required />
+                    </div>
+
+                    <div id="alertContainer-edit"></div>
+
+                    <button type="button" class="btn btn-warning w-100" onclick="saveRecord()">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Confirm delete Modal -->
+<div id="confirmModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <p id="confirmMessage"></p>
+        <div class="modal-buttons">
+            <button id="confirmNo" class="btn btn-default">Cancel</button>
+            <button id="confirmYes" class="btn btn-danger">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/zonepage.js"></script>
+<script>
+    async function addRecord() {
+        const subdomain = document.getElementById("subdomainSelect").value;
+        const recordType = document.getElementById("recordType").value;
+        const value = document.getElementById("recordValue").value;
+        const mxPriority = document.getElementById("mxPriority")?.value;
+        const srvPriority = document.getElementById("srvPriority")?.value;
+        const srvWeight = document.getElementById("srvWeight")?.value;
+        const srvPort = document.getElementById("srvPort")?.value;
+
+        let recordData = {
+            Subdomain: subdomain,
+            RecordType: recordType,
+            Value: value
+        };
+
+        if (recordType === "MX") {
+            recordData.MxPriority = mxPriority ? parseInt(mxPriority) : 10;
+        } else if (recordType === "SRV") {
+            recordData.SrvPriority = srvPriority ? parseInt(srvPriority) : 0;
+            recordData.SrvWeight = srvWeight ? parseInt(srvWeight) : 0;
+            recordData.SrvPort = srvPort ? parseInt(srvPort) : 0;
+        }
+
+        try {
+            const response = await fetch(window.location.pathname + "?handler=AddRecord", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify(recordData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || "Failed to add record");
+            }
+
+            showAlert("Record added successfully!", "success");
+            setTimeout(() => location.reload(), 1000);
+        } catch (error) {
+            showAlert(error.message, "danger");
+        }
+    }
+
+    function editRecord(name, type, value, ttl) {
+        document.getElementById("editRecordName").value = name;
+        document.getElementById("editRecordType").value = type;
+        document.getElementById("editRecordValue").value = value;
+        document.getElementById("editRecordOldValue").value = value;
+        document.getElementById("editRecordTtl").value = ttl;
+
+        // Показываем дополнительные поля в зависимости от типа записи
+        toggleEditFields();
+
+        // Разбираем MX и SRV записи
+        if (type === "MX") {
+            const parts = value.split(" ");
+            if (parts.length >= 2) {
+                document.getElementById("editMxPriority").value = parts[0]; // Приоритет MX
+                document.getElementById("editRecordValue").value = parts.slice(1).join(" "); // Оставшаяся часть
+            }
+        } else if (type === "SRV") {
+            const parts = value.split(" ");
+            if (parts.length >= 4) {
+                document.getElementById("editSrvPriority").value = parts[0];
+                document.getElementById("editSrvWeight").value = parts[1];
+                document.getElementById("editSrvPort").value = parts[2];
+                document.getElementById("editRecordValue").value = parts.slice(3).join(" "); // Доменное имя
+            }
+        }
+
+        // Открываем модальное окно без backdrop
+        var editModal = new bootstrap.Modal(document.getElementById("editRecordModal"), { backdrop: false });
+        editModal.show();
+    }
+
+    function deleteRecord(name, type, value, button) {
+        document.getElementById("confirmMessage").textContent = `Are you sure you want to delete the ${type} ${value} record for ${name}?`;
+        deleteTarget = { name, type, value, button };
+
+        document.getElementById("confirmModal").style.display = "block";
+    }
+
+    // DELETE
+    document.getElementById("confirmYes").addEventListener("click", async function () {
+        if (!deleteTarget) return;
+
+        const { name, type, value, button } = deleteTarget;
+        document.getElementById("confirmModal").style.display = "none"; // Скрываем окно после подтверждения
+
+        try {
+            const response = await fetch(window.location.pathname + "?handler=DeleteRecord", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({ Name: name, Type: type, Value: value })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || "Failed to delete record");
+            }
+
+            showAlert("Record deleted successfully!", "success");
+
+            // Удаляем строку из таблицы
+            const row = button.closest("tr");
+            if (row) row.remove();
+
+        } catch (error) {
+            showAlert(error.message, "danger");
+        }
+    });
+
+    // CANCEL DELETE
+    document.getElementById("confirmNo").addEventListener("click", function () {
+        document.getElementById("confirmModal").style.display = "none";
+    });
+
+    async function saveRecord() {
+        const name = document.getElementById("editRecordName").value;
+        const oldValue = document.getElementById("editRecordOldValue").value;
+        const type = document.getElementById("editRecordType").value;
+        let value = document.getElementById("editRecordValue").value.trim();
+        const ttl = parseInt(document.getElementById("editRecordTtl").value, 10);
+
+        let recordData = { Name: name, OldValue: oldValue, Type: type, Value: value, Ttl: ttl };
+
+        // Добавляем поля для MX и SRV
+        if (type === "MX") {
+            const mxPriority = document.getElementById("editMxPriority").value;
+            if (!mxPriority) {
+                showAlertEdit("MX Priority is required!", "danger");
+                return;
+            }
+            recordData.MxPriority = parseInt(mxPriority, 10);
+            recordData.Value = `${recordData.MxPriority} ${value}`;
+        } else if (type === "SRV") {
+            const srvPriority = document.getElementById("editSrvPriority").value;
+            const srvWeight = document.getElementById("editSrvWeight").value;
+            const srvPort = document.getElementById("editSrvPort").value;
+
+            if (!srvPriority || !srvWeight || !srvPort) {
+                showAlertEdit("SRV Priority, Weight, and Port are required!", "danger");
+                return;
+            }
+
+            recordData.SrvPriority = parseInt(srvPriority, 10);
+            recordData.SrvWeight = parseInt(srvWeight, 10);
+            recordData.SrvPort = parseInt(srvPort, 10);
+            recordData.Value = `${recordData.SrvPriority} ${recordData.SrvWeight} ${recordData.SrvPort} ${value}`;
+        }
+
+        try {
+            const response = await fetch(window.location.pathname + "?handler=EditRecord", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify(recordData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || "Failed to update record");
+            }
+
+            showAlertEdit("Record updated successfully!", "success");
+
+            // Закрываем модальное окно через 1 секунду
+            setTimeout(() => {
+                var modal = bootstrap.Modal.getInstance(document.getElementById("editRecordModal"));
+                if (modal) modal.hide();
+                location.reload();
+            }, 1000);
+
+        } catch (error) {
+            showAlertEdit(error.message, "danger");
+        }
+    }
+
+</script>
