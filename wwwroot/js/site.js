@@ -5,11 +5,7 @@
 
 // MASK FOR DATES
 $(document).ready(function () {
-    $(".datetime-input").inputmask("99.99.9999 99:99", { placeholder: "__.__.____ __:__" });
-});
-
-$(document).ready(function () {
-    $(".2-dates-input").inputmask("99.99.9999 - 99.99.9999", { placeholder: "__.__.____ - __.__.____" });
+    $(".ip-input").inputmask("999.999.999.999", { placeholder: "___.___.___.___" });
 });
 
 // NOTIFICATION

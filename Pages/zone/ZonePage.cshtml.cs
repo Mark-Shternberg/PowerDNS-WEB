@@ -17,12 +17,14 @@ namespace PowerDNS_Web.Pages.zone
         private readonly HttpClient _httpClient;
         private readonly string _apiUrl;
         private readonly string _apiKey;
+        private readonly string _default_IP;
 
         public ZonePageModel(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _httpClient = httpClientFactory.CreateClient();
             _apiUrl = configuration["pdns:url"];
             _apiKey = configuration["pdns:api-key"];
+            _default_IP = configuration["pdns:default-a"];
         }
 
         [BindProperty(SupportsGet = true)]
@@ -142,6 +144,17 @@ namespace PowerDNS_Web.Pages.zone
             public int? SrvPriority { get; set; }
             public int? SrvWeight { get; set; }
             public int? SrvPort { get; set; }
+            public string SoaNs { get; set; }
+            public string SoaEmail { get; set; }
+            public int? SoaRefresh { get; set; }
+            public int? SoaRetry { get; set; }
+            public int? SoaExpire { get; set; }
+            public int? SoaMinimumTtl { get; set; }
+        }
+
+        public class AddSubdomainRequest
+        {
+            public string Subdomain { get; set; }
         }
 
 
@@ -150,7 +163,6 @@ namespace PowerDNS_Web.Pages.zone
             try
             {
                 string requestBody = await new StreamReader(Request.Body).ReadToEndAsync();
-                Console.WriteLine($"Received JSON: {requestBody}");
 
                 var request = JsonSerializer.Deserialize<AddRecordRequest>(requestBody, new JsonSerializerOptions
                 {
@@ -348,14 +360,15 @@ namespace PowerDNS_Web.Pages.zone
         {
             try
             {
+                // CHECK IF REQUEST PARAMETERS ARE VALID
                 if (string.IsNullOrEmpty(request.Name) || string.IsNullOrEmpty(request.Type) || string.IsNullOrEmpty(request.Value))
                 {
-                    return new JsonResult(new { success = false, message = "Invalid request parameters." }) { StatusCode = 400 };
+                    return new JsonResult(new { success = false, message = "INVALID REQUEST PARAMETERS." }) { StatusCode = 400 };
                 }
 
                 string name = request.Name.TrimEnd('.') + ".";
 
-                // 1. Получаем текущие записи этой зоны
+                // FETCH CURRENT RECORDS FROM POWERDNS
                 var getRequest = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}");
                 getRequest.Headers.Add("X-API-Key", _apiKey);
 
@@ -363,7 +376,7 @@ namespace PowerDNS_Web.Pages.zone
                 if (!getResponse.IsSuccessStatusCode)
                 {
                     var errorContent = await getResponse.Content.ReadAsStringAsync();
-                    return new JsonResult(new { success = false, message = $"Error fetching records: {errorContent}" }) { StatusCode = (int)getResponse.StatusCode };
+                    return new JsonResult(new { success = false, message = $"ERROR FETCHING RECORDS: {errorContent}" }) { StatusCode = (int)getResponse.StatusCode };
                 }
 
                 var jsonResponse = await getResponse.Content.ReadAsStringAsync();
@@ -371,31 +384,25 @@ namespace PowerDNS_Web.Pages.zone
 
                 if (zoneData == null || zoneData.Rrsets == null)
                 {
-                    return new JsonResult(new { success = false, message = "Zone data is empty." }) { StatusCode = 500 };
+                    return new JsonResult(new { success = false, message = "ZONE DATA IS EMPTY." }) { StatusCode = 500 };
                 }
 
-                // ----------------------------------------
-
-                // 2. Находим текущие записи для данного имени и типа
+                // FIND EXISTING RECORD SET FOR THIS NAME AND TYPE
                 var recordSet = zoneData.Rrsets.FirstOrDefault(r => r.Name == name && r.Type == request.Type);
                 if (recordSet == null || recordSet.Records == null || recordSet.Records.Count == 0)
                 {
-                    return new JsonResult(new { success = false, message = "Record not found." }) { StatusCode = 404 };
+                    return new JsonResult(new { success = false, message = "RECORD NOT FOUND." }) { StatusCode = 404 };
                 }
 
-                // ----------------------------------------
-
-                // 3. Удаляем только старую запись, оставляя остальные
+                // REMOVE ONLY THE OLD RECORD, KEEPING OTHERS INTACT
                 var remainingRecords = recordSet.Records
                     .Where(r => r.Content != request.OldValue)
                     .Select(r => new { content = r.Content, disabled = false })
                     .ToList();
 
-                // ----------------------------------------
-
-                // 4. Формируем новое значение
                 string newRecordContent = request.Value.TrimEnd('.');
 
+                // HANDLE MX RECORD
                 if (request.Type == "MX")
                 {
                     int mxPriority = request.MxPriority ?? 10;
@@ -403,6 +410,8 @@ namespace PowerDNS_Web.Pages.zone
                     string mailServer = parts.Length > 1 ? parts.Last() : parts.First();
                     newRecordContent = $"{mxPriority} {mailServer.TrimEnd('.')}.";
                 }
+
+                // HANDLE SRV RECORD
                 else if (request.Type == "SRV")
                 {
                     int srvPriority = request.SrvPriority ?? 0;
@@ -415,13 +424,24 @@ namespace PowerDNS_Web.Pages.zone
                     newRecordContent = $"{srvPriority} {srvWeight} {srvPort} {targetServer.TrimEnd('.')}.";
                 }
 
-                // ----------------------------------------
+                // HANDLE SOA RECORD
+                else if (request.Type == "SOA")
+                {
+                    string soaNs = request.SoaNs.TrimEnd('.') + ".";
+                    string soaEmail = request.SoaEmail.TrimEnd('.') + ".";
+                    long soaSerial = 0; 
+                    int soaRefresh = request.SoaRefresh ?? 10800;
+                    int soaRetry = request.SoaRetry ?? 3600;
+                    int soaExpire = request.SoaExpire ?? 604800;
+                    int soaMinimumTtl = request.SoaMinimumTtl ?? 3600;
 
-                // Добавляем новую запись в список
+                    newRecordContent = $"{soaNs} {soaEmail} {soaSerial} {soaRefresh} {soaRetry} {soaExpire} {soaMinimumTtl}";
+                }
+
+                // ADD NEW RECORD TO THE REMAINING RECORDS
                 remainingRecords.Add(new { content = newRecordContent, disabled = false });
-                // ----------------------------------------
 
-                // 5. Отправляем обновленный список записей в PowerDNS
+                // SEND UPDATED RECORD SET TO POWERDNS
                 var updateRecord = new
                 {
                     rrsets = new[]
@@ -430,9 +450,9 @@ namespace PowerDNS_Web.Pages.zone
                         {
                             name = name,
                             type = request.Type,
-                            ttl = request.Ttl ?? recordSet.Ttl, // Используем новый TTL или старый
+                            ttl = request.Ttl ?? recordSet.Ttl,
                             changetype = "REPLACE",
-                            records = remainingRecords // Передаём оставшиеся + новую запись
+                            records = remainingRecords
                         }
                     }
                 };
@@ -449,10 +469,89 @@ namespace PowerDNS_Web.Pages.zone
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    return new JsonResult(new { success = false, message = $"Error updating record: {errorContent}" }) { StatusCode = (int)response.StatusCode };
+                    return new JsonResult(new { success = false, message = $"ERROR UPDATING RECORD: {errorContent}" }) { StatusCode = (int)response.StatusCode };
                 }
 
-                return new JsonResult(new { success = true, message = "Record updated successfully!" });
+                return new JsonResult(new { success = true, message = "RECORD UPDATED SUCCESSFULLY!" });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = $"INTERNAL SERVER ERROR: {ex.Message}" }) { StatusCode = 500 };
+            }
+        }
+
+
+        public async Task<IActionResult> OnPostAddSubdomainAsync([FromBody] AddSubdomainRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Subdomain))
+                {
+                    return new JsonResult(new { success = false, message = "Invalid subdomain name." }) { StatusCode = 400 };
+                }
+
+                string fullSubdomain = $"{request.Subdomain}.{ZoneName}";
+
+                // Получаем IP-адрес для A-записи из конфигурации
+                if (string.IsNullOrEmpty(_default_IP))
+                {
+                    return new JsonResult(new { success = false, message = "Default A record IP is not set in configuration." }) { StatusCode = 500 };
+                }
+
+                // 1. Получаем текущие записи зоны
+                var getRequest = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}");
+                getRequest.Headers.Add("X-API-Key", _apiKey);
+
+                var getResponse = await _httpClient.SendAsync(getRequest);
+                if (!getResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await getResponse.Content.ReadAsStringAsync();
+                    return new JsonResult(new { success = false, message = $"Error fetching zone records: {errorContent}" }) { StatusCode = (int)getResponse.StatusCode };
+                }
+
+                var jsonResponse = await getResponse.Content.ReadAsStringAsync();
+                var zoneData = JsonSerializer.Deserialize<ZoneData>(jsonResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (zoneData == null || zoneData.Rrsets == null)
+                {
+                    return new JsonResult(new { success = false, message = "Zone data is empty." }) { StatusCode = 500 };
+                }
+
+                // 2. Создаём A-запись для подзоны
+                var newRecord = new
+                {
+                    rrsets = new[]
+                    {
+                        new
+                        {
+                            name = fullSubdomain,
+                            type = "A",
+                            ttl = 3600,
+                            changetype = "REPLACE",
+                            records = new[]
+                            {
+                                new { content = _default_IP, disabled = false }
+                            }
+                        }
+                    }
+                };
+
+                var json = JsonSerializer.Serialize(newRecord, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+                var requestMessage = new HttpRequestMessage(HttpMethod.Patch, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}")
+                {
+                    Headers = { { "X-API-Key", _apiKey } },
+                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                };
+
+                var response = await _httpClient.SendAsync(requestMessage);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return new JsonResult(new { success = false, message = $"Error adding subdomain: {errorContent}" }) { StatusCode = (int)response.StatusCode };
+                }
+
+                return new JsonResult(new { success = true, message = "Subdomain added successfully!" });
             }
             catch (Exception ex)
             {

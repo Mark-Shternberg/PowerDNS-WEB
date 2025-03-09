@@ -63,19 +63,29 @@ function closeModal(modalId) {
 let deleteTarget = null;
 
 function toggleEditFields() {
-    const type = document.getElementById("editRecordType").value;
+    var recordType = document.getElementById("editRecordType").value;
 
+    // HIDE ALL EXTRA FIELDS INITIALLY
+    document.getElementById("editValueField").classList.add("d-none");
     document.getElementById("editMxPriorityField").classList.add("d-none");
     document.getElementById("editSrvPriorityField").classList.add("d-none");
     document.getElementById("editSrvWeightField").classList.add("d-none");
     document.getElementById("editSrvPortField").classList.add("d-none");
+    document.getElementById("editSoaFields").classList.add("d-none");
 
-    if (type === "MX") {
+    if (recordType === "SOA") {
+        document.getElementById("editSoaFields").classList.remove("d-none");
+    } else if (recordType === "MX") {
         document.getElementById("editMxPriorityField").classList.remove("d-none");
-    } else if (type === "SRV") {
+        document.getElementById("editValueField").classList.remove("d-none");
+    } else if (recordType === "SRV") {
         document.getElementById("editSrvPriorityField").classList.remove("d-none");
         document.getElementById("editSrvWeightField").classList.remove("d-none");
         document.getElementById("editSrvPortField").classList.remove("d-none");
+        document.getElementById("editValueField").classList.remove("d-none");
+    } else {
+        document.getElementById("editValueField").classList.remove("d-none");
     }
 }
+
 

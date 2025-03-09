@@ -4,51 +4,51 @@
     ViewData["Title"] = "Zones";
 }
 
-<div class="modal-overlay" id="modalOverlay" onclick="hideModal()">
-    <div id="modal-form" onclick="event.stopPropagation()">
-        <form method="post" enctype="multipart/form-data" id="main_form" style="display: flex;flex-direction: column;">
-            <center style="display: flex;align-items: flex-end;justify-content: center;">
-                <h5 id="modal-name">New zone</h5><h4 id="modal-id" style="margin-left:10px"></h4>
-            </center>
-            <br />
-
-            <label for="modal-domain">Domain name: <a style="color:red;">*</a></label>
-            <input class="form-control" name="name" id="modal-domain" type="text" placeholder="example.com" required />
-
-            <label for="modal-type">Zone type: <a style="color:red;">*</a></label>
-            <select id="modal-type" class="form-select w-auto" onchange="ZoneToggle()">
-                <option value="Native">Native</option>
-                <option value="Master">Master</option>
-                <option value="Slave">Slave</option>
-            </select>
-
-            <div id="slave-div">
-                <label for="modal-mserver">Master server: <a style="color:red;">*</a></label>
-                <input class="form-control" name="name" id="modal-mserver" type="text" placeholder="ns.example.com" required />
+<!-- Zone Modal -->
+<div class="modal fade" id="addZoneModal" tabindex="-1" aria-labelledby="addZoneModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addZoneModalLabel">Add Zone</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <div class="modal-body" style="display: flex;flex-direction: column;">
+                <label for="zonenInput" class="form-label">Zone Name (domain): <a style="color:red;">*</a></label>
+                <input type="text" id="modal-domain" class="form-control" placeholder="example.com" required />
 
-            <label for="modal-dnssec">DNSSEC: <a style="color:red;">*</a></label>
-            <select id="modal-dnssec" class="form-select w-auto">
-                <option value="Enabled">Enabled</option>
-                <option value="Disabled">Disabled</option>
-            </select>
+                <label for="modal-type">Zone type: <a style="color:red;">*</a></label>
+                <select id="modal-type" class="form-select w-auto" onchange="ZoneToggle()">
+                    <option value="Native">Native</option>
+                    <option value="Master">Master</option>
+                    <option value="Slave">Slave</option>
+                </select>
 
-            <div id="serial-div">
-                <label for="modal-serial">Serial: <a style="color:red;">*</a></label>
-                <input class="form-control" name="name" id="modal-serial" type="text" placeholder="serial" required />
-                <a style="color:red;">Be careful with editing!</a>
-            </div>
-            <br />
+                <div id="slave-div">
+                    <label for="modal-mserver">Master server: <a style="color:red;">*</a></label>
+                    <input class="form-control ip-input" name="name" id="modal-mserver" type="text" required />
+                </div>
 
-            <div id="update-buttons" style="text-align:center">
-                <button type="button" id="btn-cancel" class="btn btn-default" style="margin-right: 10px;" onclick="hideModal()">Cancel</button>
-                <button type="button" id="btn-save" class="btn btn-save btn-save" onclick="save()">Save</button>
+                <label for="modal-dnssec">DNSSEC: <a style="color:red;">*</a></label>
+                <select id="modal-dnssec" class="form-select w-auto">
+                    <option value="Enabled">Enabled</option>
+                    <option value="Disabled">Disabled</option>
+                </select>
+
             </div>
-            <div id="create-buttons" style="text-align:center">
-                <button type="button" id="btn-save" class="btn btn-save btn-create">Save</button>
+            <div class="modal-footer">
+                <div id="alertContainer-modal" style="width: 100%;"></div>
+                <!-- UPDATE BUTTONS -->
+                <div id="update-buttons" style="text-align:center">
+                    <button type="button" id="btn-cancel" class="btn btn-default" style="margin-right: 10px;" onclick="hideModal()">Cancel</button>
+                    <button type="button" id="btn-save" class="btn btn-save btn-save" onclick="save()">Save</button>
+                </div>
+                <!-- CREATE BUTTONS -->
+                <div id="create-buttons" style="text-align:center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="addZone()">Add</button>
+                </div>
             </div>
-            <div id="error-message-modal" style="color: red; display: none;text-align: center;margin-top: 10px;"></div>
-        </form>
+        </div>
     </div>
 </div>
 
@@ -58,35 +58,27 @@
         <button type="button" onclick="showModal()" class="btn btn-save" style="margin-bottom:15px">Add new zone</button>
     }
     <br />
-    <div id="search-div" style="display: flex; justify-content: center;margin-bottom: 10px;">
-        <input class="form-control" name="search" id="search" type="text" placeholder="Поиск"
-               style="width: 500px; padding-right: 30px;" onkeydown="handleSearchEnter(event)" oninput="toggleClearButton()" />
-        <button type="button" id="search-button" onclick="SearchTrip()" class="btn btn-default" style="margin-left: 10px;">Search</button>
-        <button type="button" id="clear-btn" onclick="clearSearch()" class="btn btn-default" style="margin-left: 10px; display: none;">Clear search</button>
+    <div id="search-div" style="display: flex; justify-content: center; margin-bottom: 10px;">
+        <!-- SEARCH INPUT FIELD -->
+        <input class="form-control" name="search" id="search" type="text" placeholder="Search by domain"
+               style="width: 500px; padding-right: 30px;" />
+
+        <!-- CLEAR SEARCH BUTTON (VISIBLE ONLY IF INPUT IS NOT EMPTY) -->
+        <button type="button" id="clear-btn" onclick="clearSearch()" class="btn btn-default" style="margin-left: 10px; display: none;">
+            Clear search
+        </button>
     </div>
 </div>
 
-<table class="table" id="main_table">
-    <thead>
+<table class="table table-hover" id="main_table">
+    <thead class="table-dark">
         <tr>
             <th>Domain</th>
-            <th>
-                Zone type
-                <select class="form-control" name="type" id="search-type" style="width: 200px;" onchange="SearchZone()">
-                    <option value="Native">Native</option>
-                    <option value="Master">Master</option>
-                    <option value="Slave">Slave</option>
-                </select>
-            </th>
-            <th>
-                DNSSEC
-                <select class="form-control" name="dnssec" id="search-dnssec" style="width: 200px;" onchange="SearchZone()">
-                    <option value="Enabled">Enabled</option>
-                    <option value="Disabled">Disabled</option>
-                </select>
-            </th>
-            <th style="width: 100px;">Serial</th>
-            <th style="min-width: 160px;"></th>
+            <th style="width: 150px;">Master server</th>
+            <th style="width: 150px;">Zone type</th>
+            <th style="width: 150px;">DNSSEC</th>
+            <th style="width: 150px;">Serial</th>
+            <th style="width: 150px;"></th>
         </tr>
     </thead>
     <tbody>
@@ -94,24 +86,56 @@
         {
             <tr>
                 <td><a href="/zone/@zone.name"> @zone.name</a></td>
-                <td>@zone.kind</td>
-                <td>@(zone.dnssec ? "Enabled" : "Disabled")</td>
+                <td>@zone.Master</td>
+                <td>
+                    @if (zone.kind == "Master")
+                    {
+                        <i class="fa fa-server text-primary" title="Master Zone"></i> <span>Master</span>
+                    }
+                    else if (zone.kind == "Slave")
+                    {
+                        <i class="fa fa-cloud-download-alt text-secondary" title="Slave Zone"></i> <span>Slave</span>
+                    }
+                    else if (zone.kind == "Native")
+                    {
+                        <i class="fa fa-database text-info" title="Native Zone"></i> <span>Native</span>
+                    }
+                    else
+                    {
+                        <i class="fa fa-question-circle text-warning" title="Unknown Zone Type"></i> <span>@zone.kind</span>
+                    }
+                </td>
+                <td>
+                    @if (zone.dnssec)
+                    {
+                        <i class="fa fa-key text-success" title="DNSSEC Enabled"></i> <span>Enabled</span>
+                    }
+                    else
+                    {
+                        <i class="fa fa-key text-danger fa-ban" title="DNSSEC Disabled"></i> <span>Disabled</span>
+                    }
+                </td>
                 <td>@zone.serial</td>
                 <td>
-                    <button class="btn btn-edit" data-id="@zone.name">Edit</button>
-                    <button class="btn btn-delete" data-id="@zone.name">Delete</button>
+                    <button class="btn btn-edit"
+                            onclick="openEditModal('@zone.name', '@zone.kind', '@zone.Master', '@zone.dnssec', '@zone.serial')">
+                        Edit
+                    </button>
+                    <button class="btn btn-delete" onclick="confirmDelete('@zone.name')">Delete</button>
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
-<div id="confirmModal" class="modal">
+<!-- Confirm delete Modal -->
+<div id="confirmModal" class="modal" style="display: none;">
     <div class="modal-content">
         <p id="confirmMessage"></p>
+        <div id="alertContainer-delete" style="width: 100%;"></div>
         <div class="modal-buttons">
             <button id="confirmNo" class="btn btn-default">Cancel</button>
-            <button id="confirmYes" class="btn btn-delete">Delete</button>
+            <button id="confirmYes" class="btn btn-danger">Delete</button>
         </div>
     </div>
 </div>
@@ -125,85 +149,42 @@
 <script src="~/js/zone.js"></script>
 
 <script>
-    function showModal() {
-        document.getElementById('modal-name').textContent = "New zone";
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById("search");
+        const clearButton = document.getElementById("clear-btn");
 
-        document.getElementById('modal-domain').value = "";
-        document.getElementById('modal-serial').value = "";
-        document.getElementById('modal-type').value = "Native";
+        // DETECT INPUT CHANGES AND APPLY SEARCH
+        searchInput.addEventListener("input", function () {
+            toggleClearButton(); // SHOW OR HIDE CLEAR BUTTON
+            filterTable(); // APPLY FILTER
+        });
 
-        // DISPLAY BLOCKS FOR ADD
-        document.getElementById('modal-id').textContent = "";
-        document.getElementById('update-buttons').style.display = "none";
-        document.getElementById('create-buttons').style.display = "block";
-        document.getElementById('modal-id').style.display = "none";
-        document.getElementById('serial-div').style.display = "none";
-        document.getElementById('modalOverlay').classList.add('show');
-        document.getElementById('slave-div').style.display = "none";
-    }
+        // FUNCTION TO FILTER TABLE BASED ON INPUT VALUE
+        function filterTable() {
+            const filter = searchInput.value.toLowerCase();
+            const table = document.getElementById("main_table");
+            const rows = table.getElementsByTagName("tr");
 
-    function hideModal() {
-        document.getElementById('modalOverlay').classList.remove('show');
-        document.getElementById('error-message-modal').style.display = 'none';
-    }
+            for (let i = 1; i < rows.length; i++) {
+                const domainCell = rows[i].getElementsByTagName("td")[0]; // GET FIRST COLUMN (DOMAIN)
+                if (domainCell) {
+                    const domainText = domainCell.textContent.trim().toLowerCase();
+                    rows[i].style.display = domainText.includes(filter) ? "" : "none";
+                }
+            }
+        }
 
-    // BUTTONS LISTEN
-    document.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll(".btn-create").forEach(btn => btn.addEventListener("click", addZone));
-        document.querySelectorAll(".btn-edit").forEach(btn => btn.addEventListener("click", () => showEditZone(btn.dataset.name, btn.dataset.kind, btn.dataset.dnssec, btn.dataset.serial)));
-        document.querySelectorAll(".btn-delete").forEach(btn => btn.addEventListener("click", () => deleteZone(btn.dataset.name)));
+        // FUNCTION TO SHOW OR HIDE "CLEAR SEARCH" BUTTON
+        function toggleClearButton() {
+            clearButton.style.display = searchInput.value.length > 0 ? "inline-block" : "none";
+        }
+
+        // FUNCTION TO CLEAR SEARCH INPUT AND RESET FILTER
+        window.clearSearch = function () {
+            searchInput.value = "";
+            filterTable();
+            toggleClearButton();
+        };
     });
 
-
-    // TOGGLE ZONE SELECT
-    function ZoneToggle() {
-        const type = document.getElementById('modal-type').value;
-        if (type === "Slave") {
-            document.getElementById('slave-div').style.display = "block";
-        } else {
-            document.getElementById('slave-div').style.display = "none";
-        }
-    }
-
-    // SHOW EDIT FORM
-    async function showEditZone(rowId) {
-
-        document.getElementById('update-buttons').style.display = "block";
-        document.getElementById('create-buttons').style.display = "none";
-        document.getElementById('modal-id').style.display = "block";
-
-        let row = document.getElementById('row_' + rowId);
-
-        let person = row.querySelector('#person_old_' + rowId).innerText;
-        let place = row.querySelector('#place_old_' + rowId).innerText;
-        let comment = row.querySelector('#comment_old_' + rowId).innerText;
-
-        document.getElementById('modal-name').textContent ="Командировка №";
-        document.getElementById('modal-id').textContent = rowId;
-        document.getElementById('modal-person').value = person;
-        document.getElementById('modal-place').value = place;
-        document.getElementById('modal-comment').value = comment;
-
-        // SET DATES
-        let time_start = row.querySelector('#time_start_old_' + rowId).innerText;
-        let time_end = row.querySelector('#time_end_old_' + rowId).innerText;
-
-        let input_time_start = $('#modal-time_start');
-        let input_time_end = $('#modal-time_end');
-
-        input_time_start.val(time_start);
-        input_time_end.val(time_end);
-
-        if (input_time_start.data('daterangepicker')) {
-            input_time_start.data('daterangepicker').setStartDate(moment(time_start, "DD.MM.YYYY HH:mm"));
-            input_time_start.data('daterangepicker').setEndDate(moment(time_start, "DD.MM.YYYY HH:mm"));
-        }
-
-        if (input_time_end.data('daterangepicker')) {
-            input_time_end.data('daterangepicker').setStartDate(moment(time_end, "DD.MM.YYYY HH:mm"));
-            input_time_end.data('daterangepicker').setEndDate(moment(time_end, "DD.MM.YYYY HH:mm"));
-        }
-
-        document.getElementById('modalOverlay').classList.add('show');
-    }
 </script>
