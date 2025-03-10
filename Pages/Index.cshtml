@@ -51,6 +51,52 @@
         </div>
     </div>
 
+    @if (ViewData["RecursorEnabled"]?.ToString() == "Enabled")
+    {
+        <h3 class="text-center mt-4"><i class="fa fa-database"></i> Recursor Statistics</h3>
+
+        <div class="row text-center">
+            <!-- RECURSOR CACHE HITS -->
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Recursor Cache Hits</h5>
+                        <p class="card-text display-6" id="recursorCacheHits">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECURSOR CACHE MISSES -->
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Recursor Cache Misses</h5>
+                        <p class="card-text display-6" id="recursorCacheMisses">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECURSOR UPTIME -->
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Recursor Uptime</h5>
+                        <p class="card-text display-6" id="recursorUptime">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECURSOR TOTAL QUERIES -->
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">Recursor Queries</h5>
+                        <p class="card-text display-6" id="recursorQueries">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
     <!-- CHART -->
     <div class="mt-5">
         <canvas id="queryChart"></canvas>
@@ -76,11 +122,23 @@
             document.getElementById("uptime").innerText = formatUptime(data.uptime);
             document.getElementById("totalQueries").innerText = data.totalQueries;
 
-            updateChart(data.queryRates);
+            if (document.getElementById("recursorCacheHits")) {
+                document.getElementById("recursorCacheHits").innerText = data.recursorCacheHits;
+                document.getElementById("recursorCacheMisses").innerText = data.recursorCacheMisses;
+                document.getElementById("recursorUptime").innerText = formatUptime(data.recursorUptime);
+                document.getElementById("recursorQueries").innerText = data.recursorQueries;
+            }
+
+            if (Array.isArray(data.queryRates) && data.queryRates.length > 0) {
+                updateChart(data.queryRates);
+            } else {
+                console.warn("queryRates is empty or not available");
+            }
         } catch (error) {
             console.error("Failed to load stats:", error);
         }
     }
+
 
     function formatUptime(seconds) {
         let hours = Math.floor(seconds / 3600);
@@ -111,4 +169,3 @@
     fetchPowerDNSStats();
     setInterval(fetchPowerDNSStats, 5000);
 </script>
-

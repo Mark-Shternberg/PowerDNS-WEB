@@ -1,123 +1,163 @@
 ﻿@page
-@model PowerDNS_Web.Pages.settingsModel
+@model PowerDNS_Web.Pages.SettingsModel
 @{
-    ViewData["Title"] = "Настройки";
+    ViewData["Title"] = "Settings";
 }
 
-<div class="container" style="width: 500px;">
-    <h2>Настройки MySQL соединения</h2>
-    <form method="post" nctype="multipart/form-data">
-        <div class="form-group">
-            <label for="server">Сервер</label>
-            <input type="text" class="form-control" id="server" name="server" value="@Model.MySQLConnection.Server" required />
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Settings</h2>
+
+    <form id="settingsForm">
+        <div class="row">
+            <!-- MYSQL SETTINGS -->
+            <div class="col-md-4">
+                <h5>MySQL Settings</h5>
+                <div class="mb-2">
+                    <label class="form-label">Server:</label>
+                    <input type="text" id="mysqlServer" class="form-control" value="@Model.Settings.MySQL.Server">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">User:</label>
+                    <input type="text" id="mysqlUser" class="form-control" value="@Model.Settings.MySQL.User">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Password:</label>
+                    <input type="password" id="mysqlPassword" class="form-control" value="@Model.Settings.MySQL.Password">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Database:</label>
+                    <input type="text" id="mysqlDatabase" class="form-control" value="@Model.Settings.MySQL.Database">
+                </div>
+            </div>
+
+            <!-- POWERDNS SETTINGS -->
+            <div class="col-md-4">
+                <h5>PowerDNS Settings</h5>
+                <div class="mb-2">
+                    <label class="form-label">API URL:</label>
+                    <input type="text" id="pdnsUrl" class="form-control" value="@Model.Settings.PowerDNS.Url">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">API Key:</label>
+                    <input type="password" id="pdnsApiKey" class="form-control" value="@Model.Settings.PowerDNS.Api_Key">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Default A Record:</label>
+                    <input type="text" id="pdnsDefaultA" class="form-control" value="@Model.Settings.PowerDNS.Default_A">
+                </div>
+                <h6 class="mt-3">SOA Configuration</h6>
+                <div class="mb-2">
+                    <label class="form-label">Primary NS:</label>
+                    <input type="text" id="pdnsSoaNs" class="form-control" value="@Model.Settings.PowerDNS.SOA.Ns">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Admin Email:</label>
+                    <input type="text" id="pdnsSoaMail" class="form-control" value="@Model.Settings.PowerDNS.SOA.Mail">
+                </div>
+            </div>
+
+            <!-- RECURSOR SETTINGS -->
+            <div class="col-md-4">
+                <h5>Recursor Settings</h5>
+                <div class="mb-2">
+                    <label class="form-label">Recursor Status:</label>
+                    <select id="recursorStatus" class="form-control" onchange="toggleRecursorFields()">
+                        <option value="Enabled" selected="@(Model.Settings.Recursor.Enabled == "Enabled")">Enabled</option>
+                        <option value="Disabled" selected="@(Model.Settings.Recursor.Enabled == "Disabled")">Disabled</option>
+                    </select>
+                </div>
+                <div id="recursorFields">
+                    <div class="mb-2">
+                        <label class="form-label">Recursor URL:</label>
+                        <input type="text" id="recursorUrl" class="form-control" value="@Model.Settings.Recursor.Url">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">API Key:</label>
+                        <input type="password" id="recursorApiKey" class="form-control" value="@Model.Settings.Recursor.Api_Key">
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="user">Пользователь</label>
-            <input type="text" class="form-control" id="user" name="user" value="@Model.MySQLConnection.User" required />
+        <div style="display: flex; justify-content: center;">
+            <button type="button" class="btn btn-primary mt-3" style="width:400px;" onclick="saveSettings()">Save Settings</button>
         </div>
-
-        <div class="form-group">
-            <label for="password">Пароль</label>
-            <input type="password" class="form-control" id="password" name="password" value="@Model.MySQLConnection.Password" required />
-        </div>
-
-        <div class="form-group">
-            <label for="database">База данных</label>
-            <input type="text" class="form-control" id="database" name="database" value="@Model.MySQLConnection.Database" required />
-        </div>
-
-        <center style="display: flex;flex-direction: column;align-items: center;">
-            <button type="button" id="btn-save" class="btn btn-primary mt-3" onclick="save()">
-                <span id="btn-text">Сохранить настройки</span>
-                <i id="spinner" class="fas fa-cog fa-spin" style="display: none; margin-left: 5px;"></i>
-            </button>
-        </center>
     </form>
+
+    <div id="alertContainer-settings"></div>
 </div>
 
 <div id="notification" class="notification">
     <span id="notification-message"></span>
 </div>
+
 @Html.AntiForgeryToken()
 
 <script>
-    // SAVE SETTINGS
-    async function save() {
-        let server = document.getElementById('server').value;
-        let user = document.getElementById('user').value;
-        let password = document.getElementById('password').value;
-        let database = document.getElementById('database').value;
-        let btnSave = document.getElementById('btn-save');
-        let spinner = document.getElementById('spinner');
-        let btnText = document.getElementById('btn-text');
+    // FUNCTION TO TOGGLE RECURSOR FIELDS
+    function toggleRecursorFields() {
+        const recursorStatus = document.getElementById("recursorStatus").value;
+        const recursorFields = document.getElementById("recursorFields");
 
-        // Отключаем кнопку и показываем индикатор загрузки
-        btnSave.disabled = true;
-        btnSave.classList.add("btn-secondary");
-        btnSave.classList.remove("btn-primary");
-        spinner.style.display = "inline-block";
-        btnText.innerText = "Проверка соединения";
+        if (recursorStatus === "Disabled") {
+            recursorFields.style.display = "none";
+        } else {
+            recursorFields.style.display = "block";
+        }
+    }
+
+    // INITIALIZE FIELD VISIBILITY ON LOAD
+    document.addEventListener("DOMContentLoaded", () => {
+        toggleRecursorFields();
+    });
+
+    // SAVE SETTINGS
+    async function saveSettings() {
+        const settingsData = {
+            MySQL: {
+                Server: document.getElementById("mysqlServer").value,
+                User: document.getElementById("mysqlUser").value,
+                Password: document.getElementById("mysqlPassword").value,
+                Database: document.getElementById("mysqlDatabase").value
+            },
+            PowerDNS: {
+                Url: document.getElementById("pdnsUrl").value,
+                Api_Key: document.getElementById("pdnsApiKey").value,
+                Default_A: document.getElementById("pdnsDefaultA").value,
+                SOA: {
+                    Ns: document.getElementById("pdnsSoaNs").value,
+                    Mail: document.getElementById("pdnsSoaMail").value
+                }
+            },
+            Recursor: {
+                Enabled: document.getElementById("recursorStatus").value,
+                Url: document.getElementById("recursorUrl").value,
+                Api_Key: document.getElementById("recursorApiKey").value
+            }
+        };
 
         try {
-            let response = await fetch('/settings?handler=Save_settings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            let response = await fetch(window.location.pathname + "?handler=SaveSettings", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                 },
-                body: JSON.stringify({
-                    server: server,
-                    user: user,
-                    password: password,
-                    database: database
-                })
+                body: JSON.stringify(settingsData)
             });
 
             if (response.ok) {
                 let newModel = await response.json();
                 if (newModel.success === false) {
-                    showNotification('Ошибка: ' + newModel.message, 2);
+                    showNotification('Error: ' + newModel.message, 2);
                 } else {
-                    showNotification('Настройки корректны и сохранены', 1);
+                    showNotification('Settings saved', 1);
                 }
             } else {
-                showNotification('Ошибка при сохранении.', 2);
+                showNotification('Error.', 2);
             }
         } catch (error) {
-            showNotification('Ошибка сети.', 2);
+            showNotification('Fetching error.', 2);
         }
-
-        // Включаем кнопку обратно
-        btnSave.disabled = false;
-        btnSave.classList.add("btn-primary");
-        btnSave.classList.remove("btn-secondary");
-        spinner.style.display = "none";
-        btnText.innerText = "Сохранить настройки";
-    }
-
-    // NOTIFICATION
-    function showNotification(message, type) {
-        var notification = document.getElementById("notification");
-        var messageSpan = document.getElementById("notification-message");
-
-        messageSpan.innerText = message;
-
-        notification.classList.remove("notification-success", "notification-error");
-
-        if (type === 1) {
-            notification.classList.add("notification-success");
-        } else if (type === 2) {
-            notification.classList.add("notification-error");
-        }
-
-        notification.classList.add("show");
-
-        // Hide in 3s
-        setTimeout(function () {
-            notification.classList.remove("show");
-        }, 3000);
     }
 </script>
-
-

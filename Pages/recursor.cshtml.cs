@@ -25,7 +25,8 @@ namespace PowerDNS_Web.Pages
 
         public async Task OnGetAsync()
         {
-            await LoadZonesAsync();
+            ViewData["RecursorEnabled"] = _configuration["recursor:Enabled"] ?? "Disabled";
+            if (_configuration["recursor:enabled"] == "Enabled") await LoadZonesAsync();
         }
 
         private async Task LoadZonesAsync()
@@ -33,9 +34,9 @@ namespace PowerDNS_Web.Pages
             try
             {
                 var pdnsUrl = _configuration["pdns:url"];
-                var pdnsApiKey = _configuration["pdns:api-key"];
+                var pdnsApiKey = _configuration["pdns:api_key"];
                 var recursorUrl = _configuration["recursor:url"];
-                var recursorApiKey = _configuration["recursor:api-key"];
+                var recursorApiKey = _configuration["recursor:api_key"];
 
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("X-API-Key", pdnsApiKey);
@@ -59,6 +60,41 @@ namespace PowerDNS_Web.Pages
                     .Where(z => z.Kind != null && z.Kind.Equals("Forwarded", StringComparison.OrdinalIgnoreCase))
                     .Select(z => new ForwardZone { Name = z.Name, ForwardTo = z.Servers })
                     .ToList();
+
+                // CHECK IF ZONE "." EXISTS
+                bool hasRootZone = forwardZones.Any(z => z.Name == ".");
+
+                if (!hasRootZone)
+                {
+                    // DEFINE DEFAULT FORWARD SETTINGS
+                    var forwardZoneData = new
+                    {
+                        name = ".",
+                        kind = "Forwarded",
+                        servers = new[] { "1.1.1.1:53" },
+                        recursion_desired = false
+                    };
+
+                    var content = new StringContent(JsonSerializer.Serialize(forwardZoneData), Encoding.UTF8, "application/json");
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
+
+                    var response = await _httpClient.PostAsync($"{recursorUrl}/api/v1/servers/localhost/zones", content);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var errorMessage = await response.Content.ReadAsStringAsync();
+                        _logger.LogError($"Failed to create root zone '.': {errorMessage}");
+                    }
+                    else
+                    {
+                        forwardZones.Add(new ForwardZone
+                        {
+                            Name = ".",
+                            ForwardTo = new List<string> { "1.1.1.1:53" }
+                        });
+                    }
+                }
 
                 AvailableZones = authZones
                     .Select(z => z.Name)
@@ -84,7 +120,7 @@ namespace PowerDNS_Web.Pages
             try
             {
                 var recursorUrl = _configuration["recursor:url"];
-                var recursorApiKey = _configuration["recursor:api-key"];
+                var recursorApiKey = _configuration["recursor:api_key"];
 
                 var forwardZoneData = new
                 {
@@ -125,7 +161,7 @@ namespace PowerDNS_Web.Pages
             try
             {
                 var recursorUrl = _configuration["recursor:url"];
-                var recursorApiKey = _configuration["recursor:api-key"];
+                var recursorApiKey = _configuration["recursor:api_key"];
 
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
@@ -155,54 +191,47 @@ namespace PowerDNS_Web.Pages
                     return new JsonResult(new { success = false, message = "INVALID DNS SERVERS LIST" }) { StatusCode = 400 };
                 }
 
-                var recursorConfPath = "recursor.conf";
-                var backupConfPath = "recursor.conf.bak";
+                // PARSE DNS SERVERS LIST
+                var dnsServers = request.DnsServers
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToArray();
 
-                // READ CONFIG
-                if (!System.IO.File.Exists(recursorConfPath))
+                if (dnsServers.Length == 0)
                 {
-                    return new JsonResult(new { success = false, message = "RECURSOR CONFIG NOT FOUND" }) { StatusCode = 500 };
+                    return new JsonResult(new { success = false, message = "NO VALID DNS SERVERS PROVIDED" }) { StatusCode = 400 };
                 }
 
-                var configLines = await System.IO.File.ReadAllLinesAsync(recursorConfPath);
+                // PREPARE API URL AND AUTH
+                var recursorUrl = _configuration["recursor:url"];
+                var recursorApiKey = _configuration["recursor:api_key"];
 
-                // CREATE BACKUP
-                await System.IO.File.WriteAllLinesAsync(backupConfPath, configLines);
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
 
-                // UPDATE forward-zones
-                bool updated = false;
-                for (int i = 0; i < configLines.Length; i++)
+                // CREATE JSON PAYLOAD FOR UPDATE REQUEST
+                var updateZone = new
                 {
-                    if (configLines[i].StartsWith("forward-zones="))
-                    {
-                        configLines[i] = $"forward-zones=.={request.DnsServers}";
-                        updated = true;
-                        break;
-                    }
+                    name = ".",
+                    kind = "Forwarded",
+                    servers = dnsServers,
+                    recursion_desired = false
+                };
+
+                var jsonPayload = JsonSerializer.Serialize(updateZone, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                var requestContent = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                Console.WriteLine(jsonPayload);
+
+                // SEND UPDATE REQUEST
+                var updateResponse = await _httpClient.PutAsync($"{recursorUrl}/api/v1/servers/localhost/zones/=2E", requestContent);
+
+                if (!updateResponse.IsSuccessStatusCode)
+                {
+                    var errorMessage = await updateResponse.Content.ReadAsStringAsync();
+                    _logger.LogError($"FAILED TO UPDATE ROOT ZONE '.': {errorMessage}");
+                    return new JsonResult(new { success = false, message = $"FAILED TO UPDATE ROOT ZONE '.': {errorMessage}" }) { StatusCode = (int)updateResponse.StatusCode };
                 }
 
-                if (!updated)
-                {
-                    var newConfig = new List<string>(configLines) { $"forward-zones=.={request.DnsServers}" };
-                    configLines = newConfig.ToArray();
-                }
-
-                // SAVE NEW CONFIG
-                await System.IO.File.WriteAllLinesAsync(recursorConfPath, configLines);
-
-                /* RESTART RECURSOR
-                if (!RestartRecursor())
-                {
-                    _logger.LogError("FAILED TO RESTART POWERDNS RECURSOR, ROLLING BACK CONFIGURATION");
-
-                    await System.IO.File.WriteAllLinesAsync(recursorConfPath, await System.IO.File.ReadAllLinesAsync(backupConfPath));
-
-                    if (!RestartRecursor())
-                    {
-                        return new JsonResult(new { success = false, message = "FAILED TO RESTART RECURSOR AFTER ROLLBACK" }) { StatusCode = 500 };
-                    }
-                }*/
-
+                _logger.LogInformation($"Root zone '.' updated successfully with new DNS: {string.Join(", ", dnsServers)}");
                 return new JsonResult(new { success = true });
             }
             catch (Exception ex)
@@ -212,65 +241,34 @@ namespace PowerDNS_Web.Pages
             }
         }
 
-        // RESTART RECURSOR
-        private bool RestartRecursor()
+        public class UpstreamDNS
         {
-            try
-            {
-                Process process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "/bin/systemctl",
-                        Arguments = "restart pdns-recursor",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-
-                process.Start();
-                process.WaitForExit();
-
-                return process.ExitCode == 0;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"FAILED TO RESTART RECURSOR: {ex.Message}");
-                return false;
-            }
+            public string DnsServers { get; set; }
         }
 
-    }
+        public class RecursorZone
+        {
+            public string Id { get; set; }
+            public string Kind { get; set; }
+            public string Name { get; set; }
+            public List<string> Servers { get; set; } = new();
+            public bool Recursion_Desired { get; set; }
+        }
 
-    public class UpstreamDNS
-    {
-        public string DnsServers { get; set; }
-    }
+        public class ForwardZoneRequest
+        {
+            public string Zone { get; set; }
+        }
 
-    public class RecursorZone
-    {
-        public string Id { get; set; }
-        public string Kind { get; set; } 
-        public string Name { get; set; }
-        public List<string> Servers { get; set; } = new();
-        public bool Recursion_Desired { get; set; }
-    }
+        public class ForwardZone
+        {
+            public string Name { get; set; }
+            public List<string> ForwardTo { get; set; } = new();
+        }
 
-    public class ForwardZoneRequest
-    {
-        public string Zone { get; set; }
-    }
-
-    public class ForwardZone
-    {
-        public string Name { get; set; }
-        public List<string> ForwardTo { get; set; } = new();
-    }
-
-    public class DnsZone
-    {
-        public string Name { get; set; }
+        public class DnsZone
+        {
+            public string Name { get; set; }
+        }
     }
 }

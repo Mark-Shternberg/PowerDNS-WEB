@@ -207,3 +207,21 @@ table a:hover span {
     left: 5vh;
     margin-top: -16px;
 }
+
+/* STYLING FOR LOG CONTAINERS */
+.log-container {
+    background-color: #1e1e1e;
+    color: #dcdcdc;
+    padding: 10px;
+    overflow-y: auto;
+    font-family: monospace;
+    border: 1px solid #444;
+    white-space: pre-wrap;
+    max-height: 800px;
+}
+
+.div-dnssec {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}

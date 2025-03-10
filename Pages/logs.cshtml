@@ -1,0 +1,54 @@
+﻿@page
+@model PowerDNS_Web.Pages.logsModel
+@{
+    ViewData["Title"] = "PowerDNS Logs";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center"><i class="fa fa-file-alt"></i> PowerDNS Logs</h2>
+
+    <!-- BUTTON TO REFRESH LOGS -->
+    <div class="text-center mb-3">
+        <button class="btn btn-primary" onclick="fetchPDNSLogs()">Refresh Logs</button>
+    </div>
+
+    <div class="row justify-content-center">
+        <!-- AUTHORITATIVE SERVER LOGS -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-dark text-white text-center">
+                    <h5><i class="fa fa-server"></i> PowerDNS Server Logs</h5>
+                </div>
+                <div class="card-body">
+                    <pre id="authoritativeLogs" class="log-container">Loading...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+<script>
+    async function fetchPDNSLogs() {
+        try {
+            const response = await fetch(window.location.pathname + "?handler=Logs", {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            });
+            const data = await response.json();
+
+            document.getElementById("authoritativeLogs").innerText = data.authoritativeLogs || "No logs available.";
+        } catch (error) {
+            console.error("Failed to load logs:", error);
+            document.getElementById("authoritativeLogs").innerText = "Error fetching logs.";
+        }
+    }
+
+    // AUTO UPDATE LOGS EVERY 5 SECONDS
+    setInterval(fetchPDNSLogs, 5000);
+    fetchPDNSLogs();
+</script>

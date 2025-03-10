@@ -166,6 +166,61 @@ async function save() {
     }
 }
 
+async function dnssecKeys(name) {
+    try {
+        const response = await fetch(window.location.pathname + "?handler=DnssecKeys&Name=" + encodeURIComponent(name), {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]').value
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Failed to get DNSSEC keys");
+        }
+        const keys = JSON.parse(result.keys);
+
+        // CHECK IF KEYS EXIST
+        if (!Array.isArray(keys) || keys.length === 0) {
+            throw new Error("No DNSSEC keys found.");
+        }
+        let keysHtml = "";
+        // PARSE DS RECORDS
+        keys.forEach((key, index) => {
+            keysHtml += `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fa fa-lock"></i> Key ID: ${key.id || "Unknown"} (${key.algorithm || "Unknown"}, ${key.bits || "Unknown"} bits)
+                        </h6>
+                        <p class="mb-2"><strong>DNSKEY:</strong> <code>${key.dnskey || "No DNSKEY"}</code></p>
+                        <p><strong>DS Records:</strong></p>
+                        <ul class="list-group">
+                            ${Array.isArray(key.ds) && key.ds.length > 0 ? key.ds.map(ds => `
+                                <li class="list-group-item justify-content-between align-items-center">
+                                    <code>${ds}</code>
+                                </li>
+                            `).join("") : "<li class='list-group-item text-danger'>No DS records available</li>"}
+                        </ul>
+                    </div>
+                </div>`;
+        });
+
+        document.getElementById("dsRecordsContainer").innerHTML = keysHtml;
+
+        // SHOW MODAL
+        let modal = new bootstrap.Modal(document.getElementById("dnssecKeysModal"), { backdrop: false });
+        modal.show();
+
+    } catch (error) {
+        console.error("Error loading DNSSEC keys:", error);
+        showAlertKeys(error.message, "danger");
+    }
+}
 
 function confirmDelete(zoneName) {
     document.getElementById("confirmMessage").textContent = `Are you sure you want to delete ${zoneName}?`;
@@ -217,6 +272,14 @@ function showAlertDelete(message, type) {
 
 function showAlertModal(message, type) {
     const alertContainer = document.getElementById("alertContainer-modal");
+    alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>`;
+}
+
+function showAlertKeys(message, type) {
+    const alertContainer = document.getElementById("alertContainer-keys");
     alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>

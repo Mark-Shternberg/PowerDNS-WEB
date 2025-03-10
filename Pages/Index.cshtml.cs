@@ -12,13 +12,26 @@ namespace PowerDNS_Web.Pages
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _apiUrl;
         private readonly string _apiKey;
+        private readonly string _recursorUrl;
+        private readonly string _recursorApiKey;
+        private readonly IConfiguration _configuration;
 
         public IndexModel(ILogger<ZonesModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
             _apiUrl = configuration["pdns:url"];
-            _apiKey = configuration["pdns:api-key"];
+            _apiKey = configuration["pdns:api_key"];
+
+            _recursorUrl = configuration["recursor:url"];
+            _recursorApiKey = configuration["recursor:api_key"];
+        }
+
+
+        public void OnGet()
+        {
+            ViewData["RecursorEnabled"] = _configuration["recursor:Enabled"] ?? "Disabled";
         }
 
         public async Task<IActionResult> OnGetStatsAsync()
@@ -26,37 +39,31 @@ namespace PowerDNS_Web.Pages
             try
             {
                 using var client = _httpClientFactory.CreateClient();
+
+                // GET AUTHORITATIVE SERVER STATS
+                client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Add("X-API-Key", _apiKey);
-                client.DefaultRequestHeaders.Add("Accept", "application/json");
+                var authResponse = await client.GetAsync($"{_apiUrl}/api/v1/servers/localhost/statistics");
+                var authStats = await DeserializeStatsAsync(authResponse);
 
-                var response = await client.GetAsync($"{_apiUrl}/api/v1/servers/localhost/statistics");
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError($"PowerDNS API error: {response.StatusCode} - {errorContent}");
-                    return new JsonResult(new { success = false, message = $"PowerDNS API error: {errorContent}" });
-                }
-
-                var json = await response.Content.ReadAsStringAsync();
-                var statsList = JsonSerializer.Deserialize<List<StatEntry>>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                if (statsList == null)
-                {
-                    return new JsonResult(new { success = false, message = "Stats is null" });
-                }
+                // GET RECURSOR STATS
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Add("X-API-Key", _recursorApiKey);
+                var recursorResponse = await client.GetAsync($"{_recursorUrl}/api/v1/servers/localhost/statistics");
+                var recursorStats = await DeserializeStatsAsync(recursorResponse);
 
                 return new JsonResult(new
                 {
                     success = true,
-                    cacheHits = statsList.FirstOrDefault(s => s.Name == "cache-hits")?.GetValueAsInt() ?? 0,
-                    cacheMisses = statsList.FirstOrDefault(s => s.Name == "cache-misses")?.GetValueAsInt() ?? 0,
-                    uptime = statsList.FirstOrDefault(s => s.Name == "uptime")?.GetValueAsInt() ?? 0,
-                    totalQueries = statsList.FirstOrDefault(s => s.Name == "udp-queries")?.GetValueAsInt() ?? 0,
-                    logs = statsList.FirstOrDefault(s => s.Name == "logmessages")?.GetRawJson() ?? "[]"
+                    cacheHits = authStats.GetValueOrDefault("cache-hits", 0),
+                    cacheMisses = authStats.GetValueOrDefault("cache-misses", 0),
+                    uptime = authStats.GetValueOrDefault("uptime", 0),
+                    totalQueries = authStats.GetValueOrDefault("udp-queries", 0),
+
+                    recursorCacheHits = recursorStats.GetValueOrDefault("cache-hits", 0),
+                    recursorCacheMisses = recursorStats.GetValueOrDefault("cache-misses", 0),
+                    recursorUptime = recursorStats.GetValueOrDefault("uptime", 0),
+                    recursorQueries = recursorStats.GetValueOrDefault("udp-queries", 0)
                 });
             }
             catch (Exception ex)
@@ -64,6 +71,23 @@ namespace PowerDNS_Web.Pages
                 _logger.LogError($"Exception in OnGetStatsAsync: {ex.Message}");
                 return new JsonResult(new { success = false, message = $"Internal server error: {ex.Message}" });
             }
+        }
+
+        private async Task<Dictionary<string, int>> DeserializeStatsAsync(HttpResponseMessage response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"API Error: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+                return new Dictionary<string, int>();
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var statsList = JsonSerializer.Deserialize<List<StatEntry>>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            return statsList?.ToDictionary(stat => stat.Name, stat => stat.GetValueAsInt()) ?? new Dictionary<string, int>();
         }
     }
 
@@ -75,15 +99,19 @@ namespace PowerDNS_Web.Pages
 
         public int GetValueAsInt()
         {
-            if (Value.ValueKind == JsonValueKind.Number)
-                return Value.GetInt32();
-            if (Value.ValueKind == JsonValueKind.String && int.TryParse(Value.GetString(), out int result))
-                return result;
-
-            return 0; 
+            try
+            {
+                if (Value.ValueKind == JsonValueKind.Number)
+                    return Value.GetInt32();
+                if (Value.ValueKind == JsonValueKind.String && int.TryParse(Value.GetString(), out int result))
+                    return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error parsing value for {Name}: {ex.Message}");
+            }
+            return 0;
         }
-
-        public string GetRawJson() => Value.GetRawText();
     }
 
 }

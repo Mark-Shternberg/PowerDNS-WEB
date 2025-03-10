@@ -23,8 +23,8 @@ namespace PowerDNS_Web.Pages.zone
         {
             _httpClient = httpClientFactory.CreateClient();
             _apiUrl = configuration["pdns:url"];
-            _apiKey = configuration["pdns:api-key"];
-            _default_IP = configuration["pdns:default-a"];
+            _apiKey = configuration["pdns:api_key"];
+            _default_IP = configuration["pdns:default_a"];
         }
 
         [BindProperty(SupportsGet = true)]

@@ -4,6 +4,16 @@
     ViewData["Title"] = "Recursor Forward Zones";
 }
 
+@if (ViewData["RecursorEnabled"]?.ToString() != "Enabled")
+{
+    <div class="alert alert-warning align-items-center" role="alert" style="display: flex">
+        <i class="fa fa-exclamation-triangle fa-2x me-2"></i>
+        <div>
+            Recursor is disabled in <a href="/settings">settings</a> page.
+        </div>
+    </div>
+}
+
 <div class="container mt-4">
     <h2>Recursor Forward Zones</h2>
 

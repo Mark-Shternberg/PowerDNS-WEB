@@ -2,110 +2,215 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using MySqlConnector;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace PowerDNS_Web.Pages
 {
     [Authorize(Roles = "Administrator")]
-    public class settingsModel : PageModel
+    public class SettingsModel : PageModel
     {
         private readonly IConfiguration _configuration;
-        private readonly IConfigurationSection _mysqlSection;
-        private readonly ILogger<IndexModel> _logger;
+        private readonly ILogger<SettingsModel> _logger;
 
         [BindProperty]
-        public MySQLConnectionSettings MySQLConnection { get; set; }
+        public AppSettingsModel Settings { get; set; }
 
-        public settingsModel(ILogger<IndexModel> logger, IConfiguration configuration)
+        public SettingsModel(ILogger<SettingsModel> logger, IConfiguration configuration)
         {
             _logger = logger;
             _configuration = configuration;
-            _mysqlSection = _configuration.GetSection("MySQLConnection");
-            MySQLConnection = _mysqlSection.Get<MySQLConnectionSettings>();
+
+            // LOAD SETTINGS FROM CONFIGURATION
+            Settings = new AppSettingsModel
+            {
+                MySQL = _configuration.GetSection("MySQLConnection").Get<MySQLConnectionSettings>() ?? new MySQLConnectionSettings(),
+                PowerDNS = _configuration.GetSection("pdns").Get<PowerDNSSettings>() ?? new PowerDNSSettings(),
+                Recursor = _configuration.GetSection("recursor").Get<RecursorSettings>() ?? new RecursorSettings()
+            };
         }
 
         public void OnGet()
         {
-            // Эта часть уже выполнена в конструкторе, MySQLConnection будет заполнен при запросе страницы.
-        }
-
-        public IActionResult OnPost()
-        {
-            if (!ModelState.IsValid)
-            {
-                return Page();
-            }
-
-            // Сохраняем изменения в конфигурации (например, записать обратно в appsettings.json, если необходимо)
-            // Это нужно будет настроить через механизм хранения настроек, например, в базе данных или другом хранилище.
-
-            // Если все хорошо, возвращаем страницу с сообщением об успешном обновлении.
-            return RedirectToPage("Settings");
         }
 
         // SAVE SETTINGS
-        public async Task<IActionResult> OnPostSave_settings([FromBody] MySQLConnectionSettings model)
+        public async Task<IActionResult> OnPostSaveSettings([FromBody] AppSettingsModel model)
         {
             try
             {
-                // Проверяем подключение к MySQL
-                var connectionString = $"Server={model.Server};User ID={model.User};Password={model.Password};Database={model.Database};";
-                using (var connection = new MySqlConnection(connectionString))
+                // VALIDATE INPUT DATA
+                if (string.IsNullOrWhiteSpace(model.MySQL.Server) ||
+                    string.IsNullOrWhiteSpace(model.MySQL.User) ||
+                    string.IsNullOrWhiteSpace(model.MySQL.Database) ||
+                    string.IsNullOrWhiteSpace(model.PowerDNS.Url) ||
+                    string.IsNullOrWhiteSpace(model.PowerDNS.Api_Key) ||
+                    string.IsNullOrWhiteSpace(model.Recursor.Url) ||
+                    string.IsNullOrWhiteSpace(model.Recursor.Api_Key) ||
+                    string.IsNullOrWhiteSpace(model.Recursor.Enabled))
                 {
-                    await connection.OpenAsync(); // Проверяем подключение
+                    return new JsonResult(new { success = false, message = "All fields must be filled!" });
                 }
 
-                // Путь к файлу конфигурации
+                // CHECK CONNECTION TO MYSQL
+                string connectionString = $"Server={model.MySQL.Server};User ID={model.MySQL.User};Password={model.MySQL.Password};Database={model.MySQL.Database};";
+                using (var connection = new MySqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+                }
+
+                // PATH TO APPSETTINGS.JSON
                 string appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
 
                 if (!System.IO.File.Exists(appSettingsPath))
                 {
-                    return new JsonResult(new { success = false, message = "Файл конфигурации не найден." });
+                    return new JsonResult(new { success = false, message = "Configuration file not found." });
                 }
 
-                // Загружаем текущие настройки
+                // LOAD CURRENT SETTINGS
                 string json = await System.IO.File.ReadAllTextAsync(appSettingsPath);
                 var jsonDoc = JsonDocument.Parse(json);
-                var jsonObject = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonDoc.RootElement.ToString());
+                var jsonObject = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonDoc.RootElement.ToString()) ?? new Dictionary<string, object>();
 
-                // Обновляем секцию MySQL
-                if (jsonObject.ContainsKey("MySQLConnection"))
-                {
-                    jsonObject["MySQLConnection"] = model;
-                }
-                else
-                {
-                    jsonObject.Add("MySQLConnection", model);
-                }
+                // UPDATE SETTINGS
+                jsonObject["MySQLConnection"] = model.MySQL;
+                jsonObject["pdns"] = model.PowerDNS;
+                jsonObject["recursor"] = model.Recursor;
 
-                // Сериализуем обратно в JSON
                 string updatedJson = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
 
-                // Записываем обратно в файл
+                // WRITE CHANGES
                 await System.IO.File.WriteAllTextAsync(appSettingsPath, updatedJson);
 
-                return new JsonResult(new { success = true, message = "Настройки сохранены!" });
+                // UPDATE SYSTEM SERVICES AND CONFIGURATION
+                bool recursorEnabled = model.Recursor.Enabled.Equals("Enabled", StringComparison.OrdinalIgnoreCase);
+                await UpdateRecursorStatus(recursorEnabled);
+
+                return new JsonResult(new { success = true, message = "Settings saved successfully!" });
             }
             catch (MySqlException ex)
             {
-                _logger.LogError(ex, "Ошибка подключения к MySQL");
-                return new JsonResult(new { success = false, message = "Невозможно подключиться к базе" });
+                _logger.LogError(ex, "MySQL connection error");
+                return new JsonResult(new { success = false, message = "MySQL connection error: " + ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при сохранении настроек");
-                return new JsonResult(new { success = false, message = "Ошибка при сохранении настроек" });
+                _logger.LogError(ex, "Settings save error");
+                return new JsonResult(new { success = false, message = "Save settings error: " + ex.Message });
             }
         }
 
+        private async Task UpdateRecursorStatus(bool enable)
+        {
+            try
+            {
+                string pdnsConfigPath = "/etc/powerdns/pdns.conf";
+                string recursorService = "pdns-recursor";
+                string pdnsService = "pdns";
+
+                // UPDATE pdns.conf
+                if (System.IO.File.Exists(pdnsConfigPath))
+                {
+                    string[] configLines = await System.IO.File.ReadAllLinesAsync(pdnsConfigPath);
+                    for (int i = 0; i < configLines.Length; i++)
+                    {
+                        if (configLines[i].StartsWith("local-port="))
+                        {
+                            configLines[i] = enable ? "local-port=5300" : "local-port=53";
+                        }
+                    }
+                    await System.IO.File.WriteAllLinesAsync(pdnsConfigPath, configLines);
+                }
+
+                if (enable)
+                {
+                    // ENABLE AND START RECURSOR
+                    ExecuteBashCommand($"systemctl enable {recursorService}");
+                    ExecuteBashCommand($"systemctl start {recursorService}");
+                }
+                else
+                {
+                    // STOP AND DISABLE RECURSOR
+                    ExecuteBashCommand($"systemctl stop {recursorService}");
+                    ExecuteBashCommand($"systemctl disable {recursorService}");
+                }
+
+                // RESTART POWERDNS
+                ExecuteBashCommand($"systemctl restart {pdnsService}");
+
+                _logger.LogInformation($"Recursor status updated: {(enable ? "Enabled" : "Disabled")}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to update recursor status: {ex.Message}");
+            }
+        }
+
+        private void ExecuteBashCommand(string command)
+        {
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"{command}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using (Process process = Process.Start(psi))
+                {
+                    process.WaitForExit();
+                    string output = process.StandardOutput.ReadToEnd();
+                    string error = process.StandardError.ReadToEnd();
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        _logger.LogError($"Command '{command}' error: {error}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to execute command '{command}': {ex.Message}");
+            }
+        }
+    }
+
+    public class AppSettingsModel
+    {
+        public MySQLConnectionSettings MySQL { get; set; } = new();
+        public PowerDNSSettings PowerDNS { get; set; } = new();
+        public RecursorSettings Recursor { get; set; } = new();
     }
 
     public class MySQLConnectionSettings
     {
-        public string Server { get; set; }
-        public string User { get; set; }
-        public string Password { get; set; }
-        public string Database { get; set; }
+        public string Server { get; set; } = string.Empty;
+        public string User { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Database { get; set; } = string.Empty;
     }
 
+    public class PowerDNSSettings
+    {
+        public string Url { get; set; } = string.Empty;
+        public string Api_Key { get; set; } = string.Empty;
+        public string Default_A { get; set; } = string.Empty;
+        public SOASettings SOA { get; set; } = new();
+    }
+
+    public class SOASettings
+    {
+        public string Ns { get; set; } = string.Empty;
+        public string Mail { get; set; } = string.Empty;
+    }
+
+    public class RecursorSettings
+    {
+        public string Url { get; set; } = string.Empty;
+        public string Api_Key { get; set; } = string.Empty;
+        public string Enabled { get; set; } = "Disabled"; 
+    }
 }

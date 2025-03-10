@@ -70,15 +70,16 @@
     </div>
 </div>
 
+<div id="alertContainer-keys" style="width: 100%;"></div>
 <table class="table table-hover" id="main_table">
     <thead class="table-dark">
         <tr>
             <th>Domain</th>
             <th style="width: 150px;">Master server</th>
             <th style="width: 150px;">Zone type</th>
-            <th style="width: 150px;">DNSSEC</th>
+            <th style="width: 180px;">DNSSEC</th>
             <th style="width: 150px;">Serial</th>
-            <th style="width: 150px;"></th>
+            <th style="width: 200px;">Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -108,7 +109,10 @@
                 <td>
                     @if (zone.dnssec)
                     {
-                        <i class="fa fa-key text-success" title="DNSSEC Enabled"></i> <span>Enabled</span>
+                        <div class="div-dnssec">
+                        <i class="fa fa-key text-success" title="DNSSEC Enabled"></i> <span style="margin: 0 5px 0 5px">Enabled</span>
+                        <button class="btn btn-default" onclick="dnssecKeys('@zone.name')">Keys</button>
+                        </div>
                     }
                     else
                     {
@@ -117,11 +121,15 @@
                 </td>
                 <td>@zone.serial</td>
                 <td>
-                    <button class="btn btn-edit"
+                    <button class="btn btn-warning"
                             onclick="openEditModal('@zone.name', '@zone.kind', '@zone.Master', '@zone.dnssec', '@zone.serial')">
+                        <i class="fa fa-edit"></i>
                         Edit
                     </button>
-                    <button class="btn btn-delete" onclick="confirmDelete('@zone.name')">Delete</button>
+                    <button class="btn btn-delete" onclick="confirmDelete('@zone.name')">
+                        <i class="fa fa-trash"></i>
+                        Delete
+                    </button>
                 </td>
             </tr>
         }
@@ -136,6 +144,32 @@
         <div class="modal-buttons">
             <button id="confirmNo" class="btn btn-default">Cancel</button>
             <button id="confirmYes" class="btn btn-danger">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- DNSSEC KEYS MODAL -->
+<div class="modal fade" id="dnssecKeysModal" tabindex="-1" aria-labelledby="dnssecKeysModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="dnssecKeysModalLabel">
+                    <i class="fa fa-key"></i> DNSSEC Keys
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- WARNING MESSAGE -->
+                <div class="alert alert-warning align-items-center" role="alert">
+                    <i class="fa fa-exclamation-triangle fa-2x me-2"></i>
+                    <div>
+                        The DS records below <strong>must</strong> be provided to your domain registrar for DNSSEC to function correctly.
+                    </div>
+                </div>
+
+                <!-- DS RECORDS CONTAINER -->
+                <div id="dsRecordsContainer"></div>
+            </div>
         </div>
     </div>
 </div>
