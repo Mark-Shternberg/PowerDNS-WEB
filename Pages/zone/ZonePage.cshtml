@@ -391,7 +391,6 @@
             }
         }
 
-        // Открываем модальное окно без backdrop
         var editModal = new bootstrap.Modal(document.getElementById("editRecordModal"), { backdrop: false });
         editModal.show();
     }
@@ -409,7 +408,7 @@
         if (!deleteTarget) return;
 
         const { name, type, value, button } = deleteTarget;
-        document.getElementById("confirmModal").style.display = "none"; // Скрываем окно после подтверждения
+        document.getElementById("confirmModal").style.display = "none";
 
         try {
             const response = await fetch(window.location.pathname + "?handler=DeleteRecord", {

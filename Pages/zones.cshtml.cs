@@ -94,6 +94,7 @@ namespace PowerDNS_Web.Pages
                 {
                     name = request.name,
                     kind = request.kind,
+                    dnssec = request.dnssec,
                     masters = request.kind == "Slave" && !string.IsNullOrEmpty(request.Master)
                         ? new List<string> { request.Master }
                         : null 

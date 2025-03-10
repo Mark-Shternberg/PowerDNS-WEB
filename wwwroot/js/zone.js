@@ -75,10 +75,8 @@ async function addZone() {
     const name = document.getElementById("modal-domain").value.trim();
     const kind = document.getElementById("modal-type").value;
     const master = document.getElementById("modal-type").value === "Slave" ? document.getElementById("modal-mserver").value.trim() : "";
-    const dnssec = document.getElementById("modal-dnssec").value === "Enabled";
+    var dnssec = document.getElementById("modal-dnssec").value;
     const serial = 0;
-
-    let zoneData = { Name: name, Kind: kind, Master: master, Dnssec: dnssec, Serial: serial };
 
     const errorMessage = validateZoneName(name);
 
@@ -89,10 +87,15 @@ async function addZone() {
 
     if (kind === "Slave") {
         if (validateIPv4(master)) {
-            showAlertModal(validateIP(master), "danger");
+            showAlertModal(validateIPv4(master), "danger");
             return;
         }
     }
+
+    if (dnssec === "Enabled") dnssec = true;
+    else dnssec = false;
+
+    let zoneData = { Name: name, Kind: kind, Master: master, Dnssec: dnssec, Serial: serial };
 
     try {
         const response = await fetch(window.location.pathname + "?handler=AddZone", {
@@ -132,10 +135,12 @@ async function save() {
         Serial: serial
     };
 
-    const errorMessage = validateIP(master);
-    if (errorMessage) {
-        showAlertModal(errorMessage, "danger");
-        return;
+    if (kind === "Slave") {
+        const errorMessage = validateIPv4(master);
+        if (errorMessage) {
+            showAlertModal(errorMessage, "danger");
+            return;
+        }
     }
 
     try {

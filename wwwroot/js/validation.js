@@ -59,3 +59,23 @@ function validateSubdomain(subdomain) {
     }
     return "Invalid subdomain name.";
 }
+
+function validateIPv4withPort(ip) {
+    const ipv4WithPortPattern = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}:(\d{1,5})$/;
+
+    if (ip.trim() === "") {
+        return "Please enter an IP address with port (e.g., 1.1.1.1:53).";
+    }
+
+    const match = ip.match(ipv4WithPortPattern);
+    if (!match) {
+        return "Invalid format. Use IP:Port (e.g., 8.8.8.8:53).";
+    }
+
+    const port = parseInt(match[4], 10);
+    if (port < 1 || port > 65535) {
+        return "Port must be between 1 and 65535.";
+    }
+
+    return "";
+}
