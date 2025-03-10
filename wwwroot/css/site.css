@@ -50,11 +50,6 @@ tr {
     color: white;
 }
 
-.btn-edit {
-    background-color: cornflowerblue;
-    color: white;
-}
-
 .row {
     margin: 10px;
     justify-content: center !important;

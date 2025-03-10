@@ -51,7 +51,12 @@
             {
                 <tr>
                     <td>@zone.Name</td>
-                    <td>@string.Join(", ", zone.ForwardTo)</td>
+                    <td>@if(zone.Name == ".") { 
+                            @string.Join(", ", zone.ForwardTo)
+                        } else {
+                            <a>Authoritative server</a>
+                        }
+                    </td>
                     <td>
                         @if (zone.Name != ".")
                         {

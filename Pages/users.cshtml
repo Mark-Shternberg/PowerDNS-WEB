@@ -1,83 +1,115 @@
 ﻿@page
 @model PowerDNS_Web.Pages.userModel
 @{
+    ViewData["Title"] = "User Management";
 }
-<div style="display:flex;justify-content: center;">
-    <form class="add-item-block" id="loginForm" method="post" enctype="multipart/form-data" style="text-align:center; width: 500px;">
-        <input class="form-field" name="username" id="username" type="text" placeholder="Username" required />
-        <br />
-        <label for="role">Select role:</label>
-        <select class="form-field" name="role" id="role" list="RolesList">
-            <option value="Administrator">Administrator</option>
-            <option value="ReadOnly">ReadOnly</option>
-        </select>
-        <br />
-        <input class="form-field" name="password" id="password" type="password" placeholder="Password" required />
-        <br />
-        <div style="text-align:center">
-            <button type="submit" id="btn-save" class="btn btn-save">Добавить</button>
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">User Management</h2>
+
+    <!-- FLEX CONTAINER -->
+    <div class="row">
+        <!-- ADD USER FORM (LEFT) -->
+        <div class="col-md-4">
+            <div class="card p-4 shadow">
+                <h5 class="text-center mb-3">Add New User</h5>
+                <form id="loginForm" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <input class="form-control" name="username" id="username" type="text" placeholder="Username" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Select Role:</label>
+                        <select class="form-control" name="role" id="role">
+                            <option value="Administrator">Administrator</option>
+                            <!--<option value="ReadOnly">ReadOnly</option>-->
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <input class="form-control" name="password" id="password" type="password" placeholder="Password" required />
+                    </div>
+
+                    <button type="submit" id="btn-save" class="btn btn-primary w-100">Add User</button>
+                </form>
+            </div>
         </div>
-    </form>
-</div>
 
-<div style="display: flex; justify-content: center;">
-    <table class="table" id="main_table" style="width: 700px;">
-        <thead>
-            <tr>
-                <th>Логин</th>
-                <th>Роль</th>
-                <th></th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.main_table != null)
-            {
-                @foreach (var item in Model.main_table)
-                {
-                    <tr id="row_@item.username">
-                        <td><a>@item.username</a></td>
-                        <td>
-                            <a id="role_old_@item.username">@item.role</a>
-                            <select hidden name="role" id="role_new_@item.username">
-                                <option value="Administrator" selected="@(item.role == "Administrator" ? "selected" : null)">Administrator</option>
-                                <option value="ReadOnly" selected="@(item.role == "ReadOnly" ? "selected" : null)">ReadOnly</option>
-                            </select>
-                        </td>
-                        <td>
-                            <div style="display: flex">
-                                <input hidden name="password" id="password_new_@item.username" placeholder="New password">
-                            </div>
-                        </td>
-                        <td>
-                            <div style="display: flex">
-                                <button type="button" class="btn btn-edit" data-id="@item.username" style="margin-right: 10px;">Редактировать</button>
-                                <button hidden type="button" id="cancel_@item.username" class="btn btn-default" data-id="@item.username" style="margin-right: 10px;">Отмена</button>
-                                <button hidden type="button" class="btn btn-save btn-save-edit" data-id="@item.username" style="margin-right: 10px;">Сохранить</button>
-                                <button type="button" class="btn btn-delete" data-id="@item.username">Удалить</button>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            }
-        </tbody>
-    </table>
-</div>
-
-<div id="confirmModal" class="modal">
-    <div class="modal-content">
-        <p id="confirmMessage"></p>
-        <div class="modal-buttons">
-            <button id="confirmNo" class="btn btn-default">Отмена</button>
-            <button id="confirmYes" class="btn btn-delete">Удалить</button>
+        <!-- USERS TABLE (RIGHT) -->
+        <div class="col-md-8">
+            <div class="table-responsive">
+                <table class="table table-hover text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Password</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.main_table != null)
+                        {
+                            @foreach (var item in Model.main_table)
+                            {
+                                <tr id="row_@item.username">
+                                    <td><strong>@item.username</strong></td>
+                                    <td>
+                                        <span id="role_old_@item.username">@item.role</span>
+                                        <select hidden name="role" id="role_new_@item.username" class="form-control">
+                                            <option value="Administrator" selected="@(item.role == "Administrator" ? "selected" : null)">Administrator</option>
+                                            <!--<option value="ReadOnly" selected="@(item.role == "ReadOnly" ? "selected" : null)">ReadOnly</option>-->
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input hidden name="password" id="password_new_@item.username" class="form-control" placeholder="New password">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-warning btn-sm btn-edit" data-id="@item.username">
+                                            <i class="fa fa-edit"></i>
+                                        </button>
+                                        <button hidden type="button" id="cancel_@item.username" class="btn btn-sm btn-default" data-id="@item.username">Cancel</button>
+                                        <button hidden type="button" class="btn btn-success btn-sm btn-save-edit" data-id="@item.username">Save</button>
+                                        <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="@item.username">
+                                            <i data-id="@item.username" class="fa fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- CONFIRM DELETE MODAL -->
+<div id="confirmModal" class="modal fade" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmNo" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="confirmYes" class="btn btn-danger ">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- NOTIFICATION -->
 <div id="notification" class="notification">
     <span id="notification-message"></span>
 </div>
+
 @Html.AntiForgeryToken()
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -95,8 +127,8 @@
 
         // FOR NEW ROWS
         document.addEventListener('click', function (event) {
-            if (event.target.classList.contains('btn-delete')) {
-                deleteUser(event.target);
+            if (event.target.closest('.btn-delete')) {
+                deleteUser(event);
             }
         });
 
@@ -128,11 +160,11 @@
         const password = document.getElementById('password').value;
 
         if (password === "" || username === "") {
-            showNotification('Error. Поля логина и пароля не должны быть пустыми', 2);
+            showNotification('Error. Fill all fields', 2);
             return;
         }
 
-        const response = await fetch('/admin?handler=add_new_user', {
+        const response = await fetch(window.location.pathname +'?handler=add_new_user', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -145,73 +177,38 @@
             let newModel = await response.json();
 
             if (!newModel.success) {
-                showNotification('Ошибка при регистрации! ' + newModel.message, 2);
+                showNotification('Registration error: ' + newModel.message, 2);
                 return;
             }
 
-            showNotification('Пользователь зарегистрирован!', 1);
+            showNotification('User added!', 1);
 
-            // Добавляем новую строку в таблицу
-            const tableBody = document.querySelector("tbody");
-            let newRow = document.createElement("tr");
-            newRow.id = `row_${username}`;
-            newRow.innerHTML = `
-                <td><a>${username}</a></td>
-                <td>
-                    <a id="role_old_${username}">${role}</a>
-                    <select hidden name="role" id="role_new_${username}">
-                        <option value="Administrator" ${role === "Administrator" ? "selected" : ""}>Administrator</option>
-                        <option value="ReadOnly" ${role === "ReadOnly" ? "selected" : ""}>ReadOnly</option>
-                    </select>
-                </td>
-                <td>
-                    <div style="display: flex">
-                        <input hidden name="password" id="password_new_${username}" placeholder="New password">
-                    </div>
-                </td>
-                <td>
-                    <div style="display: flex">
-                        <button type="button" class="btn btn-edit" data-id="${username}" style="margin-right: 10px;">Редактировать</button>
-                        <button hidden type="button" id="cancel_${username}" class="btn btn-default" data-id="${username}" style="margin-right: 10px;">Отмена</button>
-                        <button hidden type="button" class="btn btn-save btn-save-edit" data-id="${username}" style="margin-right: 10px;">Сохранить</button>
-                        <button type="button" class="btn btn-delete" data-id="${username}">Удалить</button>
-                    </div>
-                </td>
-            `;
-
-            tableBody.appendChild(newRow);
-
-            // Очистка полей формы
-            document.getElementById('username').value = "";
-            document.getElementById('password').value = "";
-            document.getElementById('role').value = "ReadOnly";
+            setTimeout(() => location.reload(), 1500);
         } else {
-            showNotification('Ошибка при добавлении пользователя.', 2);
+            showNotification('Registration error.', 2);
         }
     });
 
     // DELETE USER
-    async function deleteUser(button) {
+    async function deleteUser(event) {
+        let button = event.target.closest('button');
         let username = button.getAttribute('data-id');
         let row = document.getElementById('row_' + username);
 
-        // Получаем элементы модального окна
-        let modal = document.getElementById('confirmModal');
+        let modalElement = document.getElementById('confirmModal');
         let confirmMessage = document.getElementById('confirmMessage');
         let confirmYes = document.getElementById('confirmYes');
         let confirmNo = document.getElementById('confirmNo');
 
-        // Устанавливаем текст
-        confirmMessage.textContent = `Вы уверены, что хотите удалить пользователя "${username}"?`;
+        confirmMessage.textContent = `Are you sure you want to delete user: "${username}"?`;
 
-        // Показываем модальное окно
-        modal.style.display = "block";
+        let confirmModal = new bootstrap.Modal(modalElement, { backdrop: false });
+        confirmModal.show();
 
-        // Если нажали "Удалить"
         confirmYes.onclick = async function () {
-            modal.style.display = "none";
+            confirmModal.hide();
 
-            let response = await fetch('/admin?handler=Delete_user', {
+            let response = await fetch(window.location.pathname +'?handler=Delete_user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -221,23 +218,23 @@
             });
 
             if (response.ok) {
-                modal.style.display = "none";
+                confirmModal.hide();
                 let result = await response.json();
                 if (!result.success) {
-                    showNotification('Ошибка: ' + result.message, 2);
+                    showNotification('Error:: ' + result.message, 2);
                     return;
                 }
 
-                showNotification(`Пользователь "${username}" удалён.`, 1);
+                showNotification(`User "${username}" deleted.`, 1);
                 row.remove();
             } else {
-                showNotification('Ошибка при удалении пользователя.', 2);
+                showNotification('User deletion error.', 2);
             }
         };
 
-        // Если нажали "Отмена"
+        // CANCEL
         confirmNo.onclick = function () {
-            modal.style.display = "none"; // Закрываем модальное окно
+            confirmModal.hide();
         };
     }
 
@@ -266,7 +263,7 @@
         let role = row.querySelector('#role_new_' + rowId).value;
         let password = row.querySelector('#password_new_' + rowId).value;
 
-        let response = await fetch('/admin?handler=Update_user', {
+        let response = await fetch(window.location.pathname + '?handler=Update_user', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -282,11 +279,11 @@
         if (response.ok) {
             let newModel = await response.json();
             if (!newModel.success) {
-                showNotification('Ошибка при сохранении: ' + newModel.message, 2);
+                showNotification('Save error: ' + newModel.message, 2);
                 return;
             }
 
-            showNotification('Данные успешно обновлены!', 1);
+            showNotification('Save successful!', 1);
 
             row.querySelector('#password_new_' + rowId).hidden = true;
             row.querySelector('#role_old_' + rowId).textContent = role;
@@ -298,7 +295,7 @@
             row.querySelector('#cancel_' + rowId).hidden = true;
             row.querySelector('.btn-delete[data-id="' + rowId + '"]').hidden = false;
         } else {
-            showNotification('Ошибка при обновлении данных.', 2);
+            showNotification('Save error.', 2);
         }
     }
 

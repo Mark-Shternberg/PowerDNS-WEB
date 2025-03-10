@@ -55,7 +55,7 @@
 <div style="text-align:center">
     @if (User.IsInRole("Administrator"))
     {
-        <button type="button" onclick="showModal()" class="btn btn-save" style="margin-bottom:15px">Add new zone</button>
+        <button type="button" onclick="showModal()" class="btn btn-primary" style="margin-bottom:15px">Add new zone</button>
     }
     <br />
     <div id="search-div" style="display: flex; justify-content: center; margin-bottom: 10px;">
@@ -148,6 +148,7 @@
 <script src="~/js/search.js"></script>
 <script src="~/js/zone.js"></script>
 <script src="~/js/validation.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const searchInput = document.getElementById("search");

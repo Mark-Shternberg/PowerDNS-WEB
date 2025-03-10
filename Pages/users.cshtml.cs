@@ -68,20 +68,20 @@ namespace PowerDNS_Web.Pages
             }
             catch (MySqlException ex)
             {
-                _logger.LogError(ex, "Ошибка при проверке количества администраторов");
+                _logger.LogError(ex, "Error");
             }
 
             LoadMainTable();
         }
 
-        private void LoadMainTable() //ЗАГРУЗКА ТАБЛИЦЫ
+        private void LoadMainTable() // LOAD USERS
         {
             using var connection = new MySqlConnection(sql_connection());
             connection.Open();
 
             using var command = new MySqlCommand("SELECT username,role FROM users ORDER BY id DESC", connection);
 
-            using var reader_main = command.ExecuteReader(); // ПОЛУЧЕНИЕ ТАБЛИЦЫ ИНВЕНТАРИЗАЦИЙ
+            using var reader_main = command.ExecuteReader();
             if (reader_main.HasRows)
             {
                 DataTable dt = new DataTable();
@@ -99,9 +99,9 @@ namespace PowerDNS_Web.Pages
             try
             {
                 using var connection = new MySqlConnection(sql_connection());
-                await connection.OpenAsync(); // Асинхронное открытие соединения
+                await connection.OpenAsync(); 
 
-                // Проверяем, существует ли уже такой логин
+                // CHECK FOR DUPLICATES
                 string checkQuery = "SELECT COUNT(*) FROM users WHERE username = @username";
                 using (var cmd = new MySqlCommand(checkQuery, connection))
                 {
@@ -109,11 +109,11 @@ namespace PowerDNS_Web.Pages
                     var result = await cmd.ExecuteScalarAsync(); 
                     if (Convert.ToInt32(result) > 0)
                     {
-                        return new JsonResult(new { success = false, message = "Пользователь с таким логином уже существует." });
+                        return new JsonResult(new { success = false, message = "A user with such a login already exists." });
                     }
                 }
 
-                // Добавляем нового пользователя в базу данных
+                // ADD NEW USER
                 var hashedPassword = BCrypt.Net.BCrypt.HashPassword(model.password);
                 string insertQuery = "INSERT INTO users (username, role, password) VALUES (@username, @role, @password)";
                 using (var cmd = new MySqlCommand(insertQuery, connection))
@@ -124,19 +124,17 @@ namespace PowerDNS_Web.Pages
                     await cmd.ExecuteNonQueryAsync(); 
                 }
 
-                return new JsonResult(new { success = true, message = "Пользователь успешно добавлен!" });
+                return new JsonResult(new { success = true });
             }
             catch (MySqlException ex)
             {
-                // Логирование ошибок от MySQL
                 _logger.LogError(ex.Message, "Error occurred while sending MySQL command");
-                return new JsonResult(new { success = false, message = "Ошибка базы данных: " + ex.Message });
+                return new JsonResult(new { success = false, message = "SQL error: " + ex.Message });
             }
             catch (Exception ex)
             {
-                // Логирование общих ошибок
                 _logger.LogError(ex.Message, "General error");
-                return new JsonResult(new { success = false, message = "Ошибка: " + ex.Message });
+                return new JsonResult(new { success = false, message = "Error: " + ex.Message });
             }
         }
 
@@ -149,9 +147,8 @@ namespace PowerDNS_Web.Pages
                 else sql = "UPDATE users SET role=@role, password=@password WHERE (username=@username)";
 
                 using var connection = new MySqlConnection(sql_connection());
-                await connection.OpenAsync(); // Асинхронное открытие соединения
+                await connection.OpenAsync();
 
-                // Добавляем нового пользователя в базу данных
                 var hashedPassword = BCrypt.Net.BCrypt.HashPassword(model.password);
                 using (var cmd = new MySqlCommand(sql, connection))
                 {
@@ -161,23 +158,21 @@ namespace PowerDNS_Web.Pages
                     await cmd.ExecuteNonQueryAsync();
                 }
 
-                return new JsonResult(new { success = true, message = "Пользователь успешно обновлён!" });
+                return new JsonResult(new { success = true });
             }
             catch (MySqlException ex)
             {
-                // Логирование ошибок от MySQL
                 _logger.LogError(ex.Message, "Error occurred while sending MySQL command");
-                return new JsonResult(new { success = false, message = "Ошибка базы данных: " + ex.Message });
+                return new JsonResult(new { success = false, message = "SQL error: " + ex.Message });
             }
             catch (Exception ex)
             {
-                // Логирование общих ошибок
                 _logger.LogError(ex.Message, "General error");
-                return new JsonResult(new { success = false, message = "Ошибка: " + ex.Message });
+                return new JsonResult(new { success = false, message = "Error: " + ex.Message });
             }
         }
 
-        public async Task<IActionResult> OnPostDelete_user([FromBody] main_table_model model) //ОБРАБОТКА ПРИ УДАЛЕНИИ МОДЕЛИ
+        public async Task<IActionResult> OnPostDelete_user([FromBody] main_table_model model) // DELETE USER
         {
             int adminCount;
             try
@@ -211,7 +206,7 @@ namespace PowerDNS_Web.Pages
                                     if (role == "Administrator")
                                     {
                                         LoadMainTable();
-                                        return new JsonResult(new { success = false, message = "Нельзя удалять единственного администратора!" });
+                                        return new JsonResult(new { success = false, message = "You cannot delete the only administrator!" });
                                     }
                                 }
                             }
@@ -225,15 +220,13 @@ namespace PowerDNS_Web.Pages
                     command.Prepare();
 
                     int error = 0;
-                    //--------------------------------ТАБЛИЦА------------------
                     if (model.username != null && model.username != "")
                     {
                         command.Parameters.AddWithValue("?username", model.username);
                     }
                     else error++;
-                    //---------------------------------------------------
 
-                    //---------ЗАПИСЬ И ВЫХОД------------
+                    //---------EXECUTE------------
                     if (error == 0)
                     {
                         command.ExecuteNonQuery();
@@ -248,19 +241,16 @@ namespace PowerDNS_Web.Pages
             }
             catch (MySqlException ex)
             {
-                // Получаем код ошибки и её текст от MySQL
                 _logger.LogError(ex.Message, "Error occurred while send mysql command");
-                Console.WriteLine($"MySQL Error Code: {ex.Number}");
-                Console.WriteLine($"Error Message: {ex.Message}");
                 return new JsonResult(new { success = false, message = "Error: " + ex.Message });
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                _logger.LogError(ex.Message, "General error");
                 return new JsonResult(new { success = false, message = "Error: " + ex.ToString() });
             }
             LoadMainTable();
-            return new JsonResult(new { success = true, message = "Пользователь успешно удалён!" });
+            return new JsonResult(new { success = true });
         }
 
     }
