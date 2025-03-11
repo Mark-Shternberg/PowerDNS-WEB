@@ -61,21 +61,23 @@
             {
                 <tr>
                     <td>@zone.Name</td>
-                    <td>@if(zone.Name == ".") { 
-                            @string.Join(", ", zone.ForwardTo)
-                        } else {
-                            <a>Authoritative server</a>
+                    <td>@{
+                            var displayList = zone.ForwardTo.Select(f => f.Trim() == "127.0.0.1:5300" ? "Authoritative server" : f);
+                            @string.Join(", ", displayList)
                         }
                     </td>
                     <td>
                         @if (zone.Name != ".")
                         {
+                            <button class="btn btn-warning btn-sm" onclick="editZone('@zone.Name','@string.Join(", ", zone.ForwardTo)')">
+                                <i class="fa fa-edit"></i> Edit
+                            </button>
                             <button class="btn btn-danger btn-sm" onclick="removeForwardZone('@zone.Name', this)">
                                 <i class="fa fa-trash"></i> Remove
                             </button>
                         }
                         else {
-                            <button class="btn btn-warning btn-sm" onclick="editWildcardZone('@string.Join(", ", zone.ForwardTo)')">
+                            <button class="btn btn-warning btn-sm" onclick="editZone('@zone.Name','@string.Join(", ", zone.ForwardTo)')">
                                 <i class="fa fa-edit"></i> Edit
                             </button>
                         }
@@ -102,7 +104,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editZoneModalLabel">Edit main zone</h5>
+                <h5 class="modal-title" id="editZoneModalLabel">Edit <a id="zone_name-modal"></a> zone</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -116,6 +118,12 @@
                     </div>
 
                     <div id="alertContainer-edit"></div>
+                    <!-- INFO BLOCK -->
+                    <div class="modal-footer">
+                        <div class="alert alert-info w-100 text-center m-0" role="alert">
+                            <i class="fa fa-info-circle"></i> 127.0.0.1:5300 - Authoritative server
+                        </div>
+                    </div>
 
                     <button type="button" class="btn btn-warning w-100" onclick="saveRecord()">Save Changes</button>
                 </form>
@@ -272,7 +280,7 @@
         }
     }
 
-    function editWildcardZone(forwardTo) {
+    function editZone(name, forwardTo) {
         const dnsContainer = document.getElementById("editZoneDNSContainer");
         dnsContainer.innerHTML = "";
 
@@ -284,6 +292,7 @@
         }
 
         dnsList.forEach((dns, index) => addDnsField(dns, index > 0));
+        document.getElementById("zone_name-modal").textContent = name;
 
         var editModal = new bootstrap.Modal(document.getElementById("editZoneModal"), { backdrop: false });
         editModal.show();
@@ -337,6 +346,7 @@
     function saveRecord() {
         const inputs = document.querySelectorAll("#editZoneDNSContainer input");
         const dnsServers = Array.from(inputs).map(input => input.value.trim()).filter(value => value);
+        const name = document.getElementById("zone_name-modal").textContent;
 
         if (dnsServers.length === 0) {
             showAlertEdit("At least one DNS server must be specified!", "danger");
@@ -355,14 +365,14 @@
         console.log("Saving DNS Servers:", dnsServers.join(", "));
 
         // FETCH
-        fetch(window.location.pathname + "?handler=EditWildcardZone", {
+        fetch(window.location.pathname + "?handler=editZone", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
                 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
             },
-            body: JSON.stringify({ DnsServers: dnsServers.join(",") })
+            body: JSON.stringify({ Name: name, DnsServers: dnsServers.join(",") })
         })
         .then(response => response.json())
         .then(result => {

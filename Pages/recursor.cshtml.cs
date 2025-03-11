@@ -182,13 +182,13 @@ namespace PowerDNS_Web.Pages
             }
         }
 
-        public async Task<IActionResult> OnPostEditWildcardZoneAsync([FromBody] UpstreamDNS request)
+        public async Task<IActionResult> OnPostEditZoneAsync([FromBody] UpdateForwardZones request)
         {
             try
             {
-                if (string.IsNullOrEmpty(request.DnsServers))
+                if (string.IsNullOrEmpty(request.DnsServers) || string.IsNullOrEmpty(request.Name))
                 {
-                    return new JsonResult(new { success = false, message = "INVALID DNS SERVERS LIST" }) { StatusCode = 400 };
+                    return new JsonResult(new { success = false, message = "EMPTY REQUEST" }) { StatusCode = 400 };
                 }
 
                 // PARSE DNS SERVERS LIST
@@ -201,20 +201,23 @@ namespace PowerDNS_Web.Pages
                     return new JsonResult(new { success = false, message = "NO VALID DNS SERVERS PROVIDED" }) { StatusCode = 400 };
                 }
 
-                // PREPARE API URL AND AUTH
+                // PREPARE API URL AND PAYLOAD
                 var recursorUrl = _configuration["recursor:url"];
                 var recursorApiKey = _configuration["recursor:api_key"];
+                var recursionDesired = false;
 
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
 
+                if (request.Name == ".") recursionDesired = true;
+
                 // CREATE JSON PAYLOAD FOR UPDATE REQUEST
                 var updateZone = new
                 {
-                    name = ".",
+                    name = request.Name,
                     kind = "Forwarded",
                     servers = dnsServers,
-                    recursion_desired = false
+                    recursion_desired = recursionDesired
                 };
 
                 var jsonPayload = JsonSerializer.Serialize(updateZone, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
@@ -223,6 +226,7 @@ namespace PowerDNS_Web.Pages
 
                 // SEND UPDATE REQUEST
                 var updateResponse = await _httpClient.PutAsync($"{recursorUrl}/api/v1/servers/localhost/zones/=2E", requestContent);
+                Console.WriteLine(updateResponse);
 
                 if (!updateResponse.IsSuccessStatusCode)
                 {
@@ -236,13 +240,14 @@ namespace PowerDNS_Web.Pages
             }
             catch (Exception ex)
             {
-                _logger.LogError($"EXCEPTION IN OnPostEditWildcardZoneAsync: {ex.Message}");
+                _logger.LogError($"EXCEPTION IN OnPosteditZoneAsync: {ex.Message}");
                 return new JsonResult(new { success = false, message = $"INTERNAL SERVER ERROR: {ex.Message}" }) { StatusCode = 500 };
             }
         }
 
-        public class UpstreamDNS
+        public class UpdateForwardZones
         {
+            public string Name { get; set; }
             public string DnsServers { get; set; }
         }
 

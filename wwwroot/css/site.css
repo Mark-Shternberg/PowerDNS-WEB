@@ -172,7 +172,7 @@ table a:hover span {
     margin-right: 5px;
 }
 
-/* Стиль для затемнения фона */
+/* MODAL SHADOW */
 .modal {
     display: none;
     position: fixed;
@@ -184,18 +184,18 @@ table a:hover span {
     background-color: rgba(0, 0, 0, 0.4);
 }
 
-/* Окно подтверждения */
+/* MODAL */
 .modal-content {
     background-color: #fff;
     margin: 15% auto;
     padding: 20px;
     border-radius: 8px;
-    width: 400px;
+    width: 420px;
     text-align: center;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Кнопки */
+/* MODAL BUTTONS */
 .modal-buttons {
     margin-top: 20px;
     display: flex;
