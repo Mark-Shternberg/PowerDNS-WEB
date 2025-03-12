@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -18,13 +19,17 @@ namespace PowerDNS_Web.Pages.zone
         private readonly string _apiUrl;
         private readonly string _apiKey;
         private readonly string _default_IP;
+        private readonly string _recursor_Enabled;
+        private readonly ILogger<RecursorModel> _logger;
 
-        public ZonePageModel(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public ZonePageModel(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<RecursorModel> logger)
         {
+            _logger = logger;
             _httpClient = httpClientFactory.CreateClient();
             _apiUrl = configuration["pdns:url"];
             _apiKey = configuration["pdns:api_key"];
             _default_IP = configuration["pdns:default_a"];
+            _recursor_Enabled = configuration["recursor:Enabled"];
         }
 
         [BindProperty(SupportsGet = true)]
@@ -37,7 +42,7 @@ namespace PowerDNS_Web.Pages.zone
             if (string.IsNullOrEmpty(ZoneName))
                 return NotFound();
 
-            ZoneName = ZoneName.TrimEnd('.'); // Убираем точку в конце
+            ZoneName = ZoneName.TrimEnd('.');
 
             try
             {
@@ -177,7 +182,7 @@ namespace PowerDNS_Web.Pages.zone
                 string subdomain = request.Subdomain?.TrimEnd('.') ?? "@";
                 string fullDomain = subdomain == "@" ? ZoneName : $"{subdomain}.{ZoneName}";
 
-                // Получаем существующие записи
+                // GET CURRENT RECORDS FOR THIS ZONE
                 var getRequest = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}");
                 getRequest.Headers.Add("X-API-Key", _apiKey);
 
@@ -196,17 +201,22 @@ namespace PowerDNS_Web.Pages.zone
                     return new JsonResult(new { success = false, message = "Zone data is empty." }) { StatusCode = 500 };
                 }
 
-                // Находим записи нужного типа
+                // FIND EXISTING RECORD SET FOR THIS NAME AND TYPE
                 var existingRecordSet = zoneData.Rrsets.FirstOrDefault(r => r.Name == fullDomain && r.Type == request.RecordType);
                 List<Record> updatedRecords = existingRecordSet?.Records?.ToList() ?? new List<Record>();
 
-                // Если запись уже существует – не добавляем
+                if (request.RecordType == "NS")
+                {
+                    request.Value = request.Value.TrimEnd('.') + ".";
+                }
+
+                // IF RECORD ALREADY EXISTS → RETURN ERROR
                 if (updatedRecords.Any(r => r.Content == request.Value))
                 {
                     return new JsonResult(new { success = false, message = "Record already exists." }) { StatusCode = 400 };
                 }
 
-                // Добавляем новую запись
+                // ADD NEW RECORD TO THE LIST
                 string recordContent = request.Value;
 
                 if (request.RecordType == "MX")
@@ -226,9 +236,9 @@ namespace PowerDNS_Web.Pages.zone
 
 
                 updatedRecords.Add(new Record { Content = recordContent, Disabled = false });
-               //Console.WriteLine($"Updated records: {JsonSerializer.Serialize(updatedRecords)}");
+                //Console.WriteLine($"Updated records: {JsonSerializer.Serialize(updatedRecords)}");
 
-                // Обновляем записи
+                // UPDATE RECORDS IN POWERDNS
                 var recordUpdate = new
                 {
                     rrsets = new[]
@@ -322,15 +332,15 @@ namespace PowerDNS_Web.Pages.zone
                 {
                     rrsets = new[]
                     {
-                new
-                {
-                    name = name,
-                    type = request.Type,
-                    ttl = recordSet.Ttl,  // <-- Теперь TTL всегда присутствует
-                    changetype = changeType,
-                    records = updatedRecords.Select(r => new { content = r.Content, disabled = false }).ToArray()
-                }
-            }
+                        new
+                        {
+                            name = name,
+                            type = request.Type,
+                            ttl = recordSet.Ttl,  // <-- Теперь TTL всегда присутствует
+                            changetype = changeType,
+                            records = updatedRecords.Select(r => new { content = r.Content, disabled = false }).ToArray()
+                        }
+                    }
                 };
 
                 var json = JsonSerializer.Serialize(deleteRecord, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
@@ -347,6 +357,8 @@ namespace PowerDNS_Web.Pages.zone
                     var errorContent = await response.Content.ReadAsStringAsync();
                     return new JsonResult(new { success = false, message = $"Error deleting record: {errorContent}" }) { StatusCode = (int)response.StatusCode };
                 }
+
+                if (_recursor_Enabled == "Enabled") ExecuteBashCommand($"rec_control reload-zones");
 
                 return new JsonResult(new { success = true, message = "Record deleted successfully!" });
             }
@@ -480,7 +492,6 @@ namespace PowerDNS_Web.Pages.zone
             }
         }
 
-
         public async Task<IActionResult> OnPostAddSubdomainAsync([FromBody] AddSubdomainRequest request)
         {
             try
@@ -551,6 +562,8 @@ namespace PowerDNS_Web.Pages.zone
                     return new JsonResult(new { success = false, message = $"Error adding subdomain: {errorContent}" }) { StatusCode = (int)response.StatusCode };
                 }
 
+                if (_recursor_Enabled == "Enabled") ExecuteBashCommand($"rec_control reload-zones");
+
                 return new JsonResult(new { success = true, message = "Subdomain added successfully!" });
             }
             catch (Exception ex)
@@ -559,6 +572,36 @@ namespace PowerDNS_Web.Pages.zone
             }
         }
 
+        private void ExecuteBashCommand(string command)
+        {
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"{command}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using (Process process = Process.Start(psi))
+                {
+                    process.WaitForExit();
+                    string output = process.StandardOutput.ReadToEnd();
+                    string error = process.StandardError.ReadToEnd();
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        _logger.LogError($"Command '{command}' error: {error}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to execute command '{command}': {ex.Message}");
+            }
+        }
     }
 }
 

@@ -14,20 +14,28 @@ function showAlertEdit(message, type) {
 }
 
 function toggleFields() {
-    var recordType = document.getElementById("recordType").value;
+    const type = document.getElementById("recordType").value;
 
     document.getElementById("valueField").classList.remove("d-none");
     document.getElementById("mxPriorityField").classList.add("d-none");
     document.getElementById("srvPriorityField").classList.add("d-none");
     document.getElementById("srvWeightField").classList.add("d-none");
     document.getElementById("srvPortField").classList.add("d-none");
+    document.getElementById("nsField").classList.add("d-none");
+    document.getElementById("httpsSvcbField").classList.add("d-none");
 
-    if (recordType === "MX") {
+    if (type === "MX") {
         document.getElementById("mxPriorityField").classList.remove("d-none");
-    } else if (recordType === "SRV") {
+    } else if (type === "SRV") {
         document.getElementById("srvPriorityField").classList.remove("d-none");
         document.getElementById("srvWeightField").classList.remove("d-none");
         document.getElementById("srvPortField").classList.remove("d-none");
+    } else if (type === "NS") {
+        document.getElementById("nsField").classList.remove("d-none");
+        document.getElementById("valueField").classList.add("d-none");
+    } else if (type === "HTTPS") {
+        document.getElementById("httpsSvcbField").classList.remove("d-none");
+        document.getElementById("valueField").classList.add("d-none");
     }
 }
 

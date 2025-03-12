@@ -36,6 +36,8 @@
                 <option value="TXT">TXT</option>
                 <option value="MX">MX</option>
                 <option value="SRV">SRV</option>
+                <option value="NS">NS</option>
+                <option value="HTTPS">HTTPS</option>
             </select>
         </div>
         <div class="col-md-4" id="valueField">
@@ -43,11 +45,23 @@
             <input type="text" id="recordValue" class="form-control" required />
         </div>
 
+        <!-- NS Fields -->
+        <div class="col-md-4 d-none" id="nsField">
+            <label class="form-label">NS Target:</label>
+            <input type="text" id="nsTarget" class="form-control" placeholder="ns1.example.com." />
+        </div>
+
+        <!-- HTTPS (SVCB) Fields -->
+        <div class="col-md-4 d-none" id="httpsSvcbField">
+            <label class="form-label">HTTPS Parameters:</label>
+            <input type="text" id="httpsValue" class="form-control" placeholder='"1 . alpn=h3"' />
+        </div>
+
         <!-- MX Fields -->
         <div class="col-md-2 d-none" id="mxPriorityField">
             <label class="form-label">Priority:</label>
             <input type="number" id="mxPriority" class="form-control" required
-                   min="1" max="1000" step="1" value="10" />
+            min="1" max="1000" step="1" value="10" />
             <small class="form-text text-muted">Recommended: 10 (min: 1, max: 1000)</small>
         </div>
 
@@ -55,21 +69,21 @@
         <div class="col-md-2 d-none" id="srvPriorityField">
             <label class="form-label">Priority:</label>
             <input type="number" id="srvPriority" class="form-control" required
-                   min="0" max="65535" step="1" value="0" />
+            min="0" max="65535" step="1" value="0" />
             <small class="form-text text-muted">Recommended: 0 (min: 0, max: 65535)</small>
         </div>
 
         <div class="col-md-2 d-none" id="srvWeightField">
             <label class="form-label">Weight:</label>
             <input type="number" id="srvWeight" class="form-control" required
-                   min="0" max="65535" step="1" value="0" />
+            min="0" max="65535" step="1" value="0" />
             <small class="form-text text-muted">Recommended: 0 (min: 0, max: 65535)</small>
         </div>
 
         <div class="col-md-2 d-none" id="srvPortField">
             <label class="form-label">Port:</label>
             <input type="number" id="srvPort" class="form-control" required
-                   min="1" max="65535" step="1" value="443" />
+            min="1" max="65535" step="1" value="443" />
             <small class="form-text text-muted">Recommended: 443 (min: 1, max: 65535)</small>
         </div>
 
@@ -281,11 +295,19 @@
     async function addRecord() {
         const subdomain = document.getElementById("subdomainSelect").value;
         const recordType = document.getElementById("recordType").value;
-        const value = document.getElementById("recordValue").value;
+        var value = document.getElementById("recordValue").value;
         const mxPriority = document.getElementById("mxPriority")?.value;
         const srvPriority = document.getElementById("srvPriority")?.value;
         const srvWeight = document.getElementById("srvWeight")?.value;
         const srvPort = document.getElementById("srvPort")?.value;
+        const httpsValue = document.getElementById("httpsValue")?.value;
+        const nsTarget = document.getElementById("nsTarget")?.value;
+
+        if (recordType === "NS") {
+            value = nsTarget;
+        } else if (recordType === "HTTPS") {
+            value = httpsValue;
+        }
 
         let recordData = {
             Subdomain: subdomain,

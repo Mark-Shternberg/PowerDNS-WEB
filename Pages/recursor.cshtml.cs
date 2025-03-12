@@ -209,7 +209,10 @@ namespace PowerDNS_Web.Pages
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
 
-                if (request.Name == ".") recursionDesired = true;
+                if (request.Name == ".")
+                {
+                    recursionDesired = true;
+                }
 
                 // CREATE JSON PAYLOAD FOR UPDATE REQUEST
                 var updateZone = new
@@ -220,12 +223,16 @@ namespace PowerDNS_Web.Pages
                     recursion_desired = recursionDesired
                 };
 
+                if (request.Name == ".")
+                {
+                    request.Name = "=2E";
+                }
+
                 var jsonPayload = JsonSerializer.Serialize(updateZone, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
                 var requestContent = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-                Console.WriteLine(jsonPayload);
 
                 // SEND UPDATE REQUEST
-                var updateResponse = await _httpClient.PutAsync($"{recursorUrl}/api/v1/servers/localhost/zones/=2E", requestContent);
+                var updateResponse = await _httpClient.PutAsync($"{recursorUrl}/api/v1/servers/localhost/zones/{request.Name}", requestContent);
                 Console.WriteLine(updateResponse);
 
                 if (!updateResponse.IsSuccessStatusCode)

@@ -5,44 +5,40 @@
 }
 
 <div class="container mt-4">
-    <h2 class="mb-4 text-center"><i class="fa fa-chart-line"></i> PowerDNS Statistics</h2>
+    <h2 class="mb-4 text-center"><i class="fa fa-chart-line"></i> PowerDNS</h2>
 
-    <!-- GRID SYSTEM -->
     <div class="row text-center">
-
-        <!-- CACHE HITS -->
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
+        <!-- INFO -->
+        <div class="col-md-3 flex" style="width: 500px;">
+            <div class="card bg-primary text-white flex-row">
                 <div class="card-body">
-                    <h5 class="card-title">Cache Hits</h5>
-                    <p class="card-text display-6" id="cacheHits">--</p>
+                    <h5 class="card-title">Active port</h5>
+                    <p class="card-text display-6">
+                        @if (ViewData["RecursorEnabled"]?.ToString() == "Enabled")
+                        {
+                            <a>5300</a>
+                        }
+                        else
+                        {
+                            <a>53</a>
+                        }
+                    </p>
                 </div>
-            </div>
-        </div>
-
-        <!-- CACHE MISSES -->
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Cache Misses</h5>
-                    <p class="card-text display-6" id="cacheMisses">--</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- UPTIME -->
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
                 <div class="card-body">
                     <h5 class="card-title">Uptime</h5>
                     <p class="card-text display-6" id="uptime">--</p>
                 </div>
             </div>
         </div>
+    </div>
+
+    <h3 class="text-center mt-4">Statistics</h3>
+    <!-- GRID SYSTEM -->
+    <div class="row text-center">
 
         <!-- QUERY COUNT -->
         <div class="col-md-3">
-            <div class="card bg-warning text-dark">
+            <div class="card bg-primary text-white">
                 <div class="card-body">
                     <h5 class="card-title">Total Queries</h5>
                     <p class="card-text display-6" id="totalQueries">--</p>
@@ -51,9 +47,67 @@
         </div>
     </div>
 
+    <div class="row justify-content-center">
+        <!-- QUERIES FOR NONEXISTENT TYPES -->
+        <div class="col-md-4">
+            <div class="card border border-secondary shadow-sm">
+                <div class="card-header text-center bg-light">
+                    <h5 class="text-warning fw-bold"><i class="fa fa-exclamation-triangle"></i> Queries for Missing Types</h5>
+                </div>
+                <div class="card-body">
+                    <pre id="noerror-queries" class="log-container p-3 bg-white border rounded text-dark fw-semibold">Loading...</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- NONEXISTENT QUERIES -->
+        <div class="col-md-4">
+            <div class="card border border-secondary shadow-sm">
+                <div class="card-header text-center bg-light">
+                    <h5 class="text-danger fw-bold"><i class="fa fa-exclamation-circle"></i> Queries for Nonexistent Records</h5>
+                </div>
+                <div class="card-body">
+                    <pre id="nxdomain-queries" class="log-container p-3 bg-white border rounded text-dark fw-semibold">Loading...</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUERIES RECEIVED -->
+        <div class="col-md-4">
+            <div class="card border border-secondary shadow-sm">
+                <div class="card-header text-center bg-light">
+                    <h5 class="text-success fw-bold"><i class="fa fa-check-circle"></i> UDP Queries Received</h5>
+                </div>
+                <div class="card-body">
+                    <pre id="queries" class="log-container p-3 bg-white border rounded text-dark fw-semibold">Loading...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
     @if (ViewData["RecursorEnabled"]?.ToString() == "Enabled")
     {
-        <h3 class="text-center mt-4"><i class="fa fa-database"></i> Recursor Statistics</h3>
+        <h3 class="text-center mt-4"><i class="fa fa-database"></i> Recursor</h3>
+
+        <div class="row text-center">
+            <!-- INFO -->
+            <div class="col-md-3 flex" style="width: 500px;">
+                <div class="card bg-primary text-white flex-row">
+                    <div class="card-body">
+                        <h5 class="card-title">Active port</h5>
+                        <p class="card-text display-6">53</p>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Recursor Uptime</h5>
+                        <p class="card-text display-6" id="recursorUptime">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="text-center mt-4">Statistics</h3>
 
         <div class="row text-center">
             <!-- RECURSOR CACHE HITS -->
@@ -68,30 +122,36 @@
 
             <!-- RECURSOR CACHE MISSES -->
             <div class="col-md-3">
-                <div class="card bg-danger text-white">
+                <div class="card bg-warning text-black">
                     <div class="card-body">
                         <h5 class="card-title">Recursor Cache Misses</h5>
                         <p class="card-text display-6" id="recursorCacheMisses">--</p>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- RECURSOR UPTIME -->
-            <div class="col-md-3">
-                <div class="card bg-primary text-white">
+        <div class="row justify-content-center">
+            <!-- TOP REQUESTS -->
+            <div class="col-md-4">
+                <div class="card border border-secondary shadow-sm">
+                    <div class="card-header text-center bg-light">
+                        <h5 class="text-dark fw-bold">Top Requests</h5>
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title">Recursor Uptime</h5>
-                        <p class="card-text display-6" id="recursorUptime">--</p>
+                        <pre id="noerror-queries" class="log-container p-3 bg-white border rounded text-dark fw-semibold">Loading...</pre>
                     </div>
                 </div>
             </div>
 
-            <!-- RECURSOR TOTAL QUERIES -->
-            <div class="col-md-3">
-                <div class="card bg-warning text-dark">
+            <!-- TOP REMOTES -->
+            <div class="col-md-4">
+                <div class="card border border-secondary shadow-sm">
+                    <div class="card-header text-center bg-light">
+                        <h5 class="text-dark fw-bold"><i class="fa fa-network-wired"></i> Top Remotes</h5>
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title">Recursor Queries</h5>
-                        <p class="card-text display-6" id="recursorQueries">--</p>
+                        <pre id="nxdomain-queries" class="log-container p-3 bg-white border rounded text-dark fw-semibold">Loading...</pre>
                     </div>
                 </div>
             </div>
@@ -107,6 +167,7 @@
 <script src="~/js/chart.js"></script>
 
 <script>
+    // FUNCTION TO FETCH POWERDNS STATISTICS
     async function fetchPowerDNSStats() {
         try {
             const response = await fetch("/Index?handler=Stats", {
@@ -115,57 +176,61 @@
                     "Accept": "application/json"
                 }
             });
+
             const data = await response.json();
 
-            document.getElementById("cacheHits").innerText = data.cacheHits;
-            document.getElementById("cacheMisses").innerText = data.cacheMisses;
+            if (!data.success) {
+                console.error("Error fetching PowerDNS stats:", data.message);
+                return;
+            }
+
+            // UPDATE GENERAL STATISTICS
             document.getElementById("uptime").innerText = formatUptime(data.uptime);
             document.getElementById("totalQueries").innerText = data.totalQueries;
 
+            // UPDATE NOERROR-QUERIES, NXDOMAIN-QUERIES, QUERIES
+            updateQueryList("noerror-queries", data.noerrorQueries);
+            updateQueryList("nxdomain-queries", data.nxdomainQueries);
+            updateQueryList("queries", data.queries);
+
+            // IF RECURSOR IS ENABLED, UPDATE RECURSOR STATS
             if (document.getElementById("recursorCacheHits")) {
                 document.getElementById("recursorCacheHits").innerText = data.recursorCacheHits;
                 document.getElementById("recursorCacheMisses").innerText = data.recursorCacheMisses;
                 document.getElementById("recursorUptime").innerText = formatUptime(data.recursorUptime);
-                document.getElementById("recursorQueries").innerText = data.recursorQueries;
+
+                updateQueryList("top-queries", data.topQueries);
+                updateQueryList("top-remotes", data.topRemotes);
             }
 
-            if (Array.isArray(data.queryRates) && data.queryRates.length > 0) {
-                updateChart(data.queryRates);
-            } else {
-                console.warn("queryRates is empty or not available");
-            }
         } catch (error) {
             console.error("Failed to load stats:", error);
         }
     }
 
-
+    // FUNCTION TO FORMAT UPTIME IN HOURS AND MINUTES
     function formatUptime(seconds) {
         let hours = Math.floor(seconds / 3600);
         let minutes = Math.floor((seconds % 3600) / 60);
         return `${hours}h ${minutes}m`;
     }
 
-    function updateChart(queryRates) {
-        let ctx = document.getElementById("queryChart").getContext("2d");
-        new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: Array.from({ length: queryRates.length }, (_, i) => `${i} sec ago`),
-                datasets: [{
-                    label: "Queries per second",
-                    data: queryRates,
-                    borderColor: "blue",
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true } }
-            }
-        });
+    // FUNCTION TO UPDATE QUERY LIST DISPLAY
+    function updateQueryList(elementId, data) {
+        const container = document.getElementById(elementId);
+        if (!container) return;
+
+        if (!data || data.length === 0) {
+            container.innerText = "No data available";
+            return;
+        }
+
+        let formattedData = data.map(entry => `${entry.name} - ${entry.value}`).join("\n");
+        container.innerText = formattedData;
     }
 
+    // FETCH STATS INITIALLY AND UPDATE EVERY 5 SECONDS
     fetchPowerDNSStats();
     setInterval(fetchPowerDNSStats, 5000);
+
 </script>
