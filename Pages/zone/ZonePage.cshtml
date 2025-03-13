@@ -331,29 +331,29 @@
             const errorMessage = validateIPv4(value);
 
             if (errorMessage) {
-                showAlert(errorMessage, "danger");
+                showAlert(errorMessage, "alertContainer", "danger");
                 return;
             }
         } else if (recordType === "AAAA") {
             const errorMessage = validateIPv6(value);
 
             if (errorMessage) {
-                showAlert(errorMessage, "danger");
+                showAlert(errorMessage, "alertContainer", "danger");
                 return;
             }
         } else if (recordType === "CNAME") {
             if (!value.match(/^[a-zA-Z0-9.-]+$/)) {
-                showAlert("Invalid CNAME format!", "danger");
+                showAlert("Invalid CNAME format!", "alertContainer", "danger");
                 return;
             }
         } else if (recordType === "TXT") {
             if (!value.match(/^".*"$/)) {
-                showAlert("Invalid TXT format!", "danger");
+                showAlert("Invalid TXT format!", "alertContainer", "danger");
                 return;
             }
         } else if (recordType === "SRV") {
             if (!value.match(/^\d{1,5} \d{1,5} \d{1,5} [a-zA-Z0-9.-]+$/)) {
-                showAlert("Invalid SRV format!", "danger");
+                showAlert("Invalid SRV format!", "alertContainer", "danger");
                 return;
             }
         }
@@ -374,13 +374,14 @@
                 throw new Error(result.message || "Failed to add record");
             }
 
-            showAlert("Record added successfully!", "success");
+            showAlert("Record added successfully!", "alertContainer", "success");
             setTimeout(() => location.reload(), 1000);
         } catch (error) {
-            showAlert(error.message, "danger");
+            showAlert(error.message, "alertContainer", "danger");
         }
     }
 
+    // EDIT RECORD
     function editRecord(name, type, value, ttl) {
         document.getElementById("editRecordName").value = name;
         document.getElementById("editRecordType").value = type;
@@ -455,20 +456,15 @@
                 throw new Error(result.message || "Failed to delete record");
             }
 
-            showAlert("Record deleted successfully!", "success");
+            showAlert("Record deleted successfully!", "alertContainer", "success");
 
             // Удаляем строку из таблицы
             const row = button.closest("tr");
             if (row) row.remove();
 
         } catch (error) {
-            showAlert(error.message, "danger");
+            showAlert(error.message, "alertContainer", "danger");
         }
-    });
-
-    // CANCEL DELETE
-    document.getElementById("confirmNo").addEventListener("click", function () {
-        document.getElementById("confirmModal").style.display = "none";
     });
 
     // EDIT RECORD
@@ -485,7 +481,7 @@
         if (type === "MX") {
             const mxPriority = document.getElementById("editMxPriority").value;
             if (!mxPriority) {
-                showAlertEdit("MX Priority is required!", "danger");
+                showAlert("MX Priority is required!", "alertContainer-edit", "danger");
                 return;
             }
             recordData.MxPriority = parseInt(mxPriority, 10);
@@ -496,7 +492,7 @@
             const srvPort = document.getElementById("editSrvPort").value;
 
             if (!srvPriority || !srvWeight || !srvPort) {
-                showAlertEdit("SRV Priority, Weight, and Port are required!", "danger");
+                showAlert("SRV Priority, Weight, and Port are required!", "alertContainer-edit", "danger");
                 return;
             }
 
@@ -515,7 +511,7 @@
 
             // VALIDATION
             if (!soaNs || !soaEmail || !soaRefresh || !soaRetry || !soaExpire || !soaMinimumTtl) {
-                showAlertEdit("All SOA fields are required!", "danger");
+                showAlert("All SOA fields are required!", "alertContainer-edit", "danger");
                 return;
             }
 
@@ -533,29 +529,29 @@
             const errorMessage = validateIPv4(value);
 
             if (errorMessage) {
-                showAlertEdit(errorMessage, "danger");
+                showAlert(errorMessage, "alertContainer-edit", "danger");
                 return;
             }
         } else if (type === "AAAA") {
             const errorMessage = validateIPv6(value);
 
             if (errorMessage) {
-                showAlertEdit(errorMessage, "danger");
+                showAlert(errorMessage, "alertContainer-edit", "danger");
                 return;
             }
         } else if (type === "CNAME") {
             if (!value.match(/^[a-zA-Z0-9.-]+$/)) {
-                showAlertEdit("Invalid CNAME format!", "danger");
+                showAlert("Invalid CNAME format!", "alertContainer-edit", "danger");
                 return;
             }
         } else if (type === "TXT") {
             if (!value.match(/^".*"$/)) {
-                showAlertEdit("Invalid TXT format!", "danger");
+                showAlert("Invalid TXT format!", "alertContainer-edit", "danger");
                 return;
             }
         } else if (type === "SRV") {
             if (!value.match(/^\d{1,5} \d{1,5} \d{1,5} [a-zA-Z0-9.-]+$/)) {
-                showAlertEdit("Invalid SRV format!", "danger");
+                showAlert("Invalid SRV format!", "alertContainer-edit", "danger");
                 return;
             }
         }
@@ -577,7 +573,7 @@
                 throw new Error(result.message || "Failed to update record");
             }
 
-            showAlertEdit("Record updated successfully!", "success");
+            showAlert("Record updated successfully!", "alertContainer-edit", "success");
 
             // Закрываем модальное окно через 1 секунду
             setTimeout(() => {
@@ -587,7 +583,7 @@
             }, 1000);
 
         } catch (error) {
-            showAlertEdit(error.message, "danger");
+            showAlert(error.message, "alertContainer-edit", "danger");
         }
     }
 

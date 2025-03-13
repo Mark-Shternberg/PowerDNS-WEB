@@ -43,12 +43,11 @@ else
 
 <script>
     document.getElementById('loginForm').addEventListener('submit', async function (e) {
-        e.preventDefault(); // Останавливаем отправку формы
+        e.preventDefault();
 
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
 
-        // Отправка запроса на сервер
         const response = await fetch('/login?handler=Login', {
             method: 'POST',
             headers: {
@@ -61,40 +60,15 @@ else
             })
         });
 
-        const result = await response.json(); // Делаем парсинг ответа
+        const result = await response.json();
 
         const notification = document.getElementById('notification-div');
 
         if (response.ok && result.success) {
-            showLoginNotification('Авторизация успешна! Перенаправление...', 1);
+            showDivNotification('Authorization successful! Redirect...', 1);
             setTimeout(() => window.location.href = "/index", 1200);
         } else {
-            showLoginNotification('Ошибка авторизации. ' + result.message, 2);
+            showDivNotification('Authorization error. ' + result.message, 2);
         }
     });
-
-    // Функция для отображения уведомлений
-    function showLoginNotification(message, type) {
-        var notification = document.getElementById("notification-div");
-        //var messageSpan = document.getElementById("notification-message");
-
-        notification.innerText = message;
-
-        notification.classList.remove("notification-success", "notification-error");
-
-        if (type === 1) {
-            notification.classList.add("notification-success");
-        } else if (type === 2) {
-            notification.classList.add("notification-error");
-        }
-
-        notification.classList.remove('d-none');
-        notification.classList.add("show");
-
-        // Скрытие уведомления через 3 секунды
-        setTimeout(function () {
-            notification.classList.remove("show");
-            notification.classList.add('d-none');
-        }, 3000);
-    }
 </script>

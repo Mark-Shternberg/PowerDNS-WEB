@@ -21,10 +21,8 @@
 function openEditModal(zoneName, zoneType, masterServer, dnssec, serial) {
     var modal = document.getElementById("addZoneModal");
 
-    // Убираем aria-hidden
     modal.removeAttribute("aria-hidden");
 
-    // Заполняем поля модального окна
     document.getElementById("addZoneModalLabel").innerText = "Edit zone";
     let name = document.getElementById("modal-domain");
     let kind = document.getElementById("modal-type");
@@ -43,18 +41,14 @@ function openEditModal(zoneName, zoneType, masterServer, dnssec, serial) {
         dnssecSelect.value = dnssec.toString() === "True" ? "Enabled" : "Disabled";
     }
 
-    // Показываем slave-div, если выбрана зона Slave
     ZoneToggle();
 
-    // Переключаем кнопки
     document.getElementById("update-buttons").style.display = "block";
     document.getElementById("create-buttons").style.display = "none";
 
-    // Открываем модальное окно
     var bootstrapModal = new bootstrap.Modal(modal, { backdrop: false });
     bootstrapModal.show();
 
-    // Переводим фокус на поле ввода, чтобы избежать ошибки aria-hidden
     setTimeout(() => {
         document.getElementById("modal-domain").focus();
     }, 100);
@@ -81,13 +75,13 @@ async function addZone() {
     const errorMessage = validateZoneName(name);
 
     if (errorMessage) {
-        showAlertModal(errorMessage, "danger");
+        showAlert(errorMessage, "alertContainer-modal", "danger");
         return;
     }
 
     if (kind === "Slave") {
         if (validateIPv4(master)) {
-            showAlertModal(validateIPv4(master), "danger");
+            showAlert(validateIPv4(master), "alertContainer-modal", "danger");
             return;
         }
     }
@@ -113,10 +107,10 @@ async function addZone() {
             throw new Error(result.message || "Failed to add zone");
         }
 
-        showAlertModal("Zone added successfully!", "success");
+        showAlert("Zone added successfully!", "alertContainer-modal", "success");
         setTimeout(() => location.reload(), 1500);
     } catch (error) {
-        showAlertModal(error.message, "danger");
+        showAlert(error.message, "alertContainer-modal", "danger");
     }
 }
 
@@ -138,7 +132,7 @@ async function save() {
     if (kind === "Slave") {
         const errorMessage = validateIPv4(master);
         if (errorMessage) {
-            showAlertModal(errorMessage, "danger");
+            showAlert(errorMessage, "alertContainer-modal", "danger");
             return;
         }
     }
@@ -159,10 +153,10 @@ async function save() {
             throw new Error(result.message || "Failed to update zone");
         }
 
-        showAlertModal("Zone updated successfully!", "success");
+        showAlert("Zone updated successfully!", "alertContainer-modal", "success");
         setTimeout(() => location.reload(), 1500);
     } catch (error) {
-        showAlertModal(error.message, "danger");
+        showAlert(error.message, "alertContainer-modal", "danger");
     }
 }
 
@@ -218,7 +212,7 @@ async function dnssecKeys(name) {
 
     } catch (error) {
         console.error("Error loading DNSSEC keys:", error);
-        showAlertKeys(error.message, "danger");
+        showAlert(error.message, "alertContainer-keys", "danger");
     }
 }
 
@@ -250,40 +244,11 @@ async function deleteZone(zoneName) {
             throw new Error(result.message || "Failed to delete zone");
         }
 
-        showAlertDelete("Zone deleted successfully!", "success");
+        showAlert("Zone deleted successfully!", "alertContainer-delete", "success");
         setTimeout(() => location.reload(), 1500);
     } catch (error) {
-        showAlertDelete(error.message, "danger");
+        showAlert(error.message, "alertContainer-delete", "danger");
     }
-}
-
-// CANCEL DELETE
-document.getElementById("confirmNo").addEventListener("click", function () {
-    document.getElementById("confirmModal").style.display = "none";
-});
-
-function showAlertDelete(message, type) {
-    const alertContainer = document.getElementById("alertContainer-delete");
-    alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>`;
-}
-
-function showAlertModal(message, type) {
-    const alertContainer = document.getElementById("alertContainer-modal");
-    alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>`;
-}
-
-function showAlertKeys(message, type) {
-    const alertContainer = document.getElementById("alertContainer-keys");
-    alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>`;
 }
 
 function hideModal() {
@@ -296,7 +261,6 @@ function hideModal() {
         }
     }
 
-    // Удаляем backdrop и aria-hidden
     document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
     document.body.classList.remove("modal-open");
     document.body.style.paddingRight = "";

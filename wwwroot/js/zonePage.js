@@ -1,19 +1,4 @@
-﻿function showAlert(message, type) {
-    const alertContainer = document.getElementById("alertContainer");
-    alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>`;
-}
-function showAlertEdit(message, type) {
-    const alertContainer = document.getElementById("alertContainer-edit");
-    alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>`;
-}
-
-function toggleFields() {
+﻿function toggleFields() {
     const type = document.getElementById("recordType").value;
 
     document.getElementById("valueField").classList.remove("d-none");
@@ -47,25 +32,6 @@ function toggleZone(zone) {
     }
     icon.classList.toggle("fa-chevron-right");
     icon.classList.toggle("fa-chevron-down");
-}
-
-function closeModal(modalId) {
-    var modal = document.querySelector(modalId);
-    var modalBackdrop = document.querySelector('.modal-backdrop');
-
-    if (modal) {
-        var bootstrapModal = bootstrap.Modal.getInstance(modal);
-        if (bootstrapModal) {
-            bootstrapModal.hide();
-        }
-    }
-
-    if (modalBackdrop) {
-        modalBackdrop.remove();
-    }
-
-    document.body.classList.remove('modal-open');
-    document.body.style.paddingRight = '';
 }
 
 let deleteTarget = null;

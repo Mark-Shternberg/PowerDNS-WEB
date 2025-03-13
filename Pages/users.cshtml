@@ -110,7 +110,6 @@
 
 @Html.AntiForgeryToken()
 
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.btn-edit').forEach(button => {
@@ -312,18 +311,5 @@
         row.querySelector('.btn-save-edit[data-id="' + rowId + '"]').hidden = true;
         row.querySelector('#cancel_' + rowId).hidden = true;
         row.querySelector('.btn-delete[data-id="' + rowId + '"]').hidden = false;
-    }
-
-    // NOTIFICATION
-    function showNotification(message, type) {
-        var notification = document.getElementById("notification");
-        var messageSpan = document.getElementById("notification-message");
-
-        messageSpan.innerText = message;
-        notification.classList.remove("notification-success", "notification-error");
-
-        notification.classList.add(type === 1 ? "notification-success" : "notification-error", "show");
-
-        setTimeout(() => notification.classList.remove("show"), 3000);
     }
 </script>
