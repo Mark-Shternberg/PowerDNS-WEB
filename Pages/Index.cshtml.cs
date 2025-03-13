@@ -76,8 +76,8 @@ namespace PowerDNS_Web.Pages
                     recursorCacheMisses = recursorStats.GetValueOrDefault("cache-misses", 0),
                     recursorUptime = recursorStats.GetValueOrDefault("uptime", 0),
 
-                    topQueries,
-                    topRemotes
+                    topQueries = ParseTopStats(topQueries),
+                    topRemotes = ParseTopRemotes(topRemotes)
                 });
             }
             catch (Exception ex)
@@ -215,6 +215,69 @@ namespace PowerDNS_Web.Pages
             catch (Exception ex)
             {
                 _logger.LogError($"FAILED TO EXECUTE COMMAND '{command}': {ex.Message}");
+            }
+
+            return result;
+        }
+
+        // === PARSE TOP QUERIES AND REMOTES FROM RECURSOR ===
+        private List<QueryDetail> ParseTopStats(List<string> rawData)
+        {
+            var result = new List<QueryDetail>();
+
+            if (rawData == null || rawData.Count == 0)
+                return result;
+
+            foreach (var line in rawData.Skip(1))
+            {
+                if (line.Contains("rest")) continue;
+
+                var parts = line.Split('\t');
+                if (parts.Length < 2) continue;
+
+                var percentagePart = parts[0].TrimEnd('%');
+                var queryData = parts[1].Split('|');
+
+                if (queryData.Length < 2) continue;
+
+                if (double.TryParse(percentagePart, out double percentage))
+                {
+                    result.Add(new QueryDetail
+                    {
+                        Name = queryData[0].Trim(),
+                        Value = $"{percentage}% ({queryData[1]})"
+                    });
+                }
+            }
+
+            return result;
+        }
+
+        private List<QueryDetail> ParseTopRemotes(List<string> rawData)
+        {
+            var result = new List<QueryDetail>();
+
+            if (rawData == null || rawData.Count == 0)
+                return result;
+
+            foreach (var line in rawData.Skip(1))
+            {
+                if (line.Contains("rest")) continue;
+
+                var parts = line.Split('\t');
+                if (parts.Length < 2) continue;
+
+                var percentagePart = parts[0].TrimEnd('%');
+                var ipAddress = parts[1].Trim();
+
+                if (double.TryParse(percentagePart, out double percentage))
+                {
+                    result.Add(new QueryDetail
+                    {
+                        Name = ipAddress,
+                        Value = $"{percentage}%"
+                    });
+                }
             }
 
             return result;
