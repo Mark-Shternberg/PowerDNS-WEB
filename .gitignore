@@ -361,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+*.tar.gz
+*.rar
+*.bat
+*.ps1
+*.psd
+*.Development*
+/appsettings.Development.json
