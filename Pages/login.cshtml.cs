@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using BCrypt.Net;
 using MySqlConnector;
+using System.Reflection;
 
 namespace PowerDNS_Web.Pages
 {
@@ -39,12 +40,13 @@ namespace PowerDNS_Web.Pages
             public string? password { get; set; }
         }
 
-        public void OnGet()
+        public async Task OnGet()
         {
             CheckDTExist();
+            ViewData["SettingsCheck"] = (await CheckSettingsExist()).ToString();
         }
 
-        private void CheckDTExist() //ПРОВЕРЯЕТ СУЩЕСТВУЮТ ЛИ ТАБЛИЦЫ В БАЗЕ ДАННЫХ И ПРИ ОТСУТСТВИИ СОЗДАЁТ
+        private void CheckDTExist()
         {
             try
             {
@@ -80,6 +82,24 @@ namespace PowerDNS_Web.Pages
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
+            }
+        }
+
+        private async Task<bool> CheckSettingsExist()
+        {
+            try
+            {
+                string connectionString = SqlConnection();
+                using (var connection = new MySqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Database connection failed: {ex.Message}");
+                return false;
             }
         }
 

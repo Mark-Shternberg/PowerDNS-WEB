@@ -367,5 +367,4 @@ FodyWeavers.xsd
 *.bat
 *.ps1
 *.psd
-*.Development*
 /appsettings.Development.json

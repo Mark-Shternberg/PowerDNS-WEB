@@ -225,14 +225,24 @@
             return;
         }
 
-        let maxNameLength = Math.max(...data.map(entry => entry.name.length), 15);
+        let maxNameLength = 40;
+        let maxValueLength = 8;
 
-        let formattedData = data
-            .map(entry => `${entry.name.padEnd(maxNameLength)} | ${entry.value}`)
-            .join("\n");
+        let formattedData = data.map(entry => {
+            let fullName = entry.name;
+            let shortName = fullName.length > maxNameLength
+                ? fullName.substring(0, maxNameLength - 3) + "..."
+                : fullName;
 
-        container.innerText = formattedData;
+            let value = entry.value.toString().padStart(maxValueLength, " ");
+
+            return `<span class="query-item" title="${fullName}">${shortName}</span> <span class="query-value">${value}</span>`;
+        }).join("\n");
+
+        container.innerHTML = `<pre>${formattedData}</pre>`;
     }
+
+
 
 
     // FETCH STATS INITIALLY AND UPDATE EVERY 5 SECONDS
