@@ -225,9 +225,15 @@
             return;
         }
 
-        let formattedData = data.map(entry => `${entry.name} - ${entry.value}`).join("\n");
+        let maxNameLength = Math.max(...data.map(entry => entry.name.length), 15);
+
+        let formattedData = data
+            .map(entry => `${entry.name.padEnd(maxNameLength)} | ${entry.value}`)
+            .join("\n");
+
         container.innerText = formattedData;
     }
+
 
     // FETCH STATS INITIALLY AND UPDATE EVERY 5 SECONDS
     fetchPowerDNSStats();
