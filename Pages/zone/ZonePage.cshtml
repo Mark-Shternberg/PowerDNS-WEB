@@ -291,6 +291,12 @@
 <script src="~/js/validation.js"></script>
 
 <script>
+    document.getElementById("subdomainInput").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            addSubdomain();
+        }
+    });
     // ADD RECORD
     async function addRecord() {
         const subdomain = document.getElementById("subdomainSelect").value;
