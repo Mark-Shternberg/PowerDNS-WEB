@@ -49,9 +49,9 @@ If you encounter an issue, provide the relevant log details when reporting a pro
 
 2. **Forgot password?**  
    - Run:
-     ```bash
-     mysql -u root -p -e "DELETE FROM users;"
-     ```
+```bash
+mysql -u root -p -e "DELETE FROM users;"
+```
    - This command will delete all users, allowing you to create a new one (via login form).
 
 ---
@@ -60,13 +60,13 @@ If you encounter an issue, provide the relevant log details when reporting a pro
 **Possible Causes & Fixes:**
 1. **PowerDNS API Not Responding**  
    - Check if PowerDNS is running:
-     ```bash
-     systemctl status pdns
-     ```
+```bash
+systemctl status pdns
+```
    - Verify API connectivity:
-     ```bash
-     curl -H "X-API-Key: your_api_key" http://localhost:8081/api/v1/servers/localhost
-     ```
+```bash
+curl -H "X-API-Key: your_api_key" http://localhost:8081/api/v1/servers/localhost
+```
 
 2. **Recursor cache Issues**  
    - Clear DNS cache:

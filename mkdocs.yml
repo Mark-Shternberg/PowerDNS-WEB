@@ -1,5 +1,6 @@
 site_name: "PowerDNS-WEB Documentation"
 repo_url: https://gitlab.medvedev-it.com/MedvedevN/powerdns-web
+repo_name: PowerDNS-WEB
 theme:
   name: "material"
   favicon: favicon.ico
