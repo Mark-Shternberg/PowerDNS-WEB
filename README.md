@@ -1,33 +1,23 @@
-# PowerDNS-Web
-PowerDNS-Web is a web interface for PowerDNS. It is a WEB application that uses REST API to communicate with PowerDNS server.
+﻿# **PowerDNS Web Panel**
+A modern **web-based management panel** for **PowerDNS**, built with **Razor Pages**, **Bootstrap**, and **FontAwesome**. This panel allows administrators to manage DNS zones and records efficiently through the **PowerDNS API**.
 
-# Installation via install script
+## **Features**
+✅ **DNS Zone Management** – Create, edit, and delete DNS zones  
+✅ **Record Management** – Add, modify, and remove DNS records dynamically  
+✅ **Subdomain Handling** – Easily manage subdomains within zones  
+✅ **PowerDNS Recursor Support** – View and manage forward zones in the recursive server  
+✅ **Live Statistics** – Monitor query statistics, cache performance, and server uptime  
+✅ **Access Control** – Secure login and authentication  
 
-1. Download last release archive
-2. `mkdir powerdns-web-install && tar -xzvf powerdns-web-v* -C powerdns-web-install && rm powerdns-web-v*`
-3. `cd powerdns-web-install`
-4. Run `sudo chmod +x install.sh && su root ./install.sh`
+## **Tech Stack**
+- **Backend:** ASP.NET Core Razor Pages  
+- **Frontend:** Bootstrap 5 + FontAwesome  
+- **Database:** MySQL (for user authentication)  
+- **API:** PowerDNS JSON API  
+- **Authentication:** Cookie-based authentication with BCrypt password hashing  
 
-# Manual install
+## **Installation and using**
+Follow the [official documentation](https://docs.medvedev-it.com/powerns-web) for setup instructions.
 
-1. Download and install dotnet-sdk-8.0
-2. Download and install pdns and pdns-recursor
-3. Download and install MySQL server, pdns-backend-mysql
-4. Create user and table for programm
-5. Download last release archive
-6. Edit "MySQLConnection" block in appsettings.json
-7. Run command `dotnet PowerDNS-Web.dll`
-8. Install reverse proxy to http://localhost:5000
-
-# Upgrade via upgrade script
-
-1. Download last release archive
-2. `mkdir -p powerdns-web-upgrade && tar -xzvf powerdns-web-v* -C powerdns-web-upgrade`
-3. `cd powerdns-web-upgrade`
-4. Run `sudo chmod +x install.sh && sudo ./install.sh -update`
-
-# Manual upgrade
-
-1. Download last release archive
-2. `mkdir powerdns-web-upgrade && tar -xzvf powerdns-web-v* -C powerdns-web-upgrade`
-3. Move all exept appsettings.json from powerdns-weby-upgrade to your program folder
+## **License**
+This project is open-source and follows the MIT License, but PowerDNS operates under the GPL License. Please ensure compliance when using or modifying PowerDNS.
