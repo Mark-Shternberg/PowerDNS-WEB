@@ -16,10 +16,10 @@ build:
   tags:
     - docker
   script:
-    - mkdocs build
+    - mkdocs build --site-dir public
   artifacts:
     paths:
-      - site/
+      - public
 
 deploy:
   stage: deploy
