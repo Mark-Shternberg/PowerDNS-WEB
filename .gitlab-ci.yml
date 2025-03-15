@@ -1,16 +1,28 @@
-# The Docker image that will be used to build your app
 image: python:3.9
-# Functions that should be executed before the build script is run
+
+stages:
+  - build
+  - deploy
+
 before_script:
   - pip install -r requirements.txt
-pages:
+
+build:
+  stage: build
   script:
     - mkdocs build --site-dir public
   artifacts:
     paths:
-      # The folder that contains the files to be exposed at the Page URL
+      - public 
+  only:
+    - main
+
+pages:
+  stage: deploy
+  script:
+    - mkdocs build --site-dir public
+  artifacts:
+    paths:
       - public
   rules:
-    # This ensures that only pushes to the default branch will trigger
-    # a pages deploy
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
