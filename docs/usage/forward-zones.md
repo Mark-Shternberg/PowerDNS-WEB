@@ -9,6 +9,8 @@
 - If no zones are available, the dropdown and button are disabled.
 - If an error occurs, an error message is displayed.
 
+---
+
 ## Special Zone: "."
 
 ### What is the "." Zone?
@@ -49,7 +51,7 @@ The `"."` (dot) zone, also known as the **root forward zone**, is a special conf
 - Avoid setting `"."` to an **untrusted DNS provider** to prevent **DNS hijacking**.
 - Ensure the **correct forwarding rules** to maintain resolution efficiency.
 
-
+---
 
 ## Editing a Forward Zone
 
@@ -62,12 +64,16 @@ The `"."` (dot) zone, also known as the **root forward zone**, is a special conf
 **Notes:**
 - `127.0.0.1:5300` refers to the **authoritative server**.
 
+---
+
 ## Removing a Forward Zone
 
 1. Click the **Remove** (🗑) button next to a forward zone.
 2. A confirmation modal appears.
 3. Click **Delete** to confirm, or **Cancel** to abort.
 4. If the operation is successful, the zone is removed from the table.
+
+---
 
 ## Recursor Status
 

@@ -11,6 +11,8 @@
 - If any field is empty, an error notification will be displayed.
 - If an error occurs during registration, the message will be shown in a notification.
 
+---
+
 ## Editing a User
 
 1. Click the **Edit** (📝) button next to a user.
@@ -23,6 +25,8 @@
 - If you don't want to change the password, leave the field empty.
 - Only the **Role** and **Password** fields can be changed.
 - If an error occurs during saving, an error notification will be displayed.
+
+---
 
 ## Deleting a User
 

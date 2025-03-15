@@ -19,6 +19,8 @@ Block of pre-installation steps.
 7. Run command `dotnet PowerDNS-Web.dll`
 8. Install reverse proxy to http://localhost:5000
 
+---
+
 # UPGRADE
 
 ## 1. Upgrade via upgrade script

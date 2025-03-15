@@ -16,6 +16,8 @@
 - Invalid inputs will trigger an error message.
 - Special formats are enforced for `TXT`, `CNAME`, `SRV`, and `MX` records.
 
+---
+
 ## Editing a Record
 
 1. Click the **Edit** (📝) button next to the record.
@@ -26,6 +28,8 @@
 - `SOA` records require specific formatting for primary NS, admin email, and time values.
 - `MX` and `SRV` records will be split into priority and target components.
 
+---
+
 ## Deleting a Record
 
 1. Click the **Delete** (🗑) button next to a record.
@@ -33,17 +37,23 @@
 3. Click **Delete** to confirm, or **Cancel** to abort.
 4. If the operation is successful, the record is removed from the table.
 
+---
+
 ## Viewing Records
 
 - Records are grouped by **Subdomain**.
 - Clicking a subdomain row expands/collapses its records.
 - Root domain records are labeled as `(Root)`.
 
+---
+
 ## Managing Subdomains
 
 1. Click **"+"** next to the **Subdomain** dropdown.
 2. Enter a new subdomain name.
 3. Click **"Add"** to create the subdomain.
+
+---
 
 ## Record Validation
 

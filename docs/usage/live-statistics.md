@@ -10,11 +10,15 @@
 - Shows the uptime of the PowerDNS services.
 - If the recursor is enabled, displays its uptime separately.
 
+---
+
 # Statistics
 
 ## Query Log Updates
 
 - The lists update dynamically every **5 seconds**.
+
+---
 
 ## Authoritative Statistics
 
@@ -34,6 +38,8 @@
 ### UDP Queries Received
 
 - Lists all UDP queries that have been processed.
+
+---
 
 ## Recursor Statistics (If Enabled)
 
