@@ -3,10 +3,18 @@ theme:
   name: "material"
   favicon: favicon.ico
   logo: favicon.ico
-
+  
 nav:
-  - Main: index.md
-  - Install: guide.md
+  - Home: index.md
+  - Requirements: requirements.md
+  - Install and Upgrade: guide.md
+  - Usage:
+      - Live Statistics: usage/live-statistics.md
+      - Managing DNS Zones: usage/dns-zones.md
+      - Managing DNS Records: usage/dns-records.md
+      - Forward Zones: usage/forward-zones.md
+      - User Management: usage/user-management.md
+  - Troubleshooting: troubleshooting.md
   
 extra:
   social:
@@ -16,4 +24,4 @@ extra:
       link: https://gitlab.medvedev-it.com/MedvedevN/powerdns-web
   generator: false
 
-copyright: '\u00A9 2025 PowerDNS-WEB | Created by <a href="https://medvedev-it.com/" target="_blank">MedvedevN</a> | Made with Material for MkDocs'
+copyright: '© 2025 PowerDNS-WEB | Created by <a href="https://medvedev-it.com/" target="_blank">MedvedevN</a> | Made with Material for MkDocs'
