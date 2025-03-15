@@ -5,3 +5,12 @@ theme:
 nav:
   - Main: index.md
   - Install: guide.md
+  
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Mark-Shternberg/PowerDNS-WEB
+    - icon: fontawesome/brands/gitlab
+      link: https://gitlab.medvedev-it.com/MedvedevN/powerdns-web
+  generator: false
+  copyright: "© 2025 PowerDNS-WEB | Created by MedvedevN"
