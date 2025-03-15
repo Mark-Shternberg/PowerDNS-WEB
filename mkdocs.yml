@@ -16,4 +16,4 @@ extra:
       link: https://gitlab.medvedev-it.com/MedvedevN/powerdns-web
   generator: false
 
-copyright: "\u00A9 2025 PowerDNS-WEB | Created by MedvedevN"
+copyright: '\u00A9 2025 PowerDNS-WEB | Created by <a href="https://medvedev-it.com/" target="_blank">MedvedevN</a> | Made with Material for MkDocs'
