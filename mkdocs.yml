@@ -15,4 +15,5 @@ extra:
     - icon: fontawesome/brands/gitlab
       link: https://gitlab.medvedev-it.com/MedvedevN/powerdns-web
   generator: false
-copyright: &copy; 2025 PowerDNS-WEB | Created by MedvedevN
+
+copyright: "\u00A9 2025 PowerDNS-WEB | Created by MedvedevN"
