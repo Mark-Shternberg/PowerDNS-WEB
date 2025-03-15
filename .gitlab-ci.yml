@@ -9,10 +9,12 @@ stages:
   - deploy
 
 before_script:
-  - pip install -r requirements.txt #
+  - pip install -r requirements.txt
 
 build:
   stage: build
+  tags:
+    - docker
   script:
     - mkdocs build
   artifacts:
@@ -21,6 +23,8 @@ build:
 
 deploy:
   stage: deploy
+  tags:
+    - docker
   script:
     - mkdocs build --site-dir public
   artifacts:
