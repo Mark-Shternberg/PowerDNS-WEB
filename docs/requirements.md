@@ -5,17 +5,21 @@
 - **CPU**: 1 core
 - **RAM**: 2 GB
 
+---
+
 ### Software Requirements
 
 - **Operating System**:
   - Debian (latest stable release)
   - Ubuntu (latest LTS release)
-- **Required Packages**:
+- **Required Packages (for manual install)**:
   - `PowerDNS`
   - `PowerDNS Recursor`
   - `Nginx` or `Apache` (for web UI)
   - `MariaDB` or `MySQL`
   - `systemd` (default in modern Debian/Ubuntu)
+
+---
 
 ### Network Requirements
 
