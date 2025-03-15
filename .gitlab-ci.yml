@@ -9,6 +9,8 @@ before_script:
 
 build:
   stage: build
+  tags:
+    - docker
   script:
     - mkdocs build --site-dir public
   artifacts:
@@ -19,6 +21,8 @@ build:
 
 pages:
   stage: deploy
+  tags:
+    - docker
   script:
     - mkdocs build --site-dir public
   artifacts:
