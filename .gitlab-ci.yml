@@ -1,0 +1,30 @@
+image: python:3.9
+
+cache:
+  paths:
+    - .cache/pip/
+
+stages:
+  - build
+  - deploy
+
+before_script:
+  - pip install -r requirements.txt
+
+build:
+  stage: build
+  script:
+    - mkdocs build
+  artifacts:
+    paths:
+      - site/
+
+deploy:
+  stage: deploy
+  script:
+    - mkdocs build --site-dir public
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

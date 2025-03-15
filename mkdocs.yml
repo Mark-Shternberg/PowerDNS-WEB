@@ -1,0 +1,7 @@
+site_name: "PowerDNS-WEB Documentation"
+theme:
+  name: "material"
+
+nav:
+  - Main: index.md
+  - Install: guide.md
