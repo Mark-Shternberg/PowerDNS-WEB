@@ -1,16 +1,18 @@
 site_name: "PowerDNS-WEB Documentation"
 theme:
   name: "material"
+  favicon: favicon.ico
+  logo: favicon.ico
 
 nav:
   - Main: index.md
   - Install: guide.md
   
 extra:
-  favicon: favicon.ico
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/Mark-Shternberg/PowerDNS-WEB
     - icon: fontawesome/brands/gitlab
       link: https://gitlab.medvedev-it.com/MedvedevN/powerdns-web
-  copyright: "\u00A9 2025 PowerDNS-WEB | Created by MedvedevN"
+  generator: false
+copyright: &copy; 2025 PowerDNS-WEB | Created by MedvedevN
