@@ -121,8 +121,8 @@ fi
 sleep 5
 mv /root/.dotnet /var/www/powerdns-web/
 
-DBpassword=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 10)
-API_KEY=$(tr -dc 'A-Za-z0-9!?%=' < /dev/urandom | head -c 10)
+DBpassword=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 16)
+API_KEY=$(tr -dc 'A-Za-z0-9@#^&*' < /dev/urandom | head -c 12)
 
 execute_by_distro
 
@@ -203,7 +203,7 @@ webserver-allow-from=127.0.0.1,::1
 webserver-port=8081
 EOF
 
-sudo mysql -u powerdns -p powerdns < /usr/share/doc/pdns-backend-mysql/schema.mysql.sql
+mysql -u powerdns -p"$(printf '%q' "$DBpassword")" powerdns < /usr/share/doc/pdns-backend-mysql/schema.mysql.sql
 
 echo -e "${colGreen}PowerDNS configuration written to $PDNS_CONFIG${resetCol}"
 
