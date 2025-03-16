@@ -193,28 +193,30 @@ namespace PowerDNS_Web.Pages
                     }
 
                     // ADD ZONE TO RECURSOR
-
-                    var recursorUrl = _configuration["recursor:url"];
-                    var recursorApiKey = _configuration["recursor:api_key"];
-
-                    var forwardZoneData = new
+                    if (_configuration["recursor:Enabled"] == "Enabled")
                     {
-                        name = request.name.EndsWith(".") ? request.name : request.name + ".",
-                        kind = "Forwarded",
-                        servers = new[] { "127.0.0.1:5300" },
-                        recursion_desired = false
-                    };
+                        var recursorUrl = _configuration["recursor:url"];
+                        var recursorApiKey = _configuration["recursor:api_key"];
 
-                    var content2 = new StringContent(JsonSerializer.Serialize(forwardZoneData), Encoding.UTF8, "application/json");
-                    client.DefaultRequestHeaders.Clear();
-                    client.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
+                        var forwardZoneData = new
+                        {
+                            name = request.name.EndsWith(".") ? request.name : request.name + ".",
+                            kind = "Forwarded",
+                            servers = new[] { "127.0.0.1:5300" },
+                            recursion_desired = false
+                        };
 
-                    var response2 = await client.PostAsync($"{recursorUrl}/api/v1/servers/localhost/zones", content2);
+                        var content2 = new StringContent(JsonSerializer.Serialize(forwardZoneData), Encoding.UTF8, "application/json");
+                        client.DefaultRequestHeaders.Clear();
+                        client.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
 
-                    if (!response2.IsSuccessStatusCode)
-                    {
-                        var errorMessage = await response2.Content.ReadAsStringAsync();
-                        return new JsonResult(new { success = false, message = $"ZONE ADDED. ERROR ADDING FORWARD ZONE: {errorMessage}" }) { StatusCode = (int)response.StatusCode };
+                        var response2 = await client.PostAsync($"{recursorUrl}/api/v1/servers/localhost/zones", content2);
+
+                        if (!response2.IsSuccessStatusCode)
+                        {
+                            var errorMessage = await response2.Content.ReadAsStringAsync();
+                            return new JsonResult(new { success = false, message = $"ZONE ADDED. ERROR ADDING FORWARD ZONE: {errorMessage}" }) { StatusCode = (int)response.StatusCode };
+                        }
                     }
                 }
 
@@ -402,28 +404,33 @@ namespace PowerDNS_Web.Pages
             }
 
             // DELETE ZONE FROM RECURSOR
-            try
+            if (_configuration["recursor:Enabled"] == "Enabled")
             {
-                var recursorUrl = _configuration["recursor:url"];
-                var recursorApiKey = _configuration["recursor:api_key"];
-
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
-                var response2 = await client.DeleteAsync($"{recursorUrl}/api/v1/servers/localhost/zones/{zone.name}");
-
-                if (!response2.IsSuccessStatusCode)
+                try
                 {
-                    var errorMessage = await response.Content.ReadAsStringAsync();
-                    return new JsonResult(new { success = false, message = $"ERROR REMOVING FORWARD ZONE: {errorMessage}" }) { StatusCode = (int)response.StatusCode };
-                }
+                    var recursorUrl = _configuration["recursor:url"];
+                    var recursorApiKey = _configuration["recursor:api_key"];
 
-                return new JsonResult(new { success = true });
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
+                    var response2 = await client.DeleteAsync($"{recursorUrl}/api/v1/servers/localhost/zones/{zone.name}");
+
+                    if (!response2.IsSuccessStatusCode)
+                    {
+                        var errorMessage = await response.Content.ReadAsStringAsync();
+                        return new JsonResult(new { success = false, message = $"ERROR REMOVING FORWARD ZONE: {errorMessage}" }) { StatusCode = (int)response.StatusCode };
+                    }
+
+                    return new JsonResult(new { success = true });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"EXCEPTION IN OnPostRemoveForwardZoneAsync: {ex.Message}");
+                    return new JsonResult(new { success = false, message = $"INTERNAL SERVER ERROR: {ex.Message}" }) { StatusCode = 500 };
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError($"EXCEPTION IN OnPostRemoveForwardZoneAsync: {ex.Message}");
-                return new JsonResult(new { success = false, message = $"INTERNAL SERVER ERROR: {ex.Message}" }) { StatusCode = 500 };
-            }
+
+            return new JsonResult(new { success = true });
         }
     }
 }
