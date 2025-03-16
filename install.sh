@@ -176,6 +176,11 @@ server_name $server_name;\n\
 }" > /etc/nginx/sites-enabled/powerdns-web
 
 PDNS_CONFIG="/etc/powerdns/pdns.conf"
+PDNS_PORT=53
+
+if [[ "$install_recursor_flag" == "true" ]]; then
+  PDNS_PORT=5300
+fi
 
 cat << EOF > "$PDNS_CONFIG"
 launch=gmysql
@@ -184,7 +189,7 @@ gmysql-dbname=powerdns
 gmysql-user=powerdns
 gmysql-password=$DBpassword
 gmysql-dnssec=yes
-local-port=5300
+local-port=$PDNS_PORT
 allow-dnsupdate-from=127.0.0.0/8,::1,0.0.0.0/0
 api=yes
 api-key=$API_KEY
@@ -197,6 +202,8 @@ webserver-address=127.0.0.1
 webserver-allow-from=127.0.0.1,::1
 webserver-port=8081
 EOF
+
+sudo mysql -u powerdns -p powerdns < /usr/share/doc/pdns-backend-mysql/schema.mysql.sql
 
 echo -e "${colGreen}PowerDNS configuration written to $PDNS_CONFIG${resetCol}"
 
