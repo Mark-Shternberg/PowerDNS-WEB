@@ -1,6 +1,8 @@
 ﻿# **PowerDNS Web Panel**
 A modern **web-based management panel** for **PowerDNS**, built with **Razor Pages**, **Bootstrap**, and **FontAwesome**. This panel allows administrators to manage DNS zones and records efficiently through the **PowerDNS API**.
 
+> INFO. The main repository is on [GitLab](https://gitlab.medvedev-it.com/MedvedevN/powerdns-web). [GitHub](https://github.com/Mark-Shternberg/PowerDNS-WEB) is a mirror.
+
 ## **Features**
 ✅ **DNS Zone Management** – Create, edit, and delete DNS zones  
 ✅ **Record Management** – Add, modify, and remove DNS records dynamically  
