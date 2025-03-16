@@ -19,7 +19,7 @@ A modern **web-based management panel** for **PowerDNS**, built with **Razor Pag
 - **Authentication:** Cookie-based authentication with BCrypt password hashing  
 
 ## **Installation and using**
-Follow the [official documentation](https://docs.medvedev-it.com/powerns-web) for setup instructions.
+Follow the [official documentation](https://docs.medvedev-it.com/medvedevn/powerdns-web/) for setup instructions.
 
 ## **License**
 This project is open-source and follows the MIT License, but PowerDNS operates under the GPL License. Please ensure compliance when using or modifying PowerDNS.
