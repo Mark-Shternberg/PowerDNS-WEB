@@ -32,6 +32,7 @@ theme:
     - content.code.select
     - navigation.path
     - navigation.top
+    - content.action.view
 
 markdown_extensions:
   - admonition
@@ -53,7 +54,9 @@ nav:
       - Live Statistics: usage/live-statistics.md
       - Managing DNS Zones: usage/dns-zones.md
       - Managing DNS Records: usage/dns-records.md
-      - Forward Zones: usage/forward-zones.md
+      - Forward Zones: 
+          Special Forward Zone: usage/forward/special-zone.md
+          Forward Zones: usage/forward/forward-zones.md
       - User Management: usage/user-management.md
   - Troubleshooting: troubleshooting.md
   
