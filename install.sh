@@ -8,6 +8,31 @@ if [ $(id -u) -ne 0 ]; then
   exit 1
 fi
 
+if [[ " $@ " =~ " -update " ]]; then
+    if ! { systemctl list-units --type=service --all 2>/dev/null | grep -q "powerdns-web"; }; then
+        echo -e "${colRed}PowerDNS-WEB isn't installed. Run script without arguments, Exiting...${resetCol}"
+        exit 0
+    fi
+
+    if [[ ! -d /var/www/powerdns-web ]]; then
+        echo -e "${colRed}PowerDNS-WEB isn't installed in default directory.\nYou can update program manually, Exiting...${resetCol}"
+        exit 0;
+    fi
+    systemctl stop powerdns-web.service
+    sleep 1
+
+    find "powerdns-web" -type f ! -name "appsettings.json" -exec cp --parents {} "/var/www/" \;
+
+    systemctl start powerdns-web.service
+    if [ $? -eq 0 ]; then
+        echo -e "${colGreen}\tPowerDNS-WEB upgraded!${resetCol}"
+    else
+        echo -e "$colRed Upgrade error. $resetCol"
+        exit 0 
+    fi
+    exit 0 
+fi
+
 check_port_53() {
     if ss -tuln | grep -q ":53 "; then
         echo -e "\033[31mError: Port 53 is already in use. Exiting...\033[0m"
