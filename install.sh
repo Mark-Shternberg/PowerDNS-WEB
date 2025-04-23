@@ -151,6 +151,14 @@ API_KEY=$(tr -dc 'A-Za-z0-9@#^&*' < /dev/urandom | head -c 12)
 
 execute_by_distro
 
+systemctl start mysql
+if [ $? -eq 0 ]; then
+    echo -e "${colGreen}\tMySQL installed${resetCol}"
+else
+  echo -e "$colRed Error while installing MySQL. $resetCol"
+  exit 0 
+fi
+
 read -p "Enter root password for MySQL: " mysql_root_password
 
 mysql -u root -p"$(printf '%q' "$mysql_root_password")" << eof
@@ -162,6 +170,8 @@ GRANT ALL PRIVILEGES ON powerdnsweb.* TO 'powerdnsweb'@'localhost';
 GRANT ALL PRIVILEGES ON powerdns.* TO 'powerdns'@'localhost';
 FLUSH PRIVILEGES;
 eof
+
+mysql -u powerdns -p"$(printf '%q' "$mysql_root_password")" powerdns < /usr/share/doc/pdns-backend-mysql/schema.mysql.sql
 
 JSON_FILE="/var/www/powerdns-web/appsettings.json"
 
