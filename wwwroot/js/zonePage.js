@@ -11,6 +11,9 @@
 
     if (type === "MX") {
         document.getElementById("mxPriorityField").classList.remove("d-none");
+    } else if (type === "TXT") {
+        document.getElementById("txtField").classList.remove("d-none");
+        document.getElementById("valueField").classList.add("d-none");
     } else if (type === "SRV") {
         document.getElementById("srvPriorityField").classList.remove("d-none");
         document.getElementById("srvWeightField").classList.remove("d-none");
@@ -49,6 +52,8 @@ function toggleEditFields() {
 
     if (recordType === "SOA") {
         document.getElementById("editSoaFields").classList.remove("d-none");
+    } else if (recordType === "TXT") {
+        document.getElementById("editTXTField").classList.remove("d-none");
     } else if (recordType === "MX") {
         document.getElementById("editMxPriorityField").classList.remove("d-none");
         document.getElementById("editValueField").classList.remove("d-none");

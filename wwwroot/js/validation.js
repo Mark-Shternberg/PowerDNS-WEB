@@ -79,3 +79,26 @@ function validateIPv4withPort(ip) {
 
     return "";
 }
+
+function validateTXT(value) {
+    const encoder = new TextEncoder();
+    const byteLength = encoder.encode(value).length;
+
+    if (!value.trim()) {
+        return "TXT record must not be empty.";
+    }
+
+    if (byteLength > 65535) {
+        return "TXT record must be no more than 65535 bytes.";
+    }
+
+    if (value.includes('\n') || value.includes('\r')) {
+        return "TXT record must not contain line breaks.";
+    }
+
+    if (value.includes('"')) {
+        return "TXT record must not contain quotes (\").";
+    }
+
+    return "";
+}

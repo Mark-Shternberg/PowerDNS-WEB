@@ -222,7 +222,7 @@ namespace PowerDNS_Web.Pages.zone
                 if (request.RecordType == "MX")
                 {
                     int mxPriority = request.MxPriority ?? 10;
-                    string mailServer = request.Value.TrimEnd('.') + "."; 
+                    string mailServer = request.Value.TrimEnd('.') + ".";
                     recordContent = $"{mxPriority} {mailServer}";
                 }
                 else if (request.RecordType == "SRV")
@@ -230,8 +230,12 @@ namespace PowerDNS_Web.Pages.zone
                     int srvPriority = request.SrvPriority ?? 0;
                     int srvWeight = request.SrvWeight ?? 0;
                     int srvPort = request.SrvPort ?? 0;
-                    string targetHost = request.Value.TrimEnd('.') + "."; 
+                    string targetHost = request.Value.TrimEnd('.') + ".";
                     recordContent = $"{srvPriority} {srvWeight} {srvPort} {targetHost}";
+                }
+                else if (request.RecordType == "TXT")
+                {
+                    recordContent = FormatTxtForPowerDNS(request.Value);
                 }
 
 
@@ -255,6 +259,7 @@ namespace PowerDNS_Web.Pages.zone
                 };
 
                 var json = JsonSerializer.Serialize(recordUpdate, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                Console.WriteLine(json);
 
                 var patchRequest = new HttpRequestMessage(HttpMethod.Patch, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}")
                 {
@@ -266,7 +271,7 @@ namespace PowerDNS_Web.Pages.zone
                 if (!patchResponse.IsSuccessStatusCode)
                 {
                     var patchError = await patchResponse.Content.ReadAsStringAsync();
-                    return new JsonResult(new { success = false, message = $"Error updating records: {patchError}" }) { StatusCode = (int)patchResponse.StatusCode };
+                    return new JsonResult(new { success = false, message = $"ERROR ADDING RECORD: {patchError}" }) { StatusCode = (int)patchResponse.StatusCode };
                 }
 
                 return new JsonResult(new
@@ -449,6 +454,10 @@ namespace PowerDNS_Web.Pages.zone
 
                     newRecordContent = $"{soaNs} {soaEmail} {soaSerial} {soaRefresh} {soaRetry} {soaExpire} {soaMinimumTtl}";
                 }
+                else if (request.Type == "TXT")
+                {
+                    newRecordContent = FormatTxtForPowerDNS(request.Value);
+                }
 
                 // ADD NEW RECORD TO THE REMAINING RECORDS
                 remainingRecords.Add(new { content = newRecordContent, disabled = false });
@@ -602,6 +611,21 @@ namespace PowerDNS_Web.Pages.zone
                 _logger.LogError($"Failed to execute command '{command}': {ex.Message}");
             }
         }
+
+        private static string FormatTxtForPowerDNS(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return "\"\"";
+
+            raw = raw.Trim();
+
+            if (raw.StartsWith("\"")) raw = raw.Substring(1);
+            if (raw.EndsWith("\"")) raw = raw.Substring(0, raw.Length - 1);
+
+            //raw = raw.Replace("\"", "\\\"");
+
+            return $"\"{raw}\"";
+        }
+
     }
 }
 

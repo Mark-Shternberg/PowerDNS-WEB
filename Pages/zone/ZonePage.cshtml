@@ -45,6 +45,12 @@
             <input type="text" id="recordValue" class="form-control" required />
         </div>
 
+        <!-- TXT Field -->
+        <div class="col-md-4 d-none" id="txtField">
+            <label class="form-label">TXT Value:</label>
+            <textarea type="text" id="txtValue" class="form-control"></textarea>
+        </div>
+
         <!-- NS Fields -->
         <div class="col-md-4 d-none" id="nsField">
             <label class="form-label">NS Target:</label>
@@ -106,7 +112,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var group in Model.GroupedRecords.OrderBy(g => g.Key != "@" ? 1 : 0))
+            @foreach (var group in Model.GroupedRecords.OrderBy(g => g.Key != "@" ? 0 : 1))
             {
                 <tr class="zone-header" onclick="toggleZone('@group.Key')">
                     <td colspan="5" class="fw-bold">
@@ -160,6 +166,12 @@
                     <div class="mb-3" id="editValueField">
                         <label class="form-label">Value:</label>
                         <input type="text" id="editRecordValue" name="Value" class="form-control" required />
+                    </div>
+
+                    <!-- TXT Field -->
+                    <div class="md-3 d-none" id="editTXTField">
+                        <label class="form-label">TXT Value:</label>
+                        <textarea type="text" id="editTXTValue" class="form-control"></textarea>
                     </div>
 
                     <!-- MX PRIORITY -->
@@ -308,11 +320,14 @@
         const srvPort = document.getElementById("srvPort")?.value;
         const httpsValue = document.getElementById("httpsValue")?.value;
         const nsTarget = document.getElementById("nsTarget")?.value;
+        var txtValue = document.getElementById("txtValue")?.value;
 
         if (recordType === "NS") {
             value = nsTarget;
         } else if (recordType === "HTTPS") {
             value = httpsValue;
+        } else if (recordType === "TXT") {
+            value = txtValue;
         }
 
         let recordData = {
@@ -347,8 +362,19 @@
                 return;
             }
         } else if (recordType === "TXT") {
-            if (!value.match(/^".*"$/)) {
-                showAlert("Invalid TXT format!", "alertContainer", "danger");
+            value = txtValue.trim();
+
+            if (value.startsWith('"')) {
+                value = value.substring(1);
+            }
+
+            if (value.endsWith('"')) {
+                value = value.substring(0, value.length - 1);
+            }
+
+            let txtCheck = validateTXT(value);
+            if (txtCheck !== "") {
+                showAlert(txtCheck, "alertContainer", "danger");
                 return;
             }
         } else if (recordType === "SRV") {
@@ -400,6 +426,15 @@
                 document.getElementById("editSoaExpire").value = soaParts[5];
                 document.getElementById("editSoaMinimumTtl").value = soaParts[6];
             }
+        } else if (type === "TXT") {
+            if (value.startsWith('"')) {
+                value = value.substring(1);
+            }
+
+            if (value.endsWith('"')) {
+                value = value.substring(0, value.length - 1);
+            }
+            document.getElementById("editTXTValue").value = value;
         }
 
         toggleEditFields();
@@ -407,8 +442,8 @@
         if (type === "MX") {
             const parts = value.split(" ");
             if (parts.length >= 2) {
-                document.getElementById("editMxPriority").value = parts[0]; // Приоритет MX
-                document.getElementById("editRecordValue").value = parts.slice(1).join(" "); // Оставшаяся часть
+                document.getElementById("editMxPriority").value = parts[0];
+                document.getElementById("editRecordValue").value = parts.slice(1).join(" "); 
             }
         } else if (type === "SRV") {
             const parts = value.split(" ");
@@ -416,7 +451,7 @@
                 document.getElementById("editSrvPriority").value = parts[0];
                 document.getElementById("editSrvWeight").value = parts[1];
                 document.getElementById("editSrvPort").value = parts[2];
-                document.getElementById("editRecordValue").value = parts.slice(3).join(" "); // Доменное имя
+                document.getElementById("editRecordValue").value = parts.slice(3).join(" ");
             }
         }
 
@@ -474,6 +509,7 @@
         const type = document.getElementById("editRecordType").value;
         let value = document.getElementById("editRecordValue").value.trim();
         const ttl = parseInt(document.getElementById("editRecordTtl").value, 10);
+        let txtValue = document.getElementById("editTXTValue").value;
 
         let recordData = { Name: name, OldValue: oldValue, Type: type, Value: value, Ttl: ttl };
 
@@ -545,10 +581,23 @@
                 return;
             }
         } else if (type === "TXT") {
-            if (!value.match(/^".*"$/)) {
-                showAlert("Invalid TXT format!", "alertContainer-edit", "danger");
+            txtValue = txtValue.trim();
+
+            if (txtValue.startsWith('"')) {
+                txtValue = txtValue.substring(1);
+            }
+
+            if (txtValue.endsWith('"')) {
+                txtValue = txtValue.substring(0, txtValue.length - 1);
+            }
+
+            const txtCheck = validateTXT(txtValue);
+            if (txtCheck) {
+                showAlert(txtCheck, "alertContainer-edit", "danger");
                 return;
             }
+
+            recordData.Value = txtValue;
         } else if (type === "SRV") {
             if (!value.match(/^\d{1,5} \d{1,5} \d{1,5} [a-zA-Z0-9.-]+$/)) {
                 showAlert("Invalid SRV format!", "alertContainer-edit", "danger");
