@@ -48,7 +48,7 @@ function validateIPv6(ip) {
 
 function validateSubdomain(subdomain) {
     // (a-z, 0-9, -, but "-" not at the start/end)
-    const subdomainPattern = /^(?!-)[a-z0-9-]{1,63}(?<!-)$/;
+    const subdomainPattern = /^(?!-)[a-z0-9-].{1,63}(?<!-)$/;
 
     if (subdomain === "") {
         return "Please enter subdomain.";
