@@ -8,6 +8,7 @@
     document.getElementById("srvPortField").classList.add("d-none");
     document.getElementById("nsField").classList.add("d-none");
     document.getElementById("httpsSvcbField").classList.add("d-none");
+    document.getElementById("txtField").classList.add("d-none");
 
     if (type === "MX") {
         document.getElementById("mxPriorityField").classList.remove("d-none");
@@ -49,6 +50,7 @@ function toggleEditFields() {
     document.getElementById("editSrvWeightField").classList.add("d-none");
     document.getElementById("editSrvPortField").classList.add("d-none");
     document.getElementById("editSoaFields").classList.add("d-none");
+    document.getElementById("editTXTField").classList.add("d-none");
 
     if (recordType === "SOA") {
         document.getElementById("editSoaFields").classList.remove("d-none");
@@ -67,4 +69,7 @@ function toggleEditFields() {
     }
 }
 
-
+function autoResizeTextarea(textarea) {
+    textarea.style.height = "auto"; 
+    textarea.style.height = (textarea.scrollHeight) + "px";
+}

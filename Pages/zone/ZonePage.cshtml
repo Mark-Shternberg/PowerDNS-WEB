@@ -48,7 +48,8 @@
         <!-- TXT Field -->
         <div class="col-md-4 d-none" id="txtField">
             <label class="form-label">TXT Value:</label>
-            <textarea type="text" id="txtValue" class="form-control"></textarea>
+            <textarea type="text" id="txtValue" class="form-control textarea" oninput="autoResizeTextarea(this)"></textarea>
+            <small class="form-text text-muted">Don't use quotes and line breaks</small>
         </div>
 
         <!-- NS Fields -->
@@ -94,7 +95,7 @@
         </div>
 
 
-        <div class="col-md-2 d-flex align-items-end">
+        <div class="col-md-2 d-flex h-40" style="margin-top: 48px;">
             <button type="button" class="btn btn-success w-100" onclick="addRecord()">Add</button>
         </div>
     </form>
@@ -126,9 +127,9 @@
                         <tr class="zone-records @group.Key" style="display: none;">
                             <td>@record.Name</td>
                             <td>@record.Type</td>
-                            <td>@value</td>
-                            <td>@record.Ttl</td>
-                            <td>
+                            <td class="line-break">@value</td>
+                            <td class="min-width-50">@record.Ttl</td>
+                            <td class="min-width-100">
                                 <button class="btn btn-warning btn-sm" onclick="editRecord('@record.Name', '@record.Type', '@value', '@record.Ttl')">
                                     <i class="fa fa-edit"></i>
                                 </button>
@@ -171,7 +172,8 @@
                     <!-- TXT Field -->
                     <div class="md-3 d-none" id="editTXTField">
                         <label class="form-label">TXT Value:</label>
-                        <textarea type="text" id="editTXTValue" class="form-control"></textarea>
+                        <textarea type="text" id="editTXTValue" class="form-control textarea" oninput="autoResizeTextarea(this)"></textarea>
+                        <small class="form-text text-muted">Don't use quotes and line breaks</small>
                     </div>
 
                     <!-- MX PRIORITY -->
@@ -435,6 +437,10 @@
                 value = value.substring(0, value.length - 1);
             }
             document.getElementById("editTXTValue").value = value;
+
+            setTimeout(() => {
+                autoResizeTextarea(document.getElementById("editTXTValue"));
+            }, 50);
         }
 
         toggleEditFields();

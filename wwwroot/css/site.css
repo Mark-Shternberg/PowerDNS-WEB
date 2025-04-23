@@ -249,3 +249,24 @@ table a:hover span {
     border-radius: 5px;
     padding: 3px;
 }
+
+.min-width-50 {
+    min-width: 50px;
+}
+
+.min-width-100 {
+    min-width: 100px;
+}
+
+.line-break {
+    line-break: anywhere;
+}
+
+.textarea {
+    height: auto;
+    overflow-y: hidden;
+}
+
+.h-40 {
+    height: 40px;
+}
