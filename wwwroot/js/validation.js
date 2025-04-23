@@ -1,5 +1,27 @@
-﻿function validateZoneName(zoneName) {
-    const zoneRegex = /^(?!-)([a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,63}$/;
+﻿function validateForwardZoneName(zoneName) {
+    const zoneRegex = /^(?!-)(?!(.*\.in-addr\.arpa\.?)$)([a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,63}$/;
+
+    if (zoneName === "") {
+        return "Please enter a zone name.";
+    }
+
+    if (zoneName.length > 255) {
+        return "Domain name is too long (max 255 characters).";
+    }
+
+    if (zoneName.includes("..")) {
+        return "Domain name cannot contain consecutive dots.";
+    }
+
+    if (!zoneRegex.test(zoneName)) {
+        return "Invalid domain format. Use letters, numbers, and hyphens.";
+    }
+
+    return "";
+}
+
+function validateReverseZoneName(zoneName) {
+    const zoneRegex = /^(?!-)(?!(.*\.in-addr\.arpa\.?)$)([a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,63}$/;
 
     if (zoneName === "") {
         return "Please enter a zone name.";

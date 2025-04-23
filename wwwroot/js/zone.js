@@ -65,14 +65,20 @@ function ZoneToggle() {
     }
 }
 
-async function addZone() {
+async function addZone(type) {
     const name = document.getElementById("modal-domain").value.trim();
     const kind = document.getElementById("modal-type").value;
     const master = document.getElementById("modal-type").value === "Slave" ? document.getElementById("modal-mserver").value.trim() : "";
     var dnssec = document.getElementById("modal-dnssec").value;
     const serial = 0;
+    var errorMessage;
 
-    const errorMessage = validateZoneName(name);
+    if (type === "Forward") {
+        errorMessage = validateForwardZoneName(name);
+    }
+    else if (type === "Reverse") { 
+        errorMessage = validateReverseZoneName(name);
+    }
 
     if (errorMessage) {
         showAlert(errorMessage, "alertContainer-modal", "danger");
