@@ -1,10 +1,22 @@
-﻿function showModal() {
-    document.getElementById("addZoneModalLabel").innerText = "Add zone";
+﻿function showModal(type) {
     // CLEAR INPUTS
     document.getElementById("modal-domain").value = "";
+    document.getElementById("modal-reverse").value = "";
     document.getElementById("modal-type").value = "Native";
     document.getElementById("modal-mserver").value = "";
     document.getElementById("modal-dnssec").value = "Enabled";
+
+    // TOOGLE INPUT FIELDS
+    document.getElementById("modal-reverse").classList.remove("d-none");
+    document.getElementById("modal-domain").classList.remove("d-none");
+
+    if (type === "Forward") {
+        document.getElementById("addZoneModalLabel").innerText = "Add forward zone";
+        document.getElementById("modal-reverse").classList.add("d-none");
+    } else {
+        document.getElementById("addZoneModalLabel").innerText = "Add reverse zone";
+        document.getElementById("modal-domain").classList.add("d-none");
+    }
 
     // HIDE SLAVE DIV
     document.getElementById("slave-div").style.display = "none";
@@ -65,18 +77,21 @@ function ZoneToggle() {
     }
 }
 
-async function addZone(type) {
-    const name = document.getElementById("modal-domain").value.trim();
+async function addZone() {
+    var name;
+    var type = document.getElementById("addZoneModalLabel").innerText;
     const kind = document.getElementById("modal-type").value;
     const master = document.getElementById("modal-type").value === "Slave" ? document.getElementById("modal-mserver").value.trim() : "";
     var dnssec = document.getElementById("modal-dnssec").value;
     const serial = 0;
     var errorMessage;
 
-    if (type === "Forward") {
+    if (type === "Add forward zone") {
+        name = document.getElementById("modal-domain").value.trim();
         errorMessage = validateForwardZoneName(name);
     }
-    else if (type === "Reverse") { 
+    else if (type === "Add reverse zone") { 
+        name = document.getElementById("modal-reverse").value.trim();
         errorMessage = validateReverseZoneName(name);
     }
 

@@ -13,8 +13,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" style="display: flex;flex-direction: column;">
-                <label for="zonenInput" class="form-label">Zone Name (domain): <a style="color:red;">*</a></label>
+
+                <label for="zonenInput" class="form-label">Zone Name: <a style="color:red;">*</a></label>
                 <input type="text" id="modal-domain" class="form-control" placeholder="example.com" required />
+                <input type="text" id="modal-reverse" class="form-control" placeholder="192.168.0." required />
 
                 <label for="modal-type">Zone type: <a style="color:red;">*</a></label>
                 <select id="modal-type" class="form-select w-auto" onchange="ZoneToggle()">
@@ -55,7 +57,8 @@
 <div style="text-align:center">
     @if (User.IsInRole("Administrator"))
     {
-        <button type="button" onclick="showModal()" class="btn btn-primary" style="margin-bottom:15px">Add new zone</button>
+        <button type="button" onclick="showModal('Forward')" class="btn btn-primary" style="margin-bottom:15px">Add new forward zone</button>
+        <button type="button" onclick="showModal('Reverse')" class="btn btn-primary" style="margin-bottom:15px">Add new reverse zone</button>
     }
     <br />
     <div id="search-div" style="display: flex; justify-content: center; margin-bottom: 10px;">

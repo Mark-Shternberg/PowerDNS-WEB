@@ -21,7 +21,7 @@
 }
 
 function validateReverseZoneName(zoneName) {
-    const zoneRegex = /^(?!-)(?!(.*\.in-addr\.arpa\.?)$)([a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,63}$/;
+    const zoneRegex = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.$/;
 
     if (zoneName === "") {
         return "Please enter a zone name.";
@@ -36,7 +36,7 @@ function validateReverseZoneName(zoneName) {
     }
 
     if (!zoneRegex.test(zoneName)) {
-        return "Invalid domain format. Use letters, numbers, and hyphens.";
+        return "Invalid IP format. Use numbers, and dots.";
     }
 
     return "";
