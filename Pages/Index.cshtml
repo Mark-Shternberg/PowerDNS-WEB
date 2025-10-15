@@ -4,246 +4,325 @@
     ViewData["Title"] = "PowerDNS Statistics";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4 text-center"><i class="fa fa-chart-line"></i> PowerDNS</h2>
+<div class="container mt-3">
 
-    <div class="row text-center">
-        <!-- INFO -->
-        <div class="col-md-3 flex" style="width: 500px;">
-            <div class="card bg-primary text-white flex-row">
+    <!-- ===== PAGE HEADER ===== -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <div>
+            <h2 class="mb-0"><i class="fa fa-chart-line me-2"></i>PowerDNS Overview</h2>
+            <div class="text-muted small">Live metrics & recursor stats</div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge text-bg-info-subtle text-info-emphasis">
+                <i class="fa fa-plug me-1"></i> <span id="activePortBadge">--</span>
+            </span>
+            <span class="badge text-bg-secondary-subtle text-secondary-emphasis">
+                <i class="fa fa-clock me-1"></i> <span id="uptimeBadge">--</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- ===== PRIMARY METRICS ===== -->
+    <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-lg-4">
+        <div class="col">
+            <div class="card stat-card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Active port</h5>
-                    <p class="card-text display-6">
-                        @if (ViewData["RecursorEnabled"]?.ToString() == "Enabled")
-                        {
-                            <a>5300</a>
-                        }
-                        else
-                        {
-                            <a>53</a>
-                        }
-                    </p>
+                    <div class="stat-label">Active Port</div>
+                    <div class="stat-value" id="activePort">--</div>
                 </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card stat-card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Uptime</h5>
-                    <p class="card-text display-6" id="uptime">--</p>
+                    <div class="stat-label">Uptime</div>
+                    <div class="stat-value" id="uptime">--</div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="stat-label">Total Queries</div>
+                    <div class="stat-value" id="totalQueries">--</div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="stat-label">QPS (approx)</div>
+                    <div class="stat-value" id="qps">--</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <h3 class="text-center mt-4">Statistics</h3>
-    <!-- GRID SYSTEM -->
-    <div class="row text-center">
-
-        <!-- QUERY COUNT -->
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
+    <!-- ===== DETAIL LISTS ===== -->
+    <h5 class="mt-4 mb-2 text-center">Statistics</h5>
+    <div class="row g-3">
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header text-center bg-body-secondary">
+                    <h6 class="mb-0 text-warning-emphasis"><i class="fa fa-exclamation-triangle me-1"></i>Queries for Missing Types</h6>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Total Queries</h5>
-                    <p class="card-text display-6" id="totalQueries">--</p>
+                    <pre id="noerror-queries" class="log-container">Loading...</pre>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header text-center bg-body-secondary">
+                    <h6 class="mb-0 text-danger-emphasis"><i class="fa fa-exclamation-circle me-1"></i>Queries for Nonexistent Records</h6>
+                </div>
+                <div class="card-body">
+                    <pre id="nxdomain-queries" class="log-container">Loading...</pre>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header text-center bg-body-secondary">
+                    <h6 class="mb-0 text-success-emphasis"><i class="fa fa-check-circle me-1"></i>UDP Queries Received</h6>
+                </div>
+                <div class="card-body">
+                    <pre id="queries" class="log-container">Loading...</pre>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="row justify-content-center">
-        <!-- QUERIES FOR NONEXISTENT TYPES -->
-        <div class="col-md-4">
-            <div class="card border border-secondary shadow-sm">
-                <div class="card-header text-center bg-light">
-                    <h5 class="text-warning fw-bold"><i class="fa fa-exclamation-triangle"></i> Queries for Missing Types</h5>
-                </div>
-                <div class="card-body">
-                    <pre id="noerror-queries" class="log-container p-3 bg-white border rounded text-dark fw-semibold">Loading...</pre>
-                </div>
-            </div>
-        </div>
-
-        <!-- NONEXISTENT QUERIES -->
-        <div class="col-md-4">
-            <div class="card border border-secondary shadow-sm">
-                <div class="card-header text-center bg-light">
-                    <h5 class="text-danger fw-bold"><i class="fa fa-exclamation-circle"></i> Queries for Nonexistent Records</h5>
-                </div>
-                <div class="card-body">
-                    <pre id="nxdomain-queries" class="log-container p-3 bg-white border rounded text-dark fw-semibold">Loading...</pre>
-                </div>
-            </div>
-        </div>
-
-        <!-- QUERIES RECEIVED -->
-        <div class="col-md-4">
-            <div class="card border border-secondary shadow-sm">
-                <div class="card-header text-center bg-light">
-                    <h5 class="text-success fw-bold"><i class="fa fa-check-circle"></i> UDP Queries Received</h5>
-                </div>
-                <div class="card-body">
-                    <pre id="queries" class="log-container p-3 bg-white border rounded text-dark fw-semibold">Loading...</pre>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
 
     @if (ViewData["RecursorEnabled"]?.ToString() == "Enabled")
     {
-        <h3 class="text-center mt-4"><i class="fa fa-database"></i> Recursor</h3>
+        <!-- ===== RECURSOR METRICS ===== -->
+        <h5 class="mt-5 mb-2 text-center"><i class="fa fa-database me-2"></i>Recursor</h5>
 
-        <div class="row text-center">
-            <!-- INFO -->
-            <div class="col-md-3 flex" style="width: 500px;">
-                <div class="card bg-primary text-white flex-row">
+        <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-lg-4">
+            <div class="col">
+                <div class="card stat-card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Active port</h5>
-                        <p class="card-text display-6">53</p>
+                        <div class="stat-label">Recursor Port</div>
+                        <div class="stat-value">53</div>
                     </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card stat-card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Recursor Uptime</h5>
-                        <p class="card-text display-6" id="recursorUptime">--</p>
+                        <div class="stat-label">Recursor Uptime</div>
+                        <div class="stat-value" id="recursorUptime">--</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card stat-card h-100">
+                    <div class="card-body">
+                        <div class="stat-label">Cache Hits</div>
+                        <div class="stat-value" id="recursorCacheHits">--</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card stat-card h-100">
+                    <div class="card-body">
+                        <div class="stat-label">Cache Misses · Hit Ratio</div>
+                        <div class="stat-value"><span id="recursorCacheMisses">--</span><span class="mx-2 text-muted">·</span><span id="recursorHitRatio">--</span></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <h3 class="text-center mt-4">Statistics</h3>
-
-        <div class="row text-center">
-            <!-- RECURSOR CACHE HITS -->
-            <div class="col-md-3">
-                <div class="card bg-success text-white">
+        <!-- ===== RECURSOR LISTS ===== -->
+        <div class="row g-3 mt-1">
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header text-center bg-body-secondary">
+                        <h6 class="mb-0">Top Requests</h6>
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title">Recursor Cache Hits</h5>
-                        <p class="card-text display-6" id="recursorCacheHits">--</p>
+                        <pre id="top-queries" class="log-container">Loading...</pre>
                     </div>
                 </div>
             </div>
-
-            <!-- RECURSOR CACHE MISSES -->
-            <div class="col-md-3">
-                <div class="card bg-warning text-black">
-                    <div class="card-body">
-                        <h5 class="card-title">Recursor Cache Misses</h5>
-                        <p class="card-text display-6" id="recursorCacheMisses">--</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row justify-content-center">
-            <!-- TOP REQUESTS -->
-            <div class="col-md-4">
-                <div class="card border border-secondary shadow-sm">
-                    <div class="card-header text-center bg-light">
-                        <h5 class="text-dark fw-bold">Top Requests</h5>
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header text-center bg-body-secondary">
+                        <h6 class="mb-0"><i class="fa fa-network-wired me-1"></i>Top Remotes</h6>
                     </div>
                     <div class="card-body">
-                            <pre id="top-queries" class="log-container p-3 bg-white border rounded text-dark fw-semibold">Loading...</pre>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TOP REMOTES -->
-            <div class="col-md-4">
-                <div class="card border border-secondary shadow-sm">
-                    <div class="card-header text-center bg-light">
-                        <h5 class="text-dark fw-bold"><i class="fa fa-network-wired"></i> Top Remotes</h5>
-                    </div>
-                    <div class="card-body">
-                            <pre id="top-remotes" class="log-container p-3 bg-white border rounded text-dark fw-semibold">Loading...</pre>
+                        <pre id="top-remotes" class="log-container">Loading...</pre>
                     </div>
                 </div>
             </div>
         </div>
     }
-    <!-- CHART -->
+
+    <!-- ===== CHART: QPS LAST 5 MIN ===== -->
     <div class="mt-5">
+        <h6 class="text-muted mb-2">Query rate (QPS), last 5 minutes</h6>
         <canvas id="queryChart"></canvas>
     </div>
 </div>
 
 @Html.AntiForgeryToken()
+
+<!-- CHART.JS (YOUR LOCAL BUNDLE) -->
 <script src="~/js/chart.js"></script>
 
+@section Scripts {
 <script>
-    // FUNCTION TO FETCH POWERDNS STATISTICS
-    async function fetchPowerDNSStats() {
-        try {
-            const response = await fetch("/Index?handler=Stats", {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json"
-                }
-            });
+    // ===== SAFE NUMBER PARSING =====
+    const N = v => Number.isFinite(+v) ? +v : 0;
 
-            const data = await response.json();
-
-            if (!data.success) {
-                console.error("Error fetching PowerDNS stats:", data.message);
-                return;
-            }
-
-            // UPDATE GENERAL STATISTICS
-            document.getElementById("uptime").innerText = formatUptime(data.uptime);
-            document.getElementById("totalQueries").innerText = data.totalQueries;
-
-            // UPDATE NOERROR-QUERIES, NXDOMAIN-QUERIES, QUERIES
-            updateQueryList("noerror-queries", data.noerrorQueries);
-            updateQueryList("nxdomain-queries", data.nxdomainQueries);
-            updateQueryList("queries", data.queries);
-
-            // IF RECURSOR IS ENABLED, UPDATE RECURSOR STATS
-            if (document.getElementById("recursorCacheHits")) {
-                document.getElementById("recursorCacheHits").innerText = data.recursorCacheHits;
-                document.getElementById("recursorCacheMisses").innerText = data.recursorCacheMisses;
-                document.getElementById("recursorUptime").innerText = formatUptime(data.recursorUptime);
-
-                updateQueryList("top-queries", data.topQueries);
-                updateQueryList("top-remotes", data.topRemotes);
-            }
-
-        } catch (error) {
-            console.error("Failed to load stats:", error);
-        }
-    }
-
-    // FUNCTION TO FORMAT UPTIME IN HOURS AND MINUTES
+    // ===== FORMAT UPTIME (H:M) =====
     function formatUptime(seconds) {
-        let hours = Math.floor(seconds / 3600);
-        let minutes = Math.floor((seconds % 3600) / 60);
-        return `${hours}h ${minutes}m`;
+        const s = N(seconds);
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        return `${h}h ${m}m`;
     }
 
-    // FUNCTION TO UPDATE QUERY LIST DISPLAY
+    // ===== UPDATE TYPED LIST INTO PRE (NO NESTED <PRE>) =====
     function updateQueryList(elementId, data) {
         const container = document.getElementById(elementId);
         if (!container) return;
 
         if (!data || data.length === 0) {
-            container.innerText = "No data available";
+            container.textContent = "No data available";
             return;
         }
 
-        let maxNameLength = 40;
-        let maxValueLength = 8;
+        const maxNameLength = 40;
+        const maxValueLength = 8;
 
-        let formattedData = data.map(entry => {
-            let fullName = entry.name;
-            let shortName = fullName.length > maxNameLength
+        const lines = data.map(entry => {
+            const fullName = String(entry?.name ?? "");
+            const shortName = fullName.length > maxNameLength
                 ? fullName.substring(0, maxNameLength - 3) + "..."
                 : fullName;
 
-            let value = entry.value.toString().padStart(maxValueLength, " ");
-
+            const value = String(entry?.value ?? "").padStart(maxValueLength, " ");
             return `<span class="query-item" title="${fullName}">${shortName}</span> <span class="query-value">${value}</span>`;
-        }).join("\n");
+        });
 
-        container.innerHTML = `<pre>${formattedData}</pre>`;
+        container.innerHTML = lines.join("\n");
     }
 
-    // FETCH STATS INITIALLY AND UPDATE EVERY 5 SECONDS
+    // ===== QPS ROLLING BUFFER (5 MIN  5s) =====
+    const BUFFER_POINTS = 60; // 60 * 5s = 5 minutes
+    const labels = [];
+    const qpsData = [];
+    let lastTotal = null;
+    let lastTs = null;
+
+    // ===== CHART INIT (SINGLE DATASET) =====
+    let qpsChart = null;
+    function ensureChart() {
+        if (qpsChart) return qpsChart;
+        const ctx = document.getElementById('queryChart');
+        if (!ctx) return null;
+
+        // NOTE: COLORS LEFT DEFAULT (MATCHES CURRENT THEME)
+        qpsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'QPS',
+                    data: qpsData,
+                    tension: 0.25,
+                    pointRadius: 0,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { maxTicksLimit: 10 } },
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+        // GIVE CANVAS SOME HEIGHT
+        ctx.parentElement.style.height = '260px';
+        return qpsChart;
+    }
+
+    function pushQpsPoint(qps) {
+        const now = new Date();
+        const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        labels.push(label);
+        qpsData.push(qps);
+
+        if (labels.length > BUFFER_POINTS) { labels.shift(); qpsData.shift(); }
+        const c = ensureChart();
+        if (c) c.update('none'); // NO ANIMATION FOR SNAPPY UPDATES
+    }
+
+    // ===== FETCH & RENDER POWERDNS STATS =====
+    async function fetchPowerDNSStats() {
+        try {
+            const resp = await fetch("/Index?handler=Stats", {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            const data = await resp.json();
+            if (!data?.success) { console.error("Stats error:", data?.message); return; }
+
+            // CORE METRICS
+            const activePort = ("@(ViewData["RecursorEnabled"])".toLowerCase() === "enabled")
+                ? 5300 : 53;
+            document.getElementById("activePort").textContent = activePort;
+            document.getElementById("activePortBadge").textContent = `port ${activePort}`;
+
+            document.getElementById("uptime").textContent = formatUptime(data.uptime);
+            document.getElementById("uptimeBadge").textContent = formatUptime(data.uptime);
+            document.getElementById("totalQueries").textContent = data.totalQueries ?? "--";
+
+            // QPS CALC (DELTA / ELAPSED SEC)
+            const ts = Date.now();
+            if (lastTotal !== null && lastTs !== null) {
+                const delta = Math.max(0, N(data.totalQueries) - N(lastTotal));
+                const elapsed = Math.max(1, (ts - lastTs) / 1000.0);
+                const qps = +(delta / elapsed).toFixed(2);
+                document.getElementById("qps").textContent = qps.toString();
+                pushQpsPoint(qps);
+            }
+            lastTotal = N(data.totalQueries);
+            lastTs = ts;
+
+            // LISTS
+            updateQueryList("noerror-queries", data.noerrorQueries);
+            updateQueryList("nxdomain-queries", data.nxdomainQueries);
+            updateQueryList("queries", data.queries);
+
+            // RECURSOR (IF DOM NODES EXIST)
+            const haveRecursor = document.getElementById("recursorCacheHits");
+            if (haveRecursor) {
+                const hits = N(data.recursorCacheHits);
+                const misses = N(data.recursorCacheMisses);
+                const total = hits + misses;
+
+                document.getElementById("recursorCacheHits").textContent = (hits || hits === 0) ? hits : "--";
+                document.getElementById("recursorCacheMisses").textContent = (misses || misses === 0) ? misses : "--";
+                document.getElementById("recursorUptime").textContent = formatUptime(data.recursorUptime ?? 0);
+                document.getElementById("recursorHitRatio").textContent = total > 0 ? ((hits / total) * 100).toFixed(1) + "%" : "--";
+
+                updateQueryList("top-queries", data.topQueries);
+                updateQueryList("top-remotes", data.topRemotes);
+            }
+        } catch (e) {
+            console.error("Failed to load stats:", e);
+        }
+    }
+
+    // ===== INIT =====
     fetchPowerDNSStats();
     setInterval(fetchPowerDNSStats, 5000);
-
 </script>
+}

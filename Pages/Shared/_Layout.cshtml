@@ -1,4 +1,5 @@
 ﻿@{
+    // ===== GET VERSION =====
     @using System.Reflection;
     var version_full = Assembly.GetExecutingAssembly().GetName().Version;
     string version = $"{version_full.Major}.{version_full.Minor}.{version_full.Build}";
@@ -10,78 +11,153 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PowerDNS WEB</title>
+
+    <!-- ===== APPLY SAVED THEME BEFORE FIRST PAINT (NO FLICKER) ===== -->
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('theme') || 'dark';
+                document.documentElement.setAttribute('data-bs-theme', t);
+            } catch { /* NOOP */ }
+        })();
+    </script>
+
+    <!-- ===== BOOTSTRAP / FONTAWESOME / SITE CSS ===== -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/fa.css" asp-append-version="true" />
-    <script src="~/datepicker/jquery.min.js"></script>
-    <script src="~/datepicker/moment.min.js"></script>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- ===== DATE RANGE PICKER (OPTIONAL) ===== -->
     <link href="~/datepicker/daterangepicker.css" rel="stylesheet" />
+
+    <!-- ===== JQUERY, MOMENT, PICKER, INPUTMASK (LOAD ONCE) ===== -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/datepicker/moment.min.js"></script>
     <script src="~/datepicker/daterangepicker.min.js"></script>
     <script src="~/lib/jquery/dist/jquery.inputmask.min.js"></script>
 </head>
-<body data-role="@((User.IsInRole("Administrator")) ? "Administrator" : "User")">
-    <header>
-        <header>
-            <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-                <div class="container">
-                    <a class="navbar-brand" asp-area="" asp-page="/Index">PowerDNS WEB</a>
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                        <ul class="navbar-nav flex-grow-1">
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/zones">Authoritative</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/recursor">Recursor</a>
-                            </li>
-                        </ul>
-                        <ul class="navbar-nav">
-                            @if (User.Identity.IsAuthenticated)
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-page="/users">Users</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-page="/logs">logs</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-page="/settings">Settings</a>
-                                </li>
-                                <li>
-                                    <span class="nav-link">Hello, @User.Identity.Name!</span>
-                                </li>
-                                <li class="nav-item">
-                                    <form method="post" asp-page="/logout">
-                                        <button type="submit" class="btn btn-outline-danger">Logout</button>
-                                    </form>
-                                </li>
-                            }
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-        </header>
+<body data-role="@((User?.Identity?.IsAuthenticated == true && User.IsInRole("Administrator")) ? "Administrator" : "User")">
 
+    <!-- ===== NAVBAR ===== -->
+    <header>
+        <nav class="navbar navbar-expand-lg border-bottom sticky-top bg-body">
+            <div class="container">
+                <a class="navbar-brand fw-bold" asp-area="" asp-page="/Index">
+                    <i class="fa fa-bolt me-1"></i>PowerDNS WEB
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                        aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div id="mainNav" class="collapse navbar-collapse">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-page="/zones"><i class="fa fa-shield-halved me-1"></i>Authoritative</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-page="/recursor"><i class="fa fa-rotate me-1"></i>Recursor</a>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav align-items-center gap-2">
+                        @if (User?.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/users"><i class="fa fa-users me-1"></i>Users</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/logs"><i class="fa fa-clipboard-list me-1"></i>Logs</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/settings"><i class="fa fa-gear me-1"></i>Settings</a>
+                            </li>
+                            <li class="nav-item d-none d-lg-block">
+                                <span class="nav-link disabled small">Hello, @User.Identity!.Name!</span>
+                            </li>
+                            <li class="nav-item">
+                                <form method="post" asp-page="/logout" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="fa fa-right-from-bracket me-1"></i>Logout
+                                    </button>
+                                </form>
+                            </li>
+                        }
+
+                        <!-- ===== THEME TOGGLE ===== -->
+                        <li class="nav-item">
+                            <!-- NOTE: USE FA5-LIKE CLASSES FOR COMPAT; AVOID MIXING fa-solid -->
+                            <button id="themeToggle" class="btn btn-sm btn-chrome" type="button" title="Toggle theme" aria-label="Toggle theme" aria-pressed="false">
+                                <i class="fa fa-moon" id="themeIcon"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
     </header>
-    <div class="container">
+
+    <!-- ===== MAIN ===== -->
+    <div class="container py-3">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container" style="text-align:center; padding: 5px;">
-            &copy; @DateTime.Now.ToString("yyyy") - <a href="https://medvedev-it.ru/" target="_blank">Medvedev IT</a> - <a href="https://gitlab.medvedev-it.com/MedvedevN/powerdns-web" target="_blank">GitLab Repository</a><br /> Version: @version
+    <!-- ===== FOOTER ===== -->
+    <footer class="border-top text-muted small">
+        <div class="container text-center py-2">
+            &copy; @DateTime.Now.ToString("yyyy") —
+            <a href="https://medvedev-it.ru/" target="_blank">Medvedev IT</a> ·
+            <a href="https://gitlab.medvedev-it.com/MedvedevN/powerdns-web" target="_blank">GitLab Repository</a>
+            <span class="ms-2 badge text-bg-secondary align-middle">v@version</span>
         </div>
     </footer>
 
-    <!--<script src="~/lib/jquery/dist/jquery.min.js"></script>-->
+    <!-- ===== TOASTS CONTAINER (SERVER-SIDE TEMPDATA & CLIENT-SIDE API) ===== -->
+    <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1080">
+        @if (TempData["NoteInfo"] is string infoMsg)
+        {
+            <div class="toast text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+                <div class="d-flex">
+                    <div class="toast-body"><i class="fa fa-info-circle me-2"></i>@infoMsg</div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["NoteSuccess"] is string okMsg)
+        {
+            <div class="toast text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                <div class="d-flex">
+                    <div class="toast-body"><i class="fa fa-check-circle me-2"></i>@okMsg</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["NoteWarn"] is string warnMsg)
+        {
+            <div class="toast text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                <div class="d-flex">
+                    <div class="toast-body"><i class="fa fa-exclamation-triangle me-2"></i>@warnMsg</div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+        @if (TempData["NoteError"] is string errMsg)
+        {
+            <div class="toast text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="7000">
+                <div class="d-flex">
+                    <div class="toast-body"><i class="fa fa-times-circle me-2"></i>@errMsg</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- ===== SCRIPTS ===== -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
