@@ -63,14 +63,19 @@
                 <div class="col-md-3">
                     <label class="form-label">Subdomain</label>
                     <div class="input-group">
-                        <select id="subdomainSelect" name="Subdomain" class="form-select" required>
+                        <select id="subdomainSelect" name="Subdomain"
+                                class="form-select rounded-end-0" required>
                             <option value="@@" selected>(Root)</option>
                             @foreach (var subdomain in Model.GroupedRecords.Keys.Where(k => k != "@"))
                             {
                                 <option value="@subdomain">@subdomain</option>
                             }
                         </select>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubdomainModal" title="Add subdomain">
+                        <button type="button"
+                                class="btn btn-primary rounded-start-0 rounded-end border-start-0"
+                                data-bs-toggle="modal"
+                                data-bs-target="#addSubdomainModal"
+                                title="Add subdomain">
                             <i class="fa fa-plus"></i>
                         </button>
                         <div class="invalid-feedback">Select subdomain.</div>
@@ -186,7 +191,7 @@
                         <td colspan="5" class="fw-semibold">
                             <i class="fa fa-chevron-right me-2 caret" aria-hidden="true"></i>
                             @(group.Key == "@" ? "(Root)" : group.Key)
-                            <span class="badge rounded-pill bg-light text-muted ms-2">@group.Value.Sum(r => r.Content.Count)</span>
+                            <span class="badge rounded-pill text-muted ms-2">@group.Value.Sum(r => r.Content.Count)</span>
                         </td>
                     </tr>
                     @foreach (var record in group.Value)
@@ -229,7 +234,7 @@
 
 <!-- EDIT RECORD MODAL -->
 <div class="modal fade" id="editRecordModal" tabindex="-1" aria-labelledby="editRecordModalLabel" aria-hidden="true" data-bs-backdrop="false">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form method="post" asp-page-handler="EditRecord" class="needs-validation" novalidate>
                 <div class="modal-header">
@@ -322,7 +327,7 @@
 
 <!-- Add Subdomain -->
 <div class="modal fade" id="addSubdomainModal" tabindex="-1" aria-labelledby="addSubdomainModalLabel" aria-hidden="true" data-bs-backdrop="false">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form method="post" asp-page-handler="AddSubdomain" class="needs-validation" novalidate>
                 <div class="modal-header">
@@ -345,7 +350,7 @@
 
 <!-- Delete confirm -->
 <div class="modal fade" id="deleteRecordModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="false">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form method="post" asp-page-handler="DeleteRecord">
                 <div class="modal-header">
@@ -411,15 +416,19 @@
 
         // Collapse groups with header click
         document.addEventListener('click', (e) => {
-            const header = e.target.closest('tr.zone-header');
-            if (!header) return;
-            const group = header.getAttribute('data-group');
-            const rows = document.querySelectorAll(`tr.zone-record[data-group="${group}"]`);
-            const caret = header.querySelector('.caret');
-            const open = rows.length && rows[0].style.display !== 'none';
-            rows.forEach(r => r.style.display = open ? 'none' : 'table-row');
-            caret.classList.toggle('fa-chevron-right', !open);
-            caret.classList.toggle('fa-chevron-down', open);
+          const header = e.target.closest('tr.zone-header');
+          if (!header) return;
+          const group = header.getAttribute('data-group');
+          const rows = document.querySelectorAll(`tr.zone-record[data-group="${group}"]`);
+          const caret = header.querySelector('.caret');
+
+          const currentlyOpen = rows.length && rows[0].style.display !== 'none';
+          const willOpen = !currentlyOpen;
+
+          rows.forEach(r => r.style.display = willOpen ? 'table-row' : 'none');
+
+          caret.classList.toggle('fa-chevron-down', willOpen);
+          caret.classList.toggle('fa-chevron-right', !willOpen);
         });
 
         // Expand / Collapse all
