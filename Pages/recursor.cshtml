@@ -6,7 +6,7 @@
 
 @if (ViewData["RecursorEnabled"]?.ToString() != "Enabled")
 {
-    <div class="alert alert-warning align-items-center" role="alert" style="display: flex">
+    <div class="alert alert-warning d-flex align-items-center" role="alert">
         <i class="fa fa-exclamation-triangle fa-2x me-2"></i>
         <div>
             Recursor is disabled in <a href="/settings">settings</a> page.
@@ -15,15 +15,23 @@
 }
 
 <div class="container mt-4">
-    <h2>Recursor Forward Zones</h2>
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <h2 class="mb-0"><i class="fa fa-rotate me-2"></i>Recursor Forward Zones</h2>
+        <div class="text-muted small">Configure per-zone forwarding (upstream resolvers)</div>
+    </div>
 
     <!-- ADD NEW FORWARD ZONE -->
-    <div class="row mt-3">
+    <div class="row g-3 align-items-end">
         <div class="col-md-6">
-            <label for="availableZones">Available Zones:</label>
-            @if(Model.AvailableZones.Count == 0) {
-                <input id="availableZones" class="form-select" placeholder="No zones available to recurse" disabled />
-            } else {
+            <label for="availableZones" class="form-label">Available Zones</label>
+            @if (Model.AvailableZones.Count == 0)
+            {
+                <select id="availableZones" class="form-select" disabled>
+                    <option>No zones available to recurse</option>
+                </select>
+            }
+            else
+            {
                 <select id="availableZones" class="form-select">
                     @foreach (var zone in Model.AvailableZones)
                     {
@@ -32,64 +40,64 @@
                 </select>
             }
         </div>
-        <div class="col-md-2 d-flex align-items-end">
+        <div class="col-md-2">
             @if (Model.AvailableZones.Count == 0)
             {
                 <button class="btn btn-primary w-100" disabled>Add</button>
             }
-            else { 
-                <button class="btn btn-primary w-100" onclick="addForwardZone()">Add</button>
+            else
+            {
+                <button class="btn btn-primary w-100" onclick="addForwardZone()">
+                    <i class="fa fa-plus me-1"></i> Add
+                </button>
             }
         </div>
     </div>
 
-    <!-- ALERT CONTAINER -->
-    <div id="alertContainer"></div>
-
     <!-- FORWARD ZONES TABLE -->
     <h4 class="mt-4">Configured Forward Zones</h4>
-    <table class="table table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Zone</th>
-                <th>Forward To</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="forwardZonesTable">
-            @foreach (var zone in Model.ForwardZones.OrderBy(g => g.Name != "." ? 1 : 0))
-            {
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
                 <tr>
-                    <td>@zone.Name</td>
-                    <td>@{
-                            var displayList = zone.ForwardTo.Select(f => f.Trim() == "127.0.0.1:5300" ? "Authoritative server" : f);
-                            @string.Join(", ", displayList)
-                        }
-                    </td>
-                    <td>
-                        @if (zone.Name != ".")
-                        {
-                            <button class="btn btn-warning btn-sm" onclick="editZone('@zone.Name','@string.Join(", ", zone.ForwardTo)')">
-                                <i class="fa fa-edit"></i> Edit
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="removeForwardZone('@zone.Name', this)">
-                                <i class="fa fa-trash"></i> Remove
-                            </button>
-                        }
-                        else {
-                            <button class="btn btn-warning btn-sm" onclick="editZone('@zone.Name','@string.Join(", ", zone.ForwardTo)')">
-                                <i class="fa fa-edit"></i> Edit
-                            </button>
-                        }
-                    </td>
+                    <th>Zone</th>
+                    <th>Forward To</th>
+                    <th style="width:220px;">Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody id="forwardZonesTable">
+                @foreach (var zone in Model.ForwardZones.OrderBy(g => g.Name != "." ? 1 : 0))
+                {
+                    <tr>
+                        <td>@zone.Name</td>
+                        <td>
+                            @{
+                                var displayList = zone.ForwardTo.Select(f => f.Trim() == "127.0.0.1:5300" ? "Authoritative server" : f);
+                                @string.Join(", ", displayList)
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-warning btn-sm" onclick="editZone('@zone.Name','@string.Join(", ", zone.ForwardTo)')">
+                                    <i class="fa fa-edit"></i> Edit
+                                </button>
+                                @if (zone.Name != ".")
+                                {
+                                    <button class="btn btn-danger btn-sm" onclick="removeForwardZone('@zone.Name')">
+                                        <i class="fa fa-trash"></i> Remove
+                                    </button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
-<!-- Confirm delete Modal -->
-<div id="confirmModal" class="modal" style="display: none;">
+<!-- Confirm delete Modal (custom, no backdrop) -->
+<div id="confirmModal" class="modal" style="display:none">
     <div class="modal-content">
         <p id="confirmMessage"></p>
         <div class="modal-buttons">
@@ -100,48 +108,47 @@
 </div>
 
 <!-- EDIT ZONE MODAL -->
-<div class="modal fade" id="editZoneModal" tabindex="-1" aria-labelledby="editZoneModalLabel" aria-hidden="true">
+<div class="modal fade" id="editZoneModal" tabindex="-1" aria-labelledby="editZoneModalLabel" aria-hidden="true" data-bs-backdrop="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editZoneModalLabel">Edit <a id="zone_name-modal"></a> zone</h5>
+                <h5 class="modal-title" id="editZoneModalLabel">Edit <span id="zone_name-modal"></span> zone</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="editRecordForm">
-                    <div class="mb-3">
-                        <label class="form-label">Upstream DNS servers:</label>
-                        <div id="editZoneDNSContainer"></div>
-                        <button type="button" class="btn btn-primary mt-2 w-100" onclick="addDnsField()">
-                            <i class="fa fa-plus"></i> Add DNS Server
-                        </button>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label">Upstream DNS servers</label>
+                    <div id="editZoneDNSContainer"></div>
+                    <button type="button" class="btn btn-primary mt-2 w-100" onclick="addDnsField()">
+                        <i class="fa fa-plus"></i> Add DNS Server
+                    </button>
+                </div>
 
-                    <div id="alertContainer-edit"></div>
-                    <!-- INFO BLOCK -->
-                    <div class="modal-footer">
-                        <div class="alert alert-info w-100 text-center m-0" role="alert">
-                            <i class="fa fa-info-circle"></i> 127.0.0.1:5300 - Authoritative server
-                        </div>
-                    </div>
+                <div class="alert alert-info w-100 text-center m-0" role="alert">
+                    <i class="fa fa-info-circle"></i> 127.0.0.1:5300 — Authoritative server
+                </div>
 
-                    <button type="button" class="btn btn-warning w-100" onclick="saveRecord()">Save Changes</button>
-                </form>
+                <button type="button" class="btn btn-warning w-100 mt-3" onclick="saveRecord()">Save Changes</button>
             </div>
         </div>
     </div>
 </div>
 
-
 <script src="~/js/validation.js"></script>
 @Html.AntiForgeryToken()
 
 <script>
-    // ADD FORWARD ZONE
+    // ===== ANTIFORGERY =====
+    function getCsrf() {
+        const el = document.querySelector('input[name="__RequestVerificationToken"]');
+        return el ? el.value : '';
+    }
+
+    // ===== ADD FORWARD ZONE =====
     async function addForwardZone() {
-        const selectedZone = document.getElementById("availableZones").value;
+        const selectedZone = document.getElementById("availableZones")?.value;
         if (!selectedZone) {
-            showAlert("Please select a zone.", "alertContainer", "warning");
+            showToast('warning', 'Please select a zone.');
             return;
         }
 
@@ -150,37 +157,41 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]').value
+                    "Accept": "application/json",
+                    "RequestVerificationToken": getCsrf()
                 },
                 body: JSON.stringify({ Zone: selectedZone })
             });
 
             const result = await response.json();
-            if (!response.ok || !result.success) {
-                throw new Error(result.message || "Failed to add forward zone.");
-            }
+            if (!response.ok || !result.success) throw new Error(result.message || "Failed to add forward zone.");
 
-            showAlert("Zone added successfully!", "alertContainer", "success");
-            setTimeout(() => location.reload(), 1000);
+            showToast('success', result.message || 'Zone added successfully');
+            setTimeout(() => location.reload(), 600);
         } catch (error) {
-            showAlert(error.message, "alertContainer", "danger");
+            showToast('danger', error.message || 'Unexpected error while adding forward zone');
         }
     }
 
-    // REMOVE FORWARD ZONE
-    function removeForwardZone(name, button) {
-        document.getElementById("confirmMessage").textContent = `Are you sure you want to remove the forward zone: ${name}?`;
-        deleteTarget = { name, button };
+    // ===== DELETE FLOW =====
+    let deleteTarget = null;
 
+    function removeForwardZone(name) {
+        deleteTarget = name;
+        document.getElementById("confirmMessage").textContent = `Are you sure you want to remove the forward zone: ${name}?`;
         document.getElementById("confirmModal").style.display = "block";
     }
 
-    // DELETE
-    document.getElementById("confirmYes").addEventListener("click", async function () {
-        if (!deleteTarget) return;
-
-        const { name, button } = deleteTarget;
+    document.getElementById("confirmNo").addEventListener("click", () => {
         document.getElementById("confirmModal").style.display = "none";
+        deleteTarget = null;
+    });
+
+    document.getElementById("confirmYes").addEventListener("click", async () => {
+        if (!deleteTarget) return;
+        document.getElementById("confirmModal").style.display = "none";
+        const name = deleteTarget;
+        deleteTarget = null;
 
         try {
             const response = await fetch(window.location.pathname + "?handler=RemoveForwardZone", {
@@ -188,135 +199,123 @@
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    "RequestVerificationToken": getCsrf()
                 },
                 body: JSON.stringify({ Zone: name })
             });
 
             const result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.message || "Failed to remove forward zone");
 
-            if (!response.ok || !result.success) {
-                throw new Error(result.message || "Failed to remove forward zone");
-            }
-
-            showAlert("Zone removed successfully!", "alertContainer", "success");
-            setTimeout(() => location.reload(), 1000);
-
+            showToast('success', result.message || 'Zone removed successfully');
+            setTimeout(() => location.reload(), 600);
         } catch (error) {
-            showAlert(error.message, "alertContainer", "danger");
+            showToast('danger', error.message || 'Unexpected error while removing forward zone');
         }
     });
 
-    // EDIT ZONE
+    // ===== EDIT ZONE =====
     function editZone(name, forwardTo) {
         const dnsContainer = document.getElementById("editZoneDNSContainer");
         dnsContainer.innerHTML = "";
 
-        // SPLIT LIST TO ELEMENTS
-        let dnsList = forwardTo.split(",").map(dns => dns.trim()).filter(dns => dns.length > 0);
+        // ORIGINAL VALUES FROM BACKEND (NOT DISPLAY-LIST)
+        const dnsList = (forwardTo || "")
+            .split(",")
+            .map(x => x.trim())
+            .filter(Boolean);
 
-        if (dnsList.length === 0) {
-            dnsList.push("");
-        }
+        if (dnsList.length === 0) dnsList.push("");
 
-        dnsList.forEach((dns, index) => addDnsField(dns, index > 0));
+        dnsList.forEach((dns, idx) => addDnsField(dns, idx > 0));
         document.getElementById("zone_name-modal").textContent = name;
 
-        var editModal = new bootstrap.Modal(document.getElementById("editZoneModal"), { backdrop: false });
-        editModal.show();
+        new bootstrap.Modal(document.getElementById("editZoneModal"), { backdrop: false }).show();
     }
 
-    // ADD DNS FIELD
+    // ===== ADD DNS FIELD ROW =====
     function addDnsField(value = "", showRemoveButton = true) {
         const dnsContainer = document.getElementById("editZoneDNSContainer");
 
-        const div = document.createElement("div");
-        div.classList.add("input-group", "mb-2");
+        const row = document.createElement("div");
+        row.className = "input-group mb-2";
 
         const input = document.createElement("input");
         input.type = "text";
-        input.classList.add("form-control");
+        input.className = "form-control";
+        input.placeholder = "IP:Port (e.g., 8.8.8.8:53)";
         input.value = value;
-        input.placeholder = "Enter DNS server (e.g., 8.8.8.8:53)";
 
-        div.appendChild(input);
+        row.appendChild(input);
 
-        // DELETE BUTTON IF >1 ROWS
         if (showRemoveButton) {
             const removeButton = document.createElement("button");
-            removeButton.classList.add("btn", "btn-danger");
             removeButton.type = "button";
+            removeButton.className = "btn btn-danger";
             removeButton.innerHTML = '<i class="fa fa-trash"></i>';
-            removeButton.onclick = function () {
-                dnsContainer.removeChild(div);
+            removeButton.addEventListener("click", () => {
+                dnsContainer.removeChild(row);
                 updateRemoveButtons();
-            };
-            div.appendChild(removeButton);
+            });
+            row.appendChild(removeButton);
         }
 
-        dnsContainer.appendChild(div);
+        dnsContainer.appendChild(row);
         updateRemoveButtons();
     }
 
-    // UPDATE DELETE BUTTONS
+    // ===== TOGGLE REMOVE BUTTONS =====
     function updateRemoveButtons() {
-        const dnsEntries = document.querySelectorAll("#editZoneDNSContainer .input-group");
+        const rows = document.querySelectorAll("#editZoneDNSContainer .input-group");
         const removeButtons = document.querySelectorAll("#editZoneDNSContainer .btn-danger");
-
-        if (dnsEntries.length === 1) {
-            removeButtons.forEach(button => button.style.display = "none");
-        } else {
-            removeButtons.forEach(button => button.style.display = "inline-block");
-        }
+        if (rows.length <= 1) removeButtons.forEach(b => b.style.display = "none");
+        else removeButtons.forEach(b => b.style.display = "inline-block");
     }
 
-    // SAVE WILDCARD ZONE
-    function saveRecord() {
+    // ===== SAVE CHANGES =====
+    async function saveRecord() {
         const inputs = document.querySelectorAll("#editZoneDNSContainer input");
-        const dnsServers = Array.from(inputs).map(input => input.value.trim()).filter(value => value);
+        const dnsServers = Array.from(inputs)
+            .map(i => i.value.trim())
+            .filter(Boolean);
+
         const name = document.getElementById("zone_name-modal").textContent;
 
         if (dnsServers.length === 0) {
-            showAlert("At least one DNS server must be specified!", "alertContainer-edit", "danger");
+            showToast('warning', 'At least one DNS server must be specified.');
             return;
         }
 
         for (let i = 0; i < dnsServers.length; i++) {
-            const errorMessage = validateIPv4withPort(dnsServers[i]);
-
-            if (errorMessage) {
-                showAlert(`Error in DNS ${i + 1}: ${errorMessage}`, "alertContainer-edit", "danger");
+            const err = validateIPv4withPort(dnsServers[i]); // from validation.js
+            if (err) {
+                showToast('warning', `Error in DNS ${i + 1}: ${err}`);
                 return;
             }
         }
 
-        console.log("Saving DNS Servers:", dnsServers.join(", "));
+        try {
+            const response = await fetch(window.location.pathname + "?handler=editZone", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "RequestVerificationToken": getCsrf()
+                },
+                body: JSON.stringify({ Name: name, DnsServers: dnsServers.join(",") })
+            });
 
-        // FETCH
-        fetch(window.location.pathname + "?handler=editZone", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-            },
-            body: JSON.stringify({ Name: name, DnsServers: dnsServers.join(",") })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (!result.success) {
-                throw new Error(result.message || "Failed to save DNS servers");
-            }
-            showAlert("DNS servers updated successfully!", "alertContainer-edit", "success");
+            const result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.message || "Failed to save DNS servers");
 
-            setTimeout(() => {
-                var modal = bootstrap.Modal.getInstance(document.getElementById("editZoneModal"));
-                if (modal) modal.hide();
-                location.reload();
-            }, 1000);
-        })
-        .catch(error => {
-            showAlert(error.message, "alertContainer-edit", "danger");
-        });
+            showToast('success', result.message || 'DNS servers updated successfully');
+            // CLOSE MODAL + RELOAD
+            const modal = bootstrap.Modal.getInstance(document.getElementById("editZoneModal"));
+            modal?.hide();
+            setTimeout(() => location.reload(), 600);
+
+        } catch (error) {
+            showToast('danger', error.message || 'Unexpected error while saving DNS servers');
+        }
     }
 </script>

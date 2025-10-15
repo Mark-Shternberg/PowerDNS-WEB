@@ -5,13 +5,11 @@
 }
 
 <div class="container mt-4">
-    <h2>Zone: @Model.ZoneName</h2>
-    <!-- Alert for errors -->
-    <div id="alertContainer"></div>
+    <h2><i class="fa fa-dns me-2"></i>Zone: @Model.ZoneName</h2>
 
     <!-- Quick Add Record Form -->
     <h4 class="mt-4">Add Record</h4>
-    <form id="addRecordForm" class="row g-3">
+    <form id="addRecordForm" class="row g-3" onsubmit="event.preventDefault(); addRecord();">
         <div class="col-md-3">
             <label class="form-label">Subdomain:</label>
             <div class="input-group">
@@ -27,6 +25,7 @@
                 </button>
             </div>
         </div>
+
         <div class="col-md-2">
             <label class="form-label">Type:</label>
             <select id="recordType" class="form-select" onchange="toggleFields()">
@@ -40,117 +39,109 @@
                 <option value="HTTPS">HTTPS</option>
             </select>
         </div>
+
         <div class="col-md-4" id="valueField">
             <label class="form-label">Value:</label>
-            <input type="text" id="recordValue" class="form-control" required />
+            <input type="text" id="recordValue" class="form-control" />
         </div>
 
-        <!-- TXT Field -->
+        <!-- TXT -->
         <div class="col-md-4 d-none" id="txtField">
             <label class="form-label">TXT Value:</label>
-            <textarea type="text" id="txtValue" class="form-control textarea" oninput="autoResizeTextarea(this)"></textarea>
+            <textarea id="txtValue" class="form-control textarea" oninput="autoResizeTextarea(this)"></textarea>
             <small class="form-text text-muted">Don't use quotes and line breaks</small>
         </div>
 
-        <!-- NS Fields -->
+        <!-- NS -->
         <div class="col-md-4 d-none" id="nsField">
             <label class="form-label">NS Target:</label>
             <input type="text" id="nsTarget" class="form-control" placeholder="ns1.example.com." />
         </div>
 
-        <!-- HTTPS (SVCB) Fields -->
+        <!-- HTTPS (SVCB) -->
         <div class="col-md-4 d-none" id="httpsSvcbField">
             <label class="form-label">HTTPS Parameters:</label>
             <input type="text" id="httpsValue" class="form-control" placeholder='"1 . alpn=h3"' />
         </div>
 
-        <!-- MX Fields -->
+        <!-- MX -->
         <div class="col-md-2 d-none" id="mxPriorityField">
             <label class="form-label">Priority:</label>
-            <input type="number" id="mxPriority" class="form-control" required
-            min="1" max="1000" step="1" value="10" />
-            <small class="form-text text-muted">Recommended: 10 (min: 1, max: 1000)</small>
+            <input type="number" id="mxPriority" class="form-control" min="1" max="1000" step="1" value="10" />
+            <small class="form-text text-muted">Recommended: 10</small>
         </div>
 
-        <!-- SRV Fields -->
+        <!-- SRV -->
         <div class="col-md-2 d-none" id="srvPriorityField">
             <label class="form-label">Priority:</label>
-            <input type="number" id="srvPriority" class="form-control" required
-            min="0" max="65535" step="1" value="0" />
-            <small class="form-text text-muted">Recommended: 0 (min: 0, max: 65535)</small>
+            <input type="number" id="srvPriority" class="form-control" min="0" max="65535" step="1" value="0" />
         </div>
-
         <div class="col-md-2 d-none" id="srvWeightField">
             <label class="form-label">Weight:</label>
-            <input type="number" id="srvWeight" class="form-control" required
-            min="0" max="65535" step="1" value="0" />
-            <small class="form-text text-muted">Recommended: 0 (min: 0, max: 65535)</small>
+            <input type="number" id="srvWeight" class="form-control" min="0" max="65535" step="1" value="0" />
         </div>
-
         <div class="col-md-2 d-none" id="srvPortField">
             <label class="form-label">Port:</label>
-            <input type="number" id="srvPort" class="form-control" required
-            min="1" max="65535" step="1" value="443" />
-            <small class="form-text text-muted">Recommended: 443 (min: 1, max: 65535)</small>
+            <input type="number" id="srvPort" class="form-control" min="1" max="65535" step="1" value="443" />
         </div>
 
-
         <div class="col-md-2 d-flex h-40" style="margin-top: 48px;">
-            <button type="button" class="btn btn-success w-100" onclick="addRecord()">Add</button>
+            <button type="submit" class="btn btn-success w-100">Add</button>
         </div>
     </form>
 
     <!-- Records Table -->
     <h4 class="mt-4">Existing Records</h4>
-    <table class="table table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Subdomain</th>
-                <th>Type</th>
-                <th>Value</th>
-                <th>TTL</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var group in Model.GroupedRecords.OrderBy(g => g.Key != "@" ? 0 : 1))
-            {
-                <tr class="zone-header" onclick="toggleZone('@group.Key')">
-                    <td colspan="5" class="fw-bold">
-                        <i class="fa fa-chevron-right me-2" id="icon-@group.Key"></i>@(group.Key == "@" ? "(Root)" : group.Key)
-                    </td>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Subdomain</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                    <th>TTL</th>
+                    <th>Actions</th>
                 </tr>
-                @foreach (var record in group.Value)
+            </thead>
+            <tbody>
+                @foreach (var group in Model.GroupedRecords.OrderBy(g => g.Key != "@" ? 0 : 1))
                 {
-                    @foreach (var value in record.Content) 
+                    <tr class="zone-header" onclick="toggleZone('@group.Key')">
+                        <td colspan="5" class="fw-bold">
+                            <i class="fa fa-chevron-right me-2" id="icon-@group.Key"></i>@(group.Key == "@" ? "(Root)" : group.Key)
+                        </td>
+                    </tr>
+                    @foreach (var record in group.Value)
                     {
-                        <tr class="zone-records @group.Key" style="display: none;">
-                            <td>@record.Name</td>
-                            <td>@record.Type</td>
-                            <td class="line-break">@value</td>
-                            <td class="min-width-50">@record.Ttl</td>
-                            <td class="min-width-100">
-                                <button class="btn btn-warning btn-sm" onclick="editRecord('@record.Name', '@record.Type', '@value', '@record.Ttl')">
-                                    <i class="fa fa-edit"></i>
-                                </button>
-                                @if (record.Type != "SOA")
-                                {
-                                    <button class="btn btn-danger btn-sm" onclick="deleteRecord('@record.Name', '@record.Type', '@value', this)">
-                                        <i class="fa fa-trash"></i>
+                        @foreach (var value in record.Content)
+                        {
+                            <tr class="zone-records @group.Key" style="display:none;">
+                                <td>@record.Name</td>
+                                <td>@record.Type</td>
+                                <td class="line-break">@value</td>
+                                <td class="min-width-50">@record.Ttl</td>
+                                <td class="min-width-100">
+                                    <button class="btn btn-warning btn-sm" onclick="editRecord('@record.Name', '@record.Type', '@value', '@record.Ttl')">
+                                        <i class="fa fa-edit"></i>
                                     </button>
-                                }
-                            </td>
-                        </tr>
+                                    @if (record.Type != "SOA")
+                                    {
+                                        <button class="btn btn-danger btn-sm" onclick="deleteRecord('@record.Name', '@record.Type', '@value', this)">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
                     }
                 }
-            }
-        </tbody>
-
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- EDIT RECORD MODAL -->
-<div class="modal fade" id="editRecordModal" tabindex="-1" aria-labelledby="editRecordModalLabel" aria-hidden="true">
+<div class="modal fade" id="editRecordModal" tabindex="-1" aria-labelledby="editRecordModalLabel" aria-hidden="true" data-bs-backdrop="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -158,110 +149,81 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="editRecordForm">
-                    <input type="hidden" id="editRecordName" name="Name" />
-                    <input type="hidden" id="editRecordType" name="Type" />
-                    <input type="hidden" id="editRecordOldValue" name="OldValue" />
+                <form id="editRecordForm" onsubmit="event.preventDefault(); saveRecord();">
+                    <input type="hidden" id="editRecordName" />
+                    <input type="hidden" id="editRecordType" />
+                    <input type="hidden" id="editRecordOldValue" />
 
                     <!-- DEFAULT VALUE FIELD -->
                     <div class="mb-3" id="editValueField">
                         <label class="form-label">Value:</label>
-                        <input type="text" id="editRecordValue" name="Value" class="form-control" required />
+                        <input type="text" id="editRecordValue" class="form-control" />
                     </div>
 
-                    <!-- TXT Field -->
-                    <div class="md-3 d-none" id="editTXTField">
+                    <!-- TXT -->
+                    <div class="mb-3 d-none" id="editTXTField">
                         <label class="form-label">TXT Value:</label>
-                        <textarea type="text" id="editTXTValue" class="form-control textarea" oninput="autoResizeTextarea(this)"></textarea>
+                        <textarea id="editTXTValue" class="form-control textarea" oninput="autoResizeTextarea(this)"></textarea>
                         <small class="form-text text-muted">Don't use quotes and line breaks</small>
                     </div>
 
-                    <!-- MX PRIORITY -->
+                    <!-- MX -->
                     <div class="mb-3 d-none" id="editMxPriorityField">
                         <label class="form-label">Priority:</label>
-                        <input type="number" id="editMxPriority" class="form-control" required
-                               min="1" max="1000" step="1" value="10" />
-                        <small class="form-text text-muted">Recommended: 10 (min: 1, max: 1000)</small>
+                        <input type="number" id="editMxPriority" class="form-control" min="1" max="1000" step="1" value="10" />
                     </div>
 
-                    <!-- SRV FIELDS -->
+                    <!-- SRV -->
                     <div class="mb-3 d-none" id="editSrvPriorityField">
                         <label class="form-label">Priority:</label>
-                        <input type="number" id="editSrvPriority" name="SrvPriority" class="form-control" required
-                               min="0" max="65535" step="1" value="0" />
-                        <small class="form-text text-muted">Recommended: 0 (min: 0, max: 65535)</small>
+                        <input type="number" id="editSrvPriority" class="form-control" min="0" max="65535" step="1" value="0" />
                     </div>
-
                     <div class="mb-3 d-none" id="editSrvWeightField">
                         <label class="form-label">Weight:</label>
-                        <input type="number" id="editSrvWeight" name="SrvWeight" class="form-control" required
-                               min="0" max="65535" step="1" value="0" />
-                        <small class="form-text text-muted">Recommended: 0 (min: 0, max: 65535)</small>
+                        <input type="number" id="editSrvWeight" class="form-control" min="0" max="65535" step="1" value="0" />
                     </div>
-
                     <div class="mb-3 d-none" id="editSrvPortField">
                         <label class="form-label">Port:</label>
-                        <input type="number" id="editSrvPort" name="SrvPort" class="form-control" required
-                               min="1" max="65535" step="1" value="443" />
-                        <small class="form-text text-muted">Recommended: 443 (min: 1, max: 65535)</small>
+                        <input type="number" id="editSrvPort" class="form-control" min="1" max="65535" step="1" value="443" />
                     </div>
 
-                    <!-- SOA FIELDS (VISIBLE ONLY FOR SOA RECORDS) -->
+                    <!-- SOA -->
                     <div id="editSoaFields" class="d-none">
                         <h6 class="mt-3">SOA Record Details</h6>
-
                         <div class="mb-3">
                             <label class="form-label">Primary NS:</label>
-                            <input type="text" id="editSoaNs" name="SoaNs" class="form-control" required />
-                            <small class="form-text text-muted">Primary name server (e.g., ns1.example.com.)</small>
+                            <input type="text" id="editSoaNs" class="form-control" />
+                            <small class="form-text text-muted">e.g., ns1.example.com.</small>
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label">Admin Email:</label>
-                            <input type="text" id="editSoaEmail" name="SoaEmail" class="form-control" required />
-                            <small class="form-text text-muted">Administrator email (e.g., admin@example.com)</small>
+                            <input type="text" id="editSoaEmail" class="form-control" />
+                            <small class="form-text text-muted">e.g., admin@example.com</small>
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label">Refresh:</label>
-                            <input type="number" id="editSoaRefresh" name="SoaRefresh" class="form-control" required
-                                   min="1200" max="86400" step="1" value="7200" />
-                            <small class="form-text text-muted">Recommended: 7200 (min: 1200, max: 86400)</small>
+                            <input type="number" id="editSoaRefresh" class="form-control" min="1200" max="86400" step="1" value="7200" />
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label">Retry:</label>
-                            <input type="number" id="editSoaRetry" name="SoaRetry" class="form-control" required
-                                   min="180" max="7200" step="1" value="1800" />
-                            <small class="form-text text-muted">Recommended: 1800 (min: 180, max: 7200)</small>
+                            <input type="number" id="editSoaRetry" class="form-control" min="180" max="7200" step="1" value="1800" />
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label">Expire:</label>
-                            <input type="number" id="editSoaExpire" name="SoaExpire" class="form-control" required
-                                   min="86400" max="2419200" step="1" value="1209600" />
-                            <small class="form-text text-muted">Recommended: 1209600 (min: 86400, max: 2419200)</small>
+                            <input type="number" id="editSoaExpire" class="form-control" min="86400" max="2419200" step="1" value="1209600" />
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label">Minimum TTL:</label>
-                            <input type="number" id="editSoaMinimumTtl" name="SoaMinimumTtl" class="form-control" required
-                                   min="300" max="86400" step="1" value="3600" />
-                            <small class="form-text text-muted">Recommended: 3600 (min: 300, max: 86400)</small>
+                            <input type="number" id="editSoaMinimumTtl" class="form-control" min="300" max="86400" step="1" value="3600" />
                         </div>
                     </div>
 
-                    <!-- TTL -->
                     <div class="mb-3">
                         <label class="form-label">TTL:</label>
-                        <input type="number" id="editRecordTtl" name="Ttl" class="form-control" required
-                               min="300" max="604800" step="1" value="3600" />
-                        <small class="form-text text-muted">Recommended: 3600 (min: 300, max: 604800)</small>
+                        <input type="number" id="editRecordTtl" class="form-control" min="300" max="604800" step="1" value="3600" />
                     </div>
 
-                    <div id="alertContainer-edit"></div>
-
-                    <button type="button" class="btn btn-warning w-100" onclick="saveRecord()">Save Changes</button>
+                    <button type="submit" class="btn btn-warning w-100">Save Changes</button>
                 </form>
             </div>
         </div>
@@ -269,7 +231,7 @@
 </div>
 
 <!-- Add Subdomain Modal -->
-<div class="modal fade" id="addSubdomainModal" tabindex="-1" aria-labelledby="addSubdomainModalLabel" aria-hidden="true">
+<div class="modal fade" id="addSubdomainModal" tabindex="-1" aria-labelledby="addSubdomainModalLabel" aria-hidden="true" data-bs-backdrop="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -278,10 +240,9 @@
             </div>
             <div class="modal-body">
                 <label for="subdomainInput" class="form-label">Subdomain Name:</label>
-                <input type="text" id="subdomainInput" class="form-control" placeholder="Enter subdomain name" required />
+                <input type="text" id="subdomainInput" class="form-control" placeholder="Enter subdomain name" />
             </div>
             <div class="modal-footer">
-                <div id="alertContainer-subdomain" style="width: 100%;"></div>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" onclick="addSubdomain()">Add</button>
             </div>
@@ -289,8 +250,8 @@
     </div>
 </div>
 
-<!-- Confirm delete Modal -->
-<div id="confirmModal" class="modal" style="display: none;">
+<!-- Confirm delete (custom, no backdrop) -->
+<div id="confirmModal" class="modal" style="display:none;">
     <div class="modal-content">
         <p id="confirmMessage"></p>
         <div class="modal-buttons">
@@ -303,343 +264,247 @@
 <script src="~/js/zonePage.js"></script>
 <script src="~/js/subDomain.js"></script>
 <script src="~/js/validation.js"></script>
+@Html.AntiForgeryToken()
 
-<script>
-    document.getElementById("subdomainInput").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            addSubdomain();
-        }
-    });
-    // ADD RECORD
-    async function addRecord() {
-        const subdomain = document.getElementById("subdomainSelect").value;
-        const recordType = document.getElementById("recordType").value;
-        var value = document.getElementById("recordValue").value;
-        const mxPriority = document.getElementById("mxPriority")?.value;
-        const srvPriority = document.getElementById("srvPriority")?.value;
-        const srvWeight = document.getElementById("srvWeight")?.value;
-        const srvPort = document.getElementById("srvPort")?.value;
-        const httpsValue = document.getElementById("httpsValue")?.value;
-        const nsTarget = document.getElementById("nsTarget")?.value;
-        var txtValue = document.getElementById("txtValue")?.value;
-
-        if (recordType === "NS") {
-            value = nsTarget;
-        } else if (recordType === "HTTPS") {
-            value = httpsValue;
-        } else if (recordType === "TXT") {
-            value = txtValue;
+@section Scripts {
+    <script>
+        // ===== CSRF =====
+        function getCsrf(){
+            const el = document.querySelector('input[name="__RequestVerificationToken"]');
+            return el ? el.value : '';
         }
 
-        let recordData = {
-            Subdomain: subdomain,
-            RecordType: recordType,
-            Value: value
-        };
+        // enter в поле сабдомена
+        document.getElementById("subdomainInput")?.addEventListener("keypress", function(e){
+            if(e.key === "Enter"){ e.preventDefault(); addSubdomain(); }
+        });
 
-        if (recordType === "MX") {
-            recordData.MxPriority = mxPriority ? parseInt(mxPriority) : 10;
-        } else if (recordType === "SRV") {
-            recordData.SrvPriority = srvPriority ? parseInt(srvPriority) : 0;
-            recordData.SrvWeight = srvWeight ? parseInt(srvWeight) : 0;
-            recordData.SrvPort = srvPort ? parseInt(srvPort) : 0;
-        } else if (recordType === "A") {
-            const errorMessage = validateIPv4(value);
+        // ===== ADD RECORD =====
+        async function addRecord() {
+            const subdomain   = document.getElementById("subdomainSelect").value;
+            const recordType  = document.getElementById("recordType").value;
+            let value         = document.getElementById("recordValue").value.trim();
+            const mxPriority  = document.getElementById("mxPriority")?.value;
+            const srvPriority = document.getElementById("srvPriority")?.value;
+            const srvWeight   = document.getElementById("srvWeight")?.value;
+            const srvPort     = document.getElementById("srvPort")?.value;
+            const httpsValue  = document.getElementById("httpsValue")?.value?.trim();
+            let nsTarget      = document.getElementById("nsTarget")?.value?.trim();
+            let txtValue      = document.getElementById("txtValue")?.value ?? "";
 
-            if (errorMessage) {
-                showAlert(errorMessage, "alertContainer", "danger");
-                return;
-            }
-        } else if (recordType === "AAAA") {
-            const errorMessage = validateIPv6(value);
-
-            if (errorMessage) {
-                showAlert(errorMessage, "alertContainer", "danger");
-                return;
-            }
-        } else if (recordType === "CNAME") {
-            if (!value.match(/^[a-zA-Z0-9.-]+$/)) {
-                showAlert("Invalid CNAME format!", "alertContainer", "danger");
-                return;
-            }
-        } else if (recordType === "TXT") {
-            value = txtValue.trim();
-
-            if (value.startsWith('"')) {
-                value = value.substring(1);
+            // MAP FIELDS BY TYPE
+            if (recordType === "NS") {
+                if (nsTarget && !nsTarget.endsWith(".")) nsTarget += ".";
+                value = nsTarget;
+            } else if (recordType === "HTTPS") {
+                value = httpsValue;
+            } else if (recordType === "TXT") {
+                value = txtValue;
             }
 
-            if (value.endsWith('"')) {
-                value = value.substring(0, value.length - 1);
+            // VALIDATION BY TYPE
+            if (recordType === "A") {
+                const err = validateIPv4(value);
+                if (err) { showToast('warning', err); return; }
+            } else if (recordType === "AAAA") {
+                const err = validateIPv6(value);
+                if (err) { showToast('warning', err); return; }
+            } else if (recordType === "CNAME") {
+                if (!/^[a-zA-Z0-9.-]+\.?$/.test(value)) { showToast('warning', 'Invalid CNAME format'); return; }
+            } else if (recordType === "TXT") {
+                value = value.trim().replace(/^"/,'').replace(/"$/,'');
+                const err = validateTXT(value);
+                if (err) { showToast('warning', err); return; }
+            } else if (recordType === "SRV") {
+                if (!/^\d{1,5} \d{1,5} \d{1,5} [a-zA-Z0-9.-]+\.?$/.test(value)) {
+                    showToast('warning', 'Invalid SRV format');
+                    return;
+                }
             }
 
-            let txtCheck = validateTXT(value);
-            if (txtCheck !== "") {
-                showAlert(txtCheck, "alertContainer", "danger");
-                return;
-            }
-        } else if (recordType === "SRV") {
-            if (!value.match(/^\d{1,5} \d{1,5} \d{1,5} [a-zA-Z0-9.-]+$/)) {
-                showAlert("Invalid SRV format!", "alertContainer", "danger");
-                return;
-            }
-        }
-
-        try {
-            const response = await fetch(window.location.pathname + "?handler=AddRecord", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                },
-                body: JSON.stringify(recordData)
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || "Failed to add record");
+            const recordData = { Subdomain: subdomain, RecordType: recordType, Value: value };
+            if (recordType === "MX") {
+                recordData.MxPriority = mxPriority ? parseInt(mxPriority,10) : 10;
+            } else if (recordType === "SRV") {
+                recordData.SrvPriority = srvPriority ? parseInt(srvPriority,10) : 0;
+                recordData.SrvWeight   = srvWeight   ? parseInt(srvWeight,10)   : 0;
+                recordData.SrvPort     = srvPort     ? parseInt(srvPort,10)     : 0;
             }
 
-            showAlert("Record added successfully!", "alertContainer", "success");
-            setTimeout(() => location.reload(), 1000);
-        } catch (error) {
-            showAlert(error.message, "alertContainer", "danger");
-        }
-    }
+            try {
+                const resp = await fetch(window.location.pathname + "?handler=AddRecord", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "RequestVerificationToken": getCsrf()
+                    },
+                    body: JSON.stringify(recordData)
+                });
+                const result = await resp.json();
+                if (!resp.ok || !result?.success) throw new Error(result?.message || "Failed to add record");
 
-    // EDIT RECORD
-    function editRecord(name, type, value, ttl) {
-        document.getElementById("editRecordName").value = name;
-        document.getElementById("editRecordType").value = type;
-        document.getElementById("editRecordValue").value = value;
-        document.getElementById("editRecordOldValue").value = value;
-        document.getElementById("editRecordTtl").value = ttl;
-
-        // IF SOA, SPLIT VALUES
-        if (type === "SOA") {
-            var soaParts = value.split(" ");
-            if (soaParts.length === 7) {
-                document.getElementById("editSoaNs").value = soaParts[0];
-                document.getElementById("editSoaEmail").value = soaParts[1];
-                document.getElementById("editSoaRefresh").value = soaParts[3];
-                document.getElementById("editSoaRetry").value = soaParts[4];
-                document.getElementById("editSoaExpire").value = soaParts[5];
-                document.getElementById("editSoaMinimumTtl").value = soaParts[6];
-            }
-        } else if (type === "TXT") {
-            if (value.startsWith('"')) {
-                value = value.substring(1);
-            }
-
-            if (value.endsWith('"')) {
-                value = value.substring(0, value.length - 1);
-            }
-            document.getElementById("editTXTValue").value = value;
-
-            setTimeout(() => {
-                autoResizeTextarea(document.getElementById("editTXTValue"));
-            }, 50);
-        }
-
-        toggleEditFields();
-
-        if (type === "MX") {
-            const parts = value.split(" ");
-            if (parts.length >= 2) {
-                document.getElementById("editMxPriority").value = parts[0];
-                document.getElementById("editRecordValue").value = parts.slice(1).join(" "); 
-            }
-        } else if (type === "SRV") {
-            const parts = value.split(" ");
-            if (parts.length >= 4) {
-                document.getElementById("editSrvPriority").value = parts[0];
-                document.getElementById("editSrvWeight").value = parts[1];
-                document.getElementById("editSrvPort").value = parts[2];
-                document.getElementById("editRecordValue").value = parts.slice(3).join(" ");
+                showToast('success', result?.message || "Record added successfully");
+                setTimeout(() => location.reload(), 600);
+            } catch (e) {
+                showToast('danger', e.message || "Error adding record");
             }
         }
 
-        var editModal = new bootstrap.Modal(document.getElementById("editRecordModal"), { backdrop: false });
-        editModal.show();
-    }
+        // ===== EDIT RECORD (OPEN MODAL) =====
+        function editRecord(name, type, value, ttl) {
+            document.getElementById("editRecordName").value      = name;
+            document.getElementById("editRecordType").value      = type;
+            document.getElementById("editRecordOldValue").value  = value;
+            document.getElementById("editRecordTtl").value       = ttl;
 
-    // DELETE BUTTON
-    function deleteRecord(name, type, value, button) {
-        document.getElementById("confirmMessage").textContent = `Are you sure you want to delete the ${type} ${value} record for ${name}?`;
-        deleteTarget = { name, type, value, button };
+            // default
+            document.getElementById("editRecordValue").value = value;
 
-        document.getElementById("confirmModal").style.display = "block";
-    }
-
-    // DELETE
-    document.getElementById("confirmYes").addEventListener("click", async function () {
-        if (!deleteTarget) return;
-
-        const { name, type, value, button } = deleteTarget;
-        document.getElementById("confirmModal").style.display = "none";
-
-        try {
-            const response = await fetch(window.location.pathname + "?handler=DeleteRecord", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                },
-                body: JSON.stringify({ Name: name, Type: type, Value: value })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok || !result.success) {
-                throw new Error(result.message || "Failed to delete record");
+            // Special cases
+            if (type === "SOA") {
+                const p = value.split(" ");
+                if (p.length === 7) {
+                    document.getElementById("editSoaNs").value          = p[0];
+                    document.getElementById("editSoaEmail").value       = p[1];
+                    document.getElementById("editSoaRefresh").value     = p[3];
+                    document.getElementById("editSoaRetry").value       = p[4];
+                    document.getElementById("editSoaExpire").value      = p[5];
+                    document.getElementById("editSoaMinimumTtl").value  = p[6];
+                }
+            } else if (type === "TXT") {
+                let t = value.trim().replace(/^"/,'').replace(/"$/,'');
+                document.getElementById("editTXTValue").value = t;
+                setTimeout(() => autoResizeTextarea(document.getElementById("editTXTValue")), 50);
+            } else if (type === "MX") {
+                const parts = value.split(" ");
+                if (parts.length >= 2) {
+                    document.getElementById("editMxPriority").value = parts[0];
+                    document.getElementById("editRecordValue").value = parts.slice(1).join(" ");
+                }
+            } else if (type === "SRV") {
+                const parts = value.split(" ");
+                if (parts.length >= 4) {
+                    document.getElementById("editSrvPriority").value = parts[0];
+                    document.getElementById("editSrvWeight").value   = parts[1];
+                    document.getElementById("editSrvPort").value     = parts[2];
+                    document.getElementById("editRecordValue").value = parts.slice(3).join(" ");
+                }
             }
 
-            showAlert("Record deleted successfully!", "alertContainer", "success");
-
-            // Удаляем строку из таблицы
-            const row = button.closest("tr");
-            if (row) row.remove();
-
-        } catch (error) {
-            showAlert(error.message, "alertContainer", "danger");
-        }
-    });
-
-    // EDIT RECORD
-    async function saveRecord() {
-        const name = document.getElementById("editRecordName").value;
-        const oldValue = document.getElementById("editRecordOldValue").value;
-        const type = document.getElementById("editRecordType").value;
-        let value = document.getElementById("editRecordValue").value.trim();
-        const ttl = parseInt(document.getElementById("editRecordTtl").value, 10);
-        let txtValue = document.getElementById("editTXTValue").value;
-
-        let recordData = { Name: name, OldValue: oldValue, Type: type, Value: value, Ttl: ttl };
-
-        // Добавляем поля для MX и SRV
-        if (type === "MX") {
-            const mxPriority = document.getElementById("editMxPriority").value;
-            if (!mxPriority) {
-                showAlert("MX Priority is required!", "alertContainer-edit", "danger");
-                return;
-            }
-            recordData.MxPriority = parseInt(mxPriority, 10);
-            recordData.Value = `${recordData.MxPriority} ${value}`;
-        } else if (type === "SRV") {
-            const srvPriority = document.getElementById("editSrvPriority").value;
-            const srvWeight = document.getElementById("editSrvWeight").value;
-            const srvPort = document.getElementById("editSrvPort").value;
-
-            if (!srvPriority || !srvWeight || !srvPort) {
-                showAlert("SRV Priority, Weight, and Port are required!", "alertContainer-edit", "danger");
-                return;
-            }
-
-            recordData.SrvPriority = parseInt(srvPriority, 10);
-            recordData.SrvWeight = parseInt(srvWeight, 10);
-            recordData.SrvPort = parseInt(srvPort, 10);
-            recordData.Value = `${recordData.SrvPriority} ${recordData.SrvWeight} ${recordData.SrvPort} ${value}`;
-        } else if (type === "SOA") {
-            const soaNs = document.getElementById("editSoaNs").value.trim();
-            const soaEmail = document.getElementById("editSoaEmail").value.trim();
-            const soaSerial = 0;
-            const soaRefresh = document.getElementById("editSoaRefresh").value.trim();
-            const soaRetry = document.getElementById("editSoaRetry").value.trim();
-            const soaExpire = document.getElementById("editSoaExpire").value.trim();
-            const soaMinimumTtl = document.getElementById("editSoaMinimumTtl").value.trim();
-
-            // VALIDATION
-            if (!soaNs || !soaEmail || !soaRefresh || !soaRetry || !soaExpire || !soaMinimumTtl) {
-                showAlert("All SOA fields are required!", "alertContainer-edit", "danger");
-                return;
-            }
-
-            recordData.SoaNs = soaNs;
-            recordData.SoaEmail = soaEmail;
-            recordData.SoaSerial = soaSerial;
-            recordData.SoaRefresh = parseInt(soaRefresh, 10);
-            recordData.SoaRetry = parseInt(soaRetry, 10);
-            recordData.SoaExpire = parseInt(soaExpire, 10);
-            recordData.SoaMinimumTtl = parseInt(soaMinimumTtl, 10);
-
-            // FORMAT VALUE FOR POWERDNS
-            recordData.Value = `${soaNs} ${soaEmail} ${soaSerial} ${soaRefresh} ${soaRetry} ${soaExpire} ${soaMinimumTtl}`;
-        } else if (type === "A") {
-            const errorMessage = validateIPv4(value);
-
-            if (errorMessage) {
-                showAlert(errorMessage, "alertContainer-edit", "danger");
-                return;
-            }
-        } else if (type === "AAAA") {
-            const errorMessage = validateIPv6(value);
-
-            if (errorMessage) {
-                showAlert(errorMessage, "alertContainer-edit", "danger");
-                return;
-            }
-        } else if (type === "CNAME") {
-            if (!value.match(/^[a-zA-Z0-9.-]+$/)) {
-                showAlert("Invalid CNAME format!", "alertContainer-edit", "danger");
-                return;
-            }
-        } else if (type === "TXT") {
-            txtValue = txtValue.trim();
-
-            if (txtValue.startsWith('"')) {
-                txtValue = txtValue.substring(1);
-            }
-
-            if (txtValue.endsWith('"')) {
-                txtValue = txtValue.substring(0, txtValue.length - 1);
-            }
-
-            const txtCheck = validateTXT(txtValue);
-            if (txtCheck) {
-                showAlert(txtCheck, "alertContainer-edit", "danger");
-                return;
-            }
-
-            recordData.Value = txtValue;
-        } else if (type === "SRV") {
-            if (!value.match(/^\d{1,5} \d{1,5} \d{1,5} [a-zA-Z0-9.-]+$/)) {
-                showAlert("Invalid SRV format!", "alertContainer-edit", "danger");
-                return;
-            }
+            toggleEditFields();
+            new bootstrap.Modal(document.getElementById("editRecordModal"), { backdrop:false }).show();
         }
 
-        try {
-            const response = await fetch(window.location.pathname + "?handler=EditRecord", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                },
-                body: JSON.stringify(recordData)
-            });
+        // ===== DELETE FLOW =====
+        function deleteRecord(name, type, value, button) {
+            document.getElementById("confirmMessage").textContent = `Are you sure you want to delete the ${type} ${value} record for ${name}?`;
+            window.deleteTarget = { name, type, value, button };
+            document.getElementById("confirmModal").style.display = "block";
+        }
 
-            const result = await response.json();
+        document.getElementById("confirmNo").addEventListener("click", () => {
+            document.getElementById("confirmModal").style.display = "none";
+            window.deleteTarget = null;
+        });
 
-            if (!response.ok || !result.success) {
-                throw new Error(result.message || "Failed to update record");
+        document.getElementById("confirmYes").addEventListener("click", async () => {
+            const t = window.deleteTarget;
+            if (!t) return;
+            document.getElementById("confirmModal").style.display = "none";
+            window.deleteTarget = null;
+
+            try {
+                const resp = await fetch(window.location.pathname + "?handler=DeleteRecord", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "RequestVerificationToken": getCsrf()
+                    },
+                    body: JSON.stringify({ Name: t.name, Type: t.type, Value: t.value })
+                });
+                const result = await resp.json();
+                if (!resp.ok || !result?.success) throw new Error(result?.message || "Failed to delete record");
+
+                // remove row + toast
+                t.button.closest("tr")?.remove();
+                showToast('success', result?.message || "Record deleted");
+
+            } catch (e) {
+                showToast('danger', e.message || "Error deleting record");
+            }
+        });
+
+        // ===== SAVE RECORD (POST) =====
+        async function saveRecord() {
+            const name     = document.getElementById("editRecordName").value;
+            const oldValue = document.getElementById("editRecordOldValue").value;
+            const type     = document.getElementById("editRecordType").value;
+            let   value    = document.getElementById("editRecordValue").value.trim();
+            const ttl      = parseInt(document.getElementById("editRecordTtl").value, 10);
+            let   txtValue = document.getElementById("editTXTValue").value ?? "";
+
+            const data = { Name: name, OldValue: oldValue, Type: type, Value: value, Ttl: ttl };
+
+            if (type === "MX") {
+                const mx = document.getElementById("editMxPriority").value;
+                if (!mx) { showToast('warning', 'MX Priority is required'); return; }
+                data.MxPriority = parseInt(mx,10);
+                data.Value = `${data.MxPriority} ${value}`;
+            } else if (type === "SRV") {
+                const pr = document.getElementById("editSrvPriority").value;
+                const wt = document.getElementById("editSrvWeight").value;
+                const pt = document.getElementById("editSrvPort").value;
+                if (!pr || !wt || !pt) { showToast('warning', 'SRV Priority, Weight, and Port are required'); return; }
+                data.SrvPriority = parseInt(pr,10);
+                data.SrvWeight   = parseInt(wt,10);
+                data.SrvPort     = parseInt(pt,10);
+                data.Value = `${data.SrvPriority} ${data.SrvWeight} ${data.SrvPort} ${value}`;
+            } else if (type === "SOA") {
+                const ns   = document.getElementById("editSoaNs").value.trim();
+                const mail = document.getElementById("editSoaEmail").value.trim();
+                const ref  = parseInt(document.getElementById("editSoaRefresh").value,10);
+                const rty  = parseInt(document.getElementById("editSoaRetry").value,10);
+                const exp  = parseInt(document.getElementById("editSoaExpire").value,10);
+                const min  = parseInt(document.getElementById("editSoaMinimumTtl").value,10);
+                if (!ns || !mail || !ref || !rty || !exp || !min) { showToast('warning', 'All SOA fields are required'); return; }
+                data.SoaNs = ns; data.SoaEmail = mail;
+                data.SoaSerial = 0; data.SoaRefresh = ref; data.SoaRetry = rty; data.SoaExpire = exp; data.SoaMinimumTtl = min;
+                data.Value = `${ns} ${mail} 0 ${ref} ${rty} ${exp} ${min}`;
+            } else if (type === "A") {
+                const err = validateIPv4(value);  if (err) { showToast('warning', err); return; }
+            } else if (type === "AAAA") {
+                const err = validateIPv6(value);  if (err) { showToast('warning', err); return; }
+            } else if (type === "CNAME") {
+                if (!/^[a-zA-Z0-9.-]+\.?$/.test(value)) { showToast('warning', 'Invalid CNAME format'); return; }
+            } else if (type === "TXT") {
+                txtValue = txtValue.trim().replace(/^"/,'').replace(/"$/,'');
+                const err = validateTXT(txtValue); if (err) { showToast('warning', err); return; }
+                data.Value = txtValue;
             }
 
-            showAlert("Record updated successfully!", "alertContainer-edit", "success");
+            try {
+                const resp = await fetch(window.location.pathname + "?handler=EditRecord", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "RequestVerificationToken": getCsrf()
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await resp.json();
+                if (!resp.ok || !result?.success) throw new Error(result?.message || "Failed to update record");
 
-            // Закрываем модальное окно через 1 секунду
-            setTimeout(() => {
-                var modal = bootstrap.Modal.getInstance(document.getElementById("editRecordModal"));
-                if (modal) modal.hide();
-                location.reload();
-            }, 1000);
+                showToast('success', result?.message || "Record updated");
+                const m = bootstrap.Modal.getInstance(document.getElementById("editRecordModal"));
+                m?.hide();
+                setTimeout(() => location.reload(), 600);
 
-        } catch (error) {
-            showAlert(error.message, "alertContainer-edit", "danger");
+            } catch (e) {
+                showToast('danger', e.message || "Error updating record");
+            }
         }
-    }
-
-</script>
+    </script>
+}

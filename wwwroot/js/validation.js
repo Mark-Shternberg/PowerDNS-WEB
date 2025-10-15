@@ -1,4 +1,6 @@
-﻿function validateForwardZoneName(zoneName) {
+﻿//validation.js
+
+function validateForwardZoneName(zoneName) {
     const zoneRegex = /^(?!-)(?!(.*\.in-addr\.arpa\.?)$)([a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,63}$/;
 
     if (zoneName === "") {

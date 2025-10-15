@@ -5,24 +5,23 @@
 }
 
 <div class="container mt-4">
-    <h2 class="text-center mb-4">User Management</h2>
+    <h2 class="text-center mb-4"><i class="fa fa-users me-2"></i>User Management</h2>
 
-    <!-- FLEX CONTAINER -->
-    <div class="row">
-        <!-- ADD USER FORM (LEFT) -->
+    <div class="row g-3">
+        <!-- ADD USER -->
         <div class="col-md-4">
-            <div class="card p-4 shadow">
+            <div class="card p-4 shadow-sm">
                 <h5 class="text-center mb-3">Add New User</h5>
-                <form id="loginForm" method="post" enctype="multipart/form-data">
+                <form id="loginForm" method="post" novalidate>
                     <div class="mb-3">
                         <input class="form-control" name="username" id="username" type="text" placeholder="Username" required />
                     </div>
 
                     <div class="mb-3">
-                        <label for="role" class="form-label">Select Role:</label>
+                        <label for="role" class="form-label">Select Role</label>
                         <select class="form-control" name="role" id="role">
                             <option value="Administrator">Administrator</option>
-                            <!--<option value="ReadOnly">ReadOnly</option>-->
+                            <!-- <option value="ReadOnly">ReadOnly</option> -->
                         </select>
                     </div>
 
@@ -30,21 +29,23 @@
                         <input class="form-control" name="password" id="password" type="password" placeholder="Password" required />
                     </div>
 
-                    <button type="submit" id="btn-save" class="btn btn-primary w-100">Add User</button>
+                    <button type="submit" id="btn-save" class="btn btn-primary w-100">
+                        <i class="fa fa-user-plus me-1"></i> Add User
+                    </button>
                 </form>
             </div>
         </div>
 
-        <!-- USERS TABLE (RIGHT) -->
+        <!-- USERS TABLE -->
         <div class="col-md-8">
             <div class="table-responsive">
-                <table class="table table-hover text-center">
+                <table class="table table-hover text-center align-middle">
                     <thead class="table-dark">
                         <tr>
                             <th>Username</th>
                             <th>Role</th>
                             <th>Password</th>
-                            <th>Actions</th>
+                            <th style="width:200px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,21 +59,25 @@
                                         <span id="role_old_@item.username">@item.role</span>
                                         <select hidden name="role" id="role_new_@item.username" class="form-control">
                                             <option value="Administrator" selected="@(item.role == "Administrator" ? "selected" : null)">Administrator</option>
-                                            <!--<option value="ReadOnly" selected="@(item.role == "ReadOnly" ? "selected" : null)">ReadOnly</option>-->
+                                            <!-- <option value="ReadOnly" selected="@(item.role == "ReadOnly" ? "selected" : null)">ReadOnly</option> -->
                                         </select>
                                     </td>
                                     <td>
                                         <input hidden name="password" id="password_new_@item.username" class="form-control" placeholder="New password">
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-warning btn-sm btn-edit" data-id="@item.username">
-                                            <i class="fa fa-edit"></i>
-                                        </button>
-                                        <button hidden type="button" id="cancel_@item.username" class="btn btn-sm btn-default" data-id="@item.username">Cancel</button>
-                                        <button hidden type="button" class="btn btn-success btn-sm btn-save-edit" data-id="@item.username">Save</button>
-                                        <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="@item.username">
-                                            <i data-id="@item.username" class="fa fa-trash"></i>
-                                        </button>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <button type="button" class="btn btn-warning btn-sm btn-edit" data-id="@item.username" title="Edit">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                            <button hidden type="button" id="cancel_@item.username" class="btn btn-sm btn-default" data-id="@item.username">Cancel</button>
+                                            <button hidden type="button" class="btn btn-success btn-sm btn-save-edit" data-id="@item.username">
+                                                <i class="fa fa-save"></i> Save
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="@item.username" title="Delete">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -84,232 +89,214 @@
     </div>
 </div>
 
-<!-- CONFIRM DELETE MODAL -->
-<div id="confirmModal" class="modal fade" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+<!-- CONFIRM DELETE MODAL (NO BACKDROP) -->
+<div id="confirmModal" class="modal fade" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true" data-bs-backdrop="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Confirm Deletion</h5>
+                <h5 class="modal-title" id="confirmModalLabel">Confirm Deletion</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p id="confirmMessage"></p>
+                <p id="confirmMessage" class="mb-0"></p>
             </div>
             <div class="modal-footer">
                 <button id="confirmNo" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button id="confirmYes" class="btn btn-danger ">Delete</button>
+                <button id="confirmYes" class="btn btn-danger">Delete</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- NOTIFICATION -->
-<div id="notification" class="notification">
-    <span id="notification-message"></span>
-</div>
-
 @Html.AntiForgeryToken()
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.btn-edit').forEach(button => {
-            button.addEventListener('click', edit);
-        });
-
-        document.querySelectorAll('.btn-save-edit').forEach(button => {
-            button.addEventListener('click', save);
-        });
-
-        document.querySelectorAll('.btn-default').forEach(button => {
-            button.addEventListener('click', cancel);
-        });
-
-        // FOR NEW ROWS
-        document.addEventListener('click', function (event) {
-            if (event.target.closest('.btn-delete')) {
-                deleteUser(event);
-            }
-        });
-
-        document.addEventListener('click', function (event) {
-            if (event.target.classList.contains('btn-edit')) {
-                edit.call(event.target);
-            }
-        });
-
-        document.addEventListener('click', function (event) {
-            if (event.target.classList.contains('btn-save-edit')) {
-                save.call(event.target);
-            }
-        });
-
-        document.addEventListener('click', function (event) {
-            if (event.target.classList.contains('btn-default')) {
-                cancel.call(event.target);
-            }
-        });
-    });
-
-    // ADD NEW USER
-    document.getElementById('loginForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-        const username = document.getElementById('username').value;
-        const role = document.querySelector("#role option:checked").textContent;
-        const password = document.getElementById('password').value;
-
-        if (password === "" || username === "") {
-            showNotification('Error. Fill all fields', 2);
-            return;
+@section Scripts {
+    <script>
+        // ===== CSRF =====
+        function getCsrf() {
+            const el = document.querySelector('input[name="__RequestVerificationToken"]');
+            return el ? el.value : '';
         }
 
-        const response = await fetch(window.location.pathname +'?handler=add_new_user', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-            },
-            body: JSON.stringify({ username, role, password })
-        });
+        // ===== ADD NEW USER =====
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        if (response.ok) {
-            let newModel = await response.json();
+            const username = document.getElementById('username').value.trim();
+            const role = document.getElementById('role').value;
+            const password = document.getElementById('password').value;
 
-            if (!newModel.success) {
-                showNotification('Registration error: ' + newModel.message, 2);
+            if (!username || !password) {
+                showToast('warning', 'Fill all fields.');
+                return;
+            }
+            if (username.length < 3) {
+                showToast('warning', 'Username must be at least 3 characters.');
                 return;
             }
 
-            showNotification('User added!', 1);
+            try {
+                const btn = document.getElementById('btn-save');
+                btn.disabled = true;
 
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showNotification('Registration error.', 2);
-        }
-    });
+                const resp = await fetch(window.location.pathname + '?handler=add_new_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': getCsrf()
+                    },
+                    body: JSON.stringify({ username, role, password })
+                });
 
-    // DELETE USER
-    async function deleteUser(event) {
-        let button = event.target.closest('button');
-        let username = button.getAttribute('data-id');
-        let row = document.getElementById('row_' + username);
+                const data = await resp.json();
+                if (!resp.ok || !data?.success) throw new Error(data?.message || 'Registration error.');
 
-        let modalElement = document.getElementById('confirmModal');
-        let confirmMessage = document.getElementById('confirmMessage');
-        let confirmYes = document.getElementById('confirmYes');
-        let confirmNo = document.getElementById('confirmNo');
-
-        confirmMessage.textContent = `Are you sure you want to delete user: "${username}"?`;
-
-        let confirmModal = new bootstrap.Modal(modalElement, { backdrop: false });
-        confirmModal.show();
-
-        confirmYes.onclick = async function () {
-            confirmModal.hide();
-
-            let response = await fetch(window.location.pathname +'?handler=Delete_user', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                },
-                body: JSON.stringify({ username: username })
-            });
-
-            if (response.ok) {
-                confirmModal.hide();
-                let result = await response.json();
-                if (!result.success) {
-                    showNotification('Error:: ' + result.message, 2);
-                    return;
-                }
-
-                showNotification(`User "${username}" deleted.`, 1);
-                row.remove();
-            } else {
-                showNotification('User deletion error.', 2);
+                showToast('success', 'User added!');
+                setTimeout(() => location.reload(), 600);
+            } catch (err) {
+                showToast('danger', err.message || 'Registration error.');
+            } finally {
+                document.getElementById('btn-save').disabled = false;
             }
-        };
-
-        // CANCEL
-        confirmNo.onclick = function () {
-            confirmModal.hide();
-        };
-    }
-
-
-    // EDIT
-    function edit() {
-        let rowId = this.getAttribute('data-id');
-        let row = document.getElementById('row_' + rowId);
-
-        row.querySelector('#password_new_' + rowId).hidden = false;
-        row.querySelector('#role_old_' + rowId).hidden = true;
-        row.querySelector('#role_new_' + rowId).hidden = false;
-
-        this.hidden = true;
-        row.querySelector('.btn-save-edit[data-id="' + rowId + '"]').hidden = false;
-        row.querySelector('#cancel_' + rowId).hidden = false;
-        row.querySelector('.btn-delete[data-id="' + rowId + '"]').hidden = true;
-    }
-
-    // UPDATE USER
-    async function save() {
-        let rowId = this.getAttribute('data-id');
-        let row = document.getElementById('row_' + rowId);
-
-        let username = rowId;
-        let role = row.querySelector('#role_new_' + rowId).value;
-        let password = row.querySelector('#password_new_' + rowId).value;
-
-        let response = await fetch(window.location.pathname + '?handler=Update_user', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-            },
-            body: JSON.stringify({
-                username: username,
-                role: role,
-                password: password,
-            })
         });
 
-        if (response.ok) {
-            let newModel = await response.json();
-            if (!newModel.success) {
-                showNotification('Save error: ' + newModel.message, 2);
-                return;
-            }
+        // ===== EVENT DELEGATION FOR TABLE BUTTONS =====
+        document.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.btn-edit');
+            const saveBtn = e.target.closest('.btn-save-edit');
+            const cancelBtn = e.target.closest('.btn-default');
+            const delBtn = e.target.closest('.btn-delete');
 
-            showNotification('Save successful!', 1);
+            if (editBtn) onEdit(editBtn);
+            else if (saveBtn) onSave(saveBtn);
+            else if (cancelBtn) onCancel(cancelBtn);
+            else if (delBtn) onDelete(delBtn);
+        });
 
-            row.querySelector('#password_new_' + rowId).hidden = true;
-            row.querySelector('#role_old_' + rowId).textContent = role;
-            row.querySelector('#role_old_' + rowId).hidden = false;
-            row.querySelector('#role_new_' + rowId).hidden = true;
+        // ===== EDIT MODE =====
+        function onEdit(btn) {
+            const id = btn.dataset.id;
+            const row = document.getElementById('row_' + id);
+            if (!row) return;
 
-            row.querySelector('.btn-edit[data-id="' + rowId + '"]').hidden = false;
-            row.querySelector('.btn-save-edit[data-id="' + rowId + '"]').hidden = true;
-            row.querySelector('#cancel_' + rowId).hidden = true;
-            row.querySelector('.btn-delete[data-id="' + rowId + '"]').hidden = false;
-        } else {
-            showNotification('Save error.', 2);
+            row.querySelector('#password_new_' + id).hidden = false;
+            row.querySelector('#role_old_' + id).hidden = true;
+            row.querySelector('#role_new_' + id).hidden = false;
+
+            row.querySelector('.btn-edit[data-id="' + id + '"]').hidden = true;
+            row.querySelector('.btn-save-edit[data-id="' + id + '"]').hidden = false;
+            row.querySelector('#cancel_' + id).hidden = false;
+            row.querySelector('.btn-delete[data-id="' + id + '"]').hidden = true;
         }
-    }
 
-    // CANCEL
-    function cancel() {
-        let rowId = this.getAttribute('data-id');
-        let row = document.getElementById('row_' + rowId);
+        // ===== CANCEL EDIT =====
+        function onCancel(btn) {
+            const id = btn.dataset.id;
+            const row = document.getElementById('row_' + id);
+            if (!row) return;
 
-        row.querySelector('#password_new_' + rowId).hidden = true;
-        row.querySelector('#role_old_' + rowId).hidden = false;
-        row.querySelector('#role_new_' + rowId).hidden = true;
+            row.querySelector('#password_new_' + id).value = '';
+            row.querySelector('#password_new_' + id).hidden = true;
+            row.querySelector('#role_old_' + id).hidden = false;
+            row.querySelector('#role_new_' + id).hidden = true;
 
-        row.querySelector('.btn-edit[data-id="' + rowId + '"]').hidden = false;
-        row.querySelector('.btn-save-edit[data-id="' + rowId + '"]').hidden = true;
-        row.querySelector('#cancel_' + rowId).hidden = true;
-        row.querySelector('.btn-delete[data-id="' + rowId + '"]').hidden = false;
-    }
-</script>
+            row.querySelector('.btn-edit[data-id="' + id + '"]').hidden = false;
+            row.querySelector('.btn-save-edit[data-id="' + id + '"]').hidden = true;
+            row.querySelector('#cancel_' + id).hidden = true;
+            row.querySelector('.btn-delete[data-id="' + id + '"]').hidden = false;
+        }
+
+        // ===== SAVE USER =====
+        async function onSave(btn) {
+            const id = btn.dataset.id;
+            const row = document.getElementById('row_' + id);
+            if (!row) return;
+
+            const username = id;
+            const role = row.querySelector('#role_new_' + id).value;
+            const password = row.querySelector('#password_new_' + id).value;
+
+            try {
+                btn.disabled = true;
+
+                const resp = await fetch(window.location.pathname + '?handler=Update_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': getCsrf()
+                    },
+                    body: JSON.stringify({ username, role, password })
+                });
+
+                const data = await resp.json();
+                if (!resp.ok || !data?.success) throw new Error(data?.message || 'Save error.');
+
+                showToast('success', 'Save successful!');
+                // UPDATE ROW UI
+                row.querySelector('#password_new_' + id).value = '';
+                row.querySelector('#password_new_' + id).hidden = true;
+                row.querySelector('#role_old_' + id).textContent = role;
+                row.querySelector('#role_old_' + id).hidden = false;
+                row.querySelector('#role_new_' + id).hidden = true;
+
+                row.querySelector('.btn-edit[data-id="' + id + '"]').hidden = false;
+                row.querySelector('.btn-save-edit[data-id="' + id + '"]').hidden = true;
+                row.querySelector('#cancel_' + id).hidden = true;
+                row.querySelector('.btn-delete[data-id="' + id + '"]').hidden = false;
+
+            } catch (err) {
+                showToast('danger', err.message || 'Save error.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // ===== DELETE USER (WITH CONFIRM MODAL) =====
+        let pendingDelete = null;
+
+        function onDelete(btn) {
+            const username = btn.dataset.id;
+            pendingDelete = { username, rowId: 'row_' + username };
+
+            document.getElementById('confirmMessage').textContent = `Are you sure you want to delete user: "${username}"?`;
+
+            // RESET "YES" HANDLER TO AVOID ACCUMULATION
+            const yes = document.getElementById('confirmYes');
+            const yesClone = yes.cloneNode(true);
+            yes.parentNode.replaceChild(yesClone, yes);
+
+            yesClone.addEventListener('click', confirmDelete, { once: true });
+
+            new bootstrap.Modal(document.getElementById('confirmModal'), { backdrop: false }).show();
+        }
+
+        async function confirmDelete() {
+            if (!pendingDelete) return;
+
+            const { username, rowId } = pendingDelete;
+            pendingDelete = null;
+
+            try {
+                const resp = await fetch(window.location.pathname + '?handler=Delete_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': getCsrf()
+                    },
+                    body: JSON.stringify({ username })
+                });
+
+                const data = await resp.json();
+                if (!resp.ok || !data?.success) throw new Error(data?.message || 'User deletion error.');
+
+                // CLOSE MODAL + REMOVE ROW + TOAST
+                bootstrap.Modal.getInstance(document.getElementById('confirmModal'))?.hide();
+                document.getElementById(rowId)?.remove();
+                showToast('success', `User "${username}" deleted.`);
+
+            } catch (err) {
+                showToast('danger', err.message || 'User deletion error.');
+            }
+        }
+    </script>
+}

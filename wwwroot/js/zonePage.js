@@ -1,6 +1,13 @@
-﻿function toggleFields() {
+﻿// =====================================
+// ZONE PAGE SHARED HELPERS (UI)
+// ALL COMMENTS IN ENGLISH
+// =====================================
+
+// TOGGLE FIELDS WHEN ADDING RECORD
+function toggleFields() {
     const type = document.getElementById("recordType").value;
 
+    // HIDE ALL OPTIONAL
     document.getElementById("valueField").classList.remove("d-none");
     document.getElementById("mxPriorityField").classList.add("d-none");
     document.getElementById("srvPriorityField").classList.add("d-none");
@@ -28,29 +35,26 @@
     }
 }
 
+// COLLAPSIBLE GROUPS
 function toggleZone(zone) {
-    var rows = document.getElementsByClassName(zone);
-    var icon = document.getElementById("icon-" + zone);
-    for (var i = 0; i < rows.length; i++) {
+    const rows = document.getElementsByClassName(zone);
+    const icon = document.getElementById("icon-" + zone);
+    for (let i = 0; i < rows.length; i++) {
         rows[i].style.display = rows[i].style.display === "none" ? "table-row" : "none";
     }
     icon.classList.toggle("fa-chevron-right");
     icon.classList.toggle("fa-chevron-down");
 }
 
-let deleteTarget = null;
-
+// EDIT MODAL: TOGGLE FIELDS BY TYPE
 function toggleEditFields() {
-    var recordType = document.getElementById("editRecordType").value;
+    const recordType = document.getElementById("editRecordType").value;
 
-    // HIDE ALL EXTRA FIELDS INITIALLY
-    document.getElementById("editValueField").classList.add("d-none");
-    document.getElementById("editMxPriorityField").classList.add("d-none");
-    document.getElementById("editSrvPriorityField").classList.add("d-none");
-    document.getElementById("editSrvWeightField").classList.add("d-none");
-    document.getElementById("editSrvPortField").classList.add("d-none");
-    document.getElementById("editSoaFields").classList.add("d-none");
-    document.getElementById("editTXTField").classList.add("d-none");
+    const ids = [
+        "editValueField", "editMxPriorityField", "editSrvPriorityField",
+        "editSrvWeightField", "editSrvPortField", "editSoaFields", "editTXTField"
+    ];
+    ids.forEach(id => document.getElementById(id).classList.add("d-none"));
 
     if (recordType === "SOA") {
         document.getElementById("editSoaFields").classList.remove("d-none");
@@ -69,7 +73,8 @@ function toggleEditFields() {
     }
 }
 
+// AUTOSIZE FOR TEXTAREA
 function autoResizeTextarea(textarea) {
-    textarea.style.height = "auto"; 
-    textarea.style.height = (textarea.scrollHeight) + "px";
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
 }

@@ -5,159 +5,251 @@
 }
 
 <div class="container mt-4">
-    <h2 class="text-center mb-4">Settings</h2>
+    <h2 class="text-center mb-4"><i class="fa fa-gear me-2"></i>Settings</h2>
 
-    <form id="settingsForm">
-        <div class="row">
+    <form id="settingsForm" novalidate>
+        <div class="row g-4">
             <!-- MYSQL SETTINGS -->
             <div class="col-md-4">
-                <h5>MySQL Settings</h5>
-                <div class="mb-2">
-                    <label class="form-label">Server:</label>
-                    <input type="text" id="mysqlServer" class="form-control" value="@Model.Settings.MySQL.Server">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">User:</label>
-                    <input type="text" id="mysqlUser" class="form-control" value="@Model.Settings.MySQL.User">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Password:</label>
-                    <input type="password" id="mysqlPassword" class="form-control" value="@Model.Settings.MySQL.Password">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Database:</label>
-                    <input type="text" id="mysqlDatabase" class="form-control" value="@Model.Settings.MySQL.Database">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">MySQL Settings</h5>
+
+                        <div class="mb-2">
+                            <label class="form-label">Server</label>
+                            <input type="text" id="mysqlServer" class="form-control" value="@Model.Settings.MySQL.Server" placeholder="127.0.0.1 or host">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">User</label>
+                            <input type="text" id="mysqlUser" class="form-control" value="@Model.Settings.MySQL.User">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Password</label>
+                            <div class="input-group">
+                                <input type="password" id="mysqlPassword" class="form-control" value="@Model.Settings.MySQL.Password">
+                                <button class="btn btn-outline-secondary" type="button" data-toggle-vis="#mysqlPassword" title="Show/Hide"><i class="fa fa-eye"></i></button>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Database</label>
+                            <input type="text" id="mysqlDatabase" class="form-control" value="@Model.Settings.MySQL.Database">
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- POWERDNS SETTINGS -->
             <div class="col-md-4">
-                <h5>PowerDNS Settings</h5>
-                <div class="mb-2">
-                    <label class="form-label">API URL:</label>
-                    <input type="text" id="pdnsUrl" class="form-control" value="@Model.Settings.PowerDNS.Url">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">API Key:</label>
-                    <input type="password" id="pdnsApiKey" class="form-control" value="@Model.Settings.PowerDNS.Api_Key">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Default A Record:</label>
-                    <input type="text" id="pdnsDefaultA" class="form-control" value="@Model.Settings.PowerDNS.Default_A">
-                </div>
-                <h6 class="mt-3">SOA Configuration</h6>
-                <div class="mb-2">
-                    <label class="form-label">Primary NS:</label>
-                    <input type="text" id="pdnsSoaNs" class="form-control" value="@Model.Settings.PowerDNS.SOA.Ns">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Admin Email:</label>
-                    <input type="text" id="pdnsSoaMail" class="form-control" value="@Model.Settings.PowerDNS.SOA.Mail">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">PowerDNS Settings</h5>
+
+                        <div class="mb-2">
+                            <label class="form-label">API URL</label>
+                            <input type="text" id="pdnsUrl" class="form-control" value="@Model.Settings.PowerDNS.Url" placeholder="http://127.0.0.1:8081/api/v1">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">API Key</label>
+                            <div class="input-group">
+                                <input type="password" id="pdnsApiKey" class="form-control" value="@Model.Settings.PowerDNS.Api_Key">
+                                <button class="btn btn-outline-secondary" type="button" data-toggle-vis="#pdnsApiKey" title="Show/Hide"><i class="fa fa-eye"></i></button>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Default A Record</label>
+                            <input type="text" id="pdnsDefaultA" class="form-control ip-input" value="@Model.Settings.PowerDNS.Default_A" placeholder="A record IPv4 (e.g., 203.0.113.10)">
+                        </div>
+
+                        <h6 class="mt-3">SOA Configuration</h6>
+                        <div class="mb-2">
+                            <label class="form-label">Primary NS</label>
+                            <input type="text" id="pdnsSoaNs" class="form-control" value="@Model.Settings.PowerDNS.SOA.Ns" placeholder="ns1.example.com">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Admin Email</label>
+                            <input type="text" id="pdnsSoaMail" class="form-control" value="@Model.Settings.PowerDNS.SOA.Mail" placeholder="admin@example.com">
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- RECURSOR SETTINGS -->
             <div class="col-md-4">
-                <h5>Recursor Settings</h5>
-                <div class="mb-2">
-                    <label class="form-label">Recursor Status:</label>
-                    <select id="recursorStatus" class="form-control" onchange="toggleRecursorFields()">
-                        <option value="Enabled" selected="@(Model.Settings.Recursor.Enabled == "Enabled")">Enabled</option>
-                        <option value="Disabled" selected="@(Model.Settings.Recursor.Enabled == "Disabled")">Disabled</option>
-                    </select>
-                </div>
-                <div id="recursorFields">
-                    <div class="mb-2">
-                        <label class="form-label">Recursor URL:</label>
-                        <input type="text" id="recursorUrl" class="form-control" value="@Model.Settings.Recursor.Url">
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">API Key:</label>
-                        <input type="password" id="recursorApiKey" class="form-control" value="@Model.Settings.Recursor.Api_Key">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Recursor Settings</h5>
+
+                        <div class="mb-2">
+                            <label class="form-label">Recursor Status</label>
+                            <select id="recursorStatus" class="form-select" onchange="toggleRecursorFields()">
+                                <option value="Enabled" selected="@(Model.Settings.Recursor.Enabled == "Enabled" ? "selected" : null)">Enabled</option>
+                                <option value="Disabled" selected="@(Model.Settings.Recursor.Enabled == "Disabled" ? "selected" : null)">Disabled</option>
+                            </select>
+                        </div>
+
+                        <div id="recursorFields">
+                            <div class="mb-2">
+                                <label class="form-label">Recursor URL</label>
+                                <input type="text" id="recursorUrl" class="form-control" value="@Model.Settings.Recursor.Url" placeholder="http://127.0.0.1:8082/api/v1">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">API Key</label>
+                                <div class="input-group">
+                                    <input type="password" id="recursorApiKey" class="form-control" value="@Model.Settings.Recursor.Api_Key">
+                                    <button class="btn btn-outline-secondary" type="button" data-toggle-vis="#recursorApiKey" title="Show/Hide"><i class="fa fa-eye"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-muted small mt-2">Tip: you can point some zones to authoritative via <code>127.0.0.1:5300</code> on the Recursor page.</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div style="display: flex; justify-content: center;">
-            <button type="button" class="btn btn-primary mt-3" style="width:400px;" onclick="saveSettings()">Save Settings</button>
+        <div class="d-flex justify-content-center">
+            <button type="button" id="btnSaveSettings" class="btn btn-primary mt-4" style="min-width:260px;" onclick="saveSettings()">
+                <i class="fa fa-save me-1"></i> Save Settings
+            </button>
         </div>
     </form>
-
-    <div id="alertContainer-settings"></div>
-</div>
-
-<div id="notification" class="notification">
-    <span id="notification-message"></span>
 </div>
 
 @Html.AntiForgeryToken()
 
+@section Scripts {
+<script src="~/js/validation.js"></script>
 <script>
-    // FUNCTION TO TOGGLE RECURSOR FIELDS
-    function toggleRecursorFields() {
-        const recursorStatus = document.getElementById("recursorStatus").value;
-        const recursorFields = document.getElementById("recursorFields");
-
-        if (recursorStatus === "Disabled") {
-            recursorFields.style.display = "none";
-        } else {
-            recursorFields.style.display = "block";
-        }
+    // ===== UTIL: CSRF =====
+    function getCsrf() {
+        const el = document.querySelector('input[name="__RequestVerificationToken"]');
+        return el ? el.value : '';
     }
 
-    // INITIALIZE FIELD VISIBILITY ON LOAD
-    document.addEventListener("DOMContentLoaded", () => {
-        toggleRecursorFields();
+    // ===== TOGGLE PASSWORD VISIBILITY BUTTONS =====
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-toggle-vis]');
+        if (!btn) return;
+        const sel = btn.getAttribute('data-toggle-vis');
+        const input = document.querySelector(sel);
+        if (!input) return;
+        input.type = input.type === 'password' ? 'text' : 'password';
+        btn.querySelector('i')?.classList.toggle('fa-eye');
+        btn.querySelector('i')?.classList.toggle('fa-eye-slash');
     });
 
-    // SAVE SETTINGS
+    // ===== RECURSOR FIELDS VISIBILITY =====
+    function toggleRecursorFields() {
+        const status = document.getElementById("recursorStatus").value;
+        const fields = document.getElementById("recursorFields");
+        fields.style.display = (status === "Disabled") ? "none" : "block";
+    }
+    document.addEventListener("DOMContentLoaded", toggleRecursorFields);
+
+    // ===== LIGHT VALIDATORS =====
+    function isHttpUrl(u) {
+        try { const x = new URL(u); return x.protocol === 'http:' || x.protocol === 'https:'; } catch { return false; }
+    }
+    function isEmail(s) {
+        return /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test((s||'').trim());
+    }
+
+    // Use validation.js helpers where appropriate
+    function mustIPv4OrEmpty(v, fieldLabel) {
+        if (!v) return true;
+        const err = validateIPv4(v); // returns "" if valid
+        if (err) { showToast('warning', `${fieldLabel}: ${err}`); return false; }
+        return true;
+    }
+    function mustFqdnOrEmpty(v, fieldLabel) {
+        if (!v) return true;
+        const err = validateForwardZoneName(v); // FQDN validator (no trailing dot)
+        if (err) { showToast('warning', `${fieldLabel}: ${err}`); return false; }
+        return true;
+    }
+
+    // ===== COLLECT + SAVE SETTINGS =====
     async function saveSettings() {
+        const btn = document.getElementById('btnSaveSettings');
+        btn.disabled = true;
+
         const settingsData = {
             MySQL: {
-                Server: document.getElementById("mysqlServer").value,
-                User: document.getElementById("mysqlUser").value,
+                Server:   document.getElementById("mysqlServer").value.trim(),
+                User:     document.getElementById("mysqlUser").value.trim(),
                 Password: document.getElementById("mysqlPassword").value,
-                Database: document.getElementById("mysqlDatabase").value
+                Database: document.getElementById("mysqlDatabase").value.trim()
             },
             PowerDNS: {
-                Url: document.getElementById("pdnsUrl").value,
-                Api_Key: document.getElementById("pdnsApiKey").value,
-                Default_A: document.getElementById("pdnsDefaultA").value,
+                Url:       document.getElementById("pdnsUrl").value.trim(),
+                Api_Key:   document.getElementById("pdnsApiKey").value,
+                Default_A: document.getElementById("pdnsDefaultA").value.trim(),
                 SOA: {
-                    Ns: document.getElementById("pdnsSoaNs").value,
-                    Mail: document.getElementById("pdnsSoaMail").value
+                    Ns:   document.getElementById("pdnsSoaNs").value.trim(),
+                    Mail: document.getElementById("pdnsSoaMail").value.trim()
                 }
             },
             Recursor: {
                 Enabled: document.getElementById("recursorStatus").value,
-                Url: document.getElementById("recursorUrl").value,
-                Api_Key: document.getElementById("recursorApiKey").value
+                Url:     document.getElementById("recursorUrl")?.value.trim() || "",
+                Api_Key: document.getElementById("recursorApiKey")?.value || ""
             }
         };
 
+        // === CLIENT-SIDE VALIDATION ===
+        // MySQL basics
+        if (!settingsData.MySQL.Server || !settingsData.MySQL.User || !settingsData.MySQL.Database) {
+            showToast('warning', 'MySQL: server, user and database are required.');
+            btn.disabled = false; return;
+        }
+
+        // PowerDNS
+        if (!isHttpUrl(settingsData.PowerDNS.Url)) {
+            showToast('warning', 'PowerDNS: API URL must be http(s)://…');
+            btn.disabled = false; return;
+        }
+        if (!mustIPv4OrEmpty(settingsData.PowerDNS.Default_A, 'Default A Record')) {
+            btn.disabled = false; return;
+        }
+        if (!mustFqdnOrEmpty(settingsData.PowerDNS.SOA.Ns, 'SOA Primary NS')) {
+            btn.disabled = false; return;
+        }
+        if (settingsData.PowerDNS.SOA.Mail && !isEmail(settingsData.PowerDNS.SOA.Mail)) {
+            showToast('warning', 'SOA Admin Email: invalid email.');
+            btn.disabled = false; return;
+        }
+
+        // Recursor (if enabled)
+        if (settingsData.Recursor.Enabled === 'Enabled') {
+            if (!isHttpUrl(settingsData.Recursor.Url)) {
+                showToast('warning', 'Recursor: URL must be http(s)://…');
+                btn.disabled = false; return;
+            }
+        }
+
         try {
-            let response = await fetch(window.location.pathname + "?handler=SaveSettings", {
+            const response = await fetch(window.location.pathname + "?handler=SaveSettings", {
                 method: "POST",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    "Accept": "application/json",
+                    "RequestVerificationToken": getCsrf()
                 },
                 body: JSON.stringify(settingsData)
             });
 
-            if (response.ok) {
-                let newModel = await response.json();
-                if (newModel.success === false) {
-                    showNotification('Error: ' + newModel.message, 2);
-                } else {
-                    showNotification('Settings saved', 1);
-                }
-            } else {
-                showNotification('Error.', 2);
+            const payload = await response.json();
+            if (!response.ok || payload?.success === false) {
+                throw new Error(payload?.message || 'Save failed.');
             }
-        } catch (error) {
-            showNotification('Fetching error.', 2);
+
+            showToast('success', payload?.message || 'Settings saved');
+        } catch (err) {
+            console.error(err);
+            showToast('danger', err.message || 'Error while saving settings');
+        } finally {
+            btn.disabled = false;
         }
     }
 </script>
+}

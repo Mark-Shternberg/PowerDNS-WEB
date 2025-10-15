@@ -1,15 +1,20 @@
-﻿async function addSubdomain() {
-    const subdomainName = document.getElementById("subdomainInput").value.trim();
+﻿// =====================================
+// SUBDOMAIN DIALOG
+// =====================================
 
-    const errorMessage = validateSubdomain(subdomainName);
+function showAddSubdomainModal() {
+    const el = document.getElementById("addSubdomainModal");
+    if (!el) return;
+    new bootstrap.Modal(el, { backdrop: false }).show();
+}
 
-    if (errorMessage) {
-        showAlertSubdomain(errorMessage, "danger");
-        return;
-    }
+async function addSubdomain() {
+    const subdomainName = (document.getElementById("subdomainInput")?.value || "").trim();
+    const err = validateSubdomain(subdomainName);
+    if (err) { showToast('warning', err); return; }
 
     try {
-        const response = await fetch(window.location.pathname + "?handler=AddSubdomain", {
+        const resp = await fetch(window.location.pathname + "?handler=AddSubdomain", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -18,41 +23,14 @@
             },
             body: JSON.stringify({ Subdomain: subdomainName })
         });
+        const result = await resp.json();
+        if (!resp.ok || !result?.success) throw new Error(result?.message || "Failed to add subdomain");
 
-        const result = await response.json();
+        showToast('success', result?.message || "Subdomain added");
+        bootstrap.Modal.getInstance(document.getElementById("addSubdomainModal"))?.hide();
+        setTimeout(() => location.reload(), 600);
 
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || "Failed to add subdomain");
-        }
-
-        showAlertSubdomain("Subdomain added successfully!", "success");
-
-        // Закрываем модальное окно через 1 секунду
-        setTimeout(() => location.reload(), 1000);
-
-    } catch (error) {
-        showAlertSubdomain(error.message, "danger");
+    } catch (e) {
+        showToast('danger', e.message || "Error adding subdomain");
     }
-}
-
-function showAddSubdomainModal() {
-    openModal("addSubdomainModal");
-}
-
-// OPEN MODAL
-function openModal(modalId) {
-    var modalElement = document.getElementById(modalId);
-    if (!modalElement) return;
-
-    var modal = new bootstrap.Modal(modalElement, { backdrop: false });
-    modal.show();
-}
-
-// DISPLAY ALERT
-function showAlertSubdomain(message, type) {
-    const alertContainer = document.getElementById("alertContainer-subdomain");
-    alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>`;
 }
