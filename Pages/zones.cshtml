@@ -1,12 +1,12 @@
 ﻿@page
-@model ZonesModel
+@model PowerDNS_Web.Pages.ZonesModel
 @{
     ViewData["Title"] = "Zones";
 }
 
 <div class="container py-3">
 
-    <!-- ===== PAGE HEADER / ACTIONS ===== -->
+    <!-- HEADER -->
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <div>
             <h2 class="mb-0"><i class="fa fa-shield-halved me-2"></i>Zones</h2>
@@ -14,222 +14,245 @@
         </div>
         @if (User.IsInRole("Administrator"))
         {
-            <div class="d-flex flex-wrap gap-2">
-                <button type="button" onclick="showModal('Forward')" class="btn btn-primary">
+            <div class="btn-group">
+                <button type="button"
+                        class="btn btn-primary js-open-add"
+                        data-bs-toggle="modal"
+                        data-bs-target="#addEditZoneModal"
+                        data-mode="add-forward">
                     <i class="fa fa-plus me-1"></i> Add forward zone
                 </button>
-                <button type="button" onclick="showModal('Reverse')" class="btn btn-outline-primary">
+                <button type="button"
+                        class="btn btn-outline-primary js-open-add"
+                        data-bs-toggle="modal"
+                        data-bs-target="#addEditZoneModal"
+                        data-mode="add-reverse">
                     <i class="fa fa-plus me-1"></i> Add reverse zone
                 </button>
             </div>
         }
     </div>
 
-    <!-- ===== SEARCH ===== -->
+    <!-- SEARCH -->
     <div class="d-flex justify-content-center mb-3">
         <div class="input-group" style="max-width: 560px;">
             <span class="input-group-text"><i class="fa fa-search"></i></span>
             <input class="form-control" id="search" type="text" placeholder="Search by domain">
-            <button type="button" id="clear-btn" onclick="clearSearch()" class="btn btn-default" style="display:none">
-                Clear
-            </button>
+            <button type="button" id="clear-btn" class="btn btn-default" style="display:none">Clear</button>
         </div>
     </div>
 
-    <!-- ===== ZONES TABLE ===== -->
+    <!-- TABLE -->
     <div class="table-responsive">
         <table class="table table-hover align-middle" id="main_table">
             <thead class="table-dark">
                 <tr>
                     <th>Domain</th>
-                    <th style="width: 180px;">Master server</th>
-                    <th style="width: 150px;">Zone type</th>
+                    <th style="width: 180px;">Master</th>
+                    <th style="width: 160px;">Type</th>
                     <th style="width: 220px;">DNSSEC</th>
-                    <th style="width: 160px;">Serial</th>
-                    <th style="width: 210px;">Actions</th>
+                    <th style="width: 140px;">Serial</th>
+                    <th style="width: 240px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
-            @foreach (var zone in Model.Zones)
-            {
-                <tr>
-                    <td><a href="/zone/@zone.name" class="text-decoration-none">@zone.name</a></td>
-                    <td>@zone.Master</td>
-                    <td>
-                        @if (zone.kind == "Master")
-                        {
-                            <i class="fa fa-server text-primary" title="Master Zone"></i> <span>Master</span>
-                        }
-                        else if (zone.kind == "Slave")
-                        {
-                            <i class="fa fa-cloud text-secondary" title="Slave Zone"></i> <span>Slave</span>
-                        }
-                        else if (zone.kind == "Native")
-                        {
-                            <i class="fa fa-database text-info" title="Native Zone"></i> <span>Native</span>
-                        }
-                        else
-                        {
-                            <i class="fa fa-question-circle text-warning" title="Unknown Zone Type"></i> <span>@zone.kind</span>
-                        }
-                    </td>
-                    <td>
-                        @if (zone.dnssec)
-                        {
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="fa fa-key text-success" title="DNSSEC Enabled"></i>
-                                <span>Enabled</span>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="dnssecKeys('@zone.name')">
-                                    <i class="fa fa-key me-1"></i> Keys
+                @foreach (var zone in Model.Zones)
+                {
+                    var isDnssec = zone.dnssec;
+                    var type = zone.kind;
+                    <tr>
+                        <td>
+                            <a href="/zone/@zone.name" class="text-decoration-none fw-semibold">@zone.name</a>
+                        </td>
+                        <td>@zone.Master</td>
+                        <td>
+                            @if (type == "Master")
+                            {
+                                <span class="badge bg-primary"><i class="fa fa-server me-1"></i>Master</span>
+                            }
+                            else if (type == "Slave")
+                            {
+
+                                <span class="badge bg-secondary"><i class="fa fa-cloud me-1"></i>Slave</span>
+                            }
+                            else if (type == "Native")
+                            {
+
+                                <span class="badge bg-info text-dark"><i class="fa fa-database me-1"></i>Native</span>
+                            }
+                            else
+                            {
+
+                                <span class="badge bg-warning text-dark"><i class="fa fa-question-circle me-1"></i>@type</span>
+                            }
+                        </td>
+                        <td>
+                            @if (isDnssec)
+                            {
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge bg-success"><i class="fa fa-key me-1"></i>Enabled</span>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-secondary js-keys"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#dnssecKeysModal"
+                                            data-zone="@zone.name">
+                                        <i class="fa fa-key me-1"></i>Keys
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger"><i class="fa fa-ban me-1"></i>Disabled</span>
+                            }
+                        </td>
+                        <td class="text-muted">@zone.serial</td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button"
+                                        class="btn btn-sm btn-warning js-edit"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#addEditZoneModal"
+                                        data-mode="edit"
+                                        data-name="@zone.name"
+                                        data-kind="@zone.kind"
+                                        data-master="@zone.Master"
+                                        data-dnssec="@(zone.dnssec ? "Enabled" : "Disabled")"
+                                        data-serial="@zone.serial">
+                                    <i class="fa fa-edit"></i> Edit
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-delete"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#confirmDeleteModal"
+                                        data-name="@zone.name">
+                                    <i class="fa fa-trash"></i> Delete
                                 </button>
                             </div>
-                        }
-                        else
-                        {
-                            <i class="fa fa-ban text-danger" title="DNSSEC Disabled"></i> <span>Disabled</span>
-                        }
-                    </td>
-                    <td>@zone.serial</td>
-                    <td>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-warning"
-                                    onclick="openEditModal('@zone.name', '@zone.kind', '@zone.Master', '@zone.dnssec', '@zone.serial')">
-                                <i class="fa fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="btn btn-sm btn-delete" onclick="confirmDelete('@zone.name')">
-                                <i class="fa fa-trash"></i>
-                                Delete
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            }
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- ===== ADD/EDIT ZONE MODAL ===== -->
-<div class="modal fade" id="addZoneModal" tabindex="-1" aria-labelledby="addZoneModalLabel" aria-hidden="true" data-bs-backdrop="false">
-    <div class="modal-dialog">
+<!-- ADD/EDIT MODAL (CENTERED) -->
+<div class="modal fade" id="addEditZoneModal" tabindex="-1" aria-labelledby="addEditZoneLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addZoneModalLabel">Add Zone</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="hideModal()"></button>
-            </div>
-            <div class="modal-body">
+            <form id="zoneForm" class="needs-validation" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Mode" id="form-mode" value="add-forward" />
 
-                <!-- FORWARD DOMAIN -->
-                <div class="mb-3" id="domain-block">
-                    <label for="modal-domain" class="form-label">Zone Name <span class="text-danger">*</span></label>
-                    <input type="text" id="modal-domain" class="form-control" placeholder="example.com">
+                <!-- ВАЖНО: hidden kind для disabled select -->
+                <input type="hidden" id="zone-kind-hidden" name="kind" value="Native" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addEditZoneLabel">Add zone</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <!-- REVERSE DOMAIN -->
-                <div class="mb-3 d-none" id="reverse-block">
-                    <label for="modal-reverse" class="form-label">Reverse prefix <span class="text-danger">*</span></label>
-                    <input type="text" id="modal-reverse" class="form-control" placeholder="192.168.0.">
-                    <div class="form-text">Network prefix (no last octet). Example: <code>192.168.0.</code></div>
-                </div>
+                <div class="modal-body">
 
-                <div class="row g-3">
-                    <div class="col-sm-6">
-                        <label for="modal-type" class="form-label">Zone type <span class="text-danger">*</span></label>
-                        <select id="modal-type" class="form-select" onchange="ZoneToggle()">
-                            <option value="Native">Native</option>
-                            <option value="Master">Master</option>
-                            <option value="Slave">Slave</option>
-                        </select>
+                    <!-- FORWARD NAME -->
+                    <div class="mb-3" id="forward-block">
+                        <label for="zone-name" class="form-label">Zone name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="zone-name" name="name" placeholder="example.com" />
+                        <div class="invalid-feedback">Please enter a valid zone name.</div>
                     </div>
-                    <div class="col-sm-6">
-                        <label for="modal-dnssec" class="form-label">DNSSEC <span class="text-danger">*</span></label>
-                        <select id="modal-dnssec" class="form-select">
-                            <option value="Enabled">Enabled</option>
-                            <option value="Disabled">Disabled</option>
-                        </select>
+
+                    <!-- REVERSE PREFIX -->
+                    <div class="mb-3 d-none" id="reverse-block">
+                        <label for="reverse-prefix" class="form-label">Reverse prefix <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="reverse-prefix" name="revprefix" placeholder="192.168.0." />
+                        <div class="form-text">Network prefix (no last octet), e.g. <code>192.168.0.</code></div>
+                        <div class="invalid-feedback">Please enter reverse prefix like 192.168.0.</div>
                     </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label for="zone-kind" class="form-label">Zone type <span class="text-danger">*</span></label>
+                            <select id="zone-kind" class="form-select" required>
+                                <option value="Native">Native</option>
+                                <option value="Master">Master</option>
+                                <option value="Slave">Slave</option>
+                            </select>
+                            <div class="invalid-feedback">Please select zone type.</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="zone-dnssec" class="form-label">DNSSEC <span class="text-danger">*</span></label>
+                            <select id="zone-dnssec" name="dnssec" class="form-select" required>
+                                <option value="Enabled" selected>Enabled</option>
+                                <option value="Disabled">Disabled</option>
+                            </select>
+                            <div class="invalid-feedback">Please choose DNSSEC state.</div>
+                        </div>
+                    </div>
+
+                    <div id="slave-block" class="mt-3 d-none">
+                        <label for="zone-master" class="form-label">Master server <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="zone-master" name="Master" placeholder="1.2.3.4" />
+                        <div class="invalid-feedback">Master server IP is required for Slave zone.</div>
+                    </div>
+
+                    <input type="hidden" id="zone-serial" name="serial" value="0" />
                 </div>
 
-                <div id="slave-div" class="mt-3 d-none">
-                    <label for="modal-mserver" class="form-label">Master server <span class="text-danger">*</span></label>
-                    <input class="form-control ip-input" id="modal-mserver" type="text" placeholder="1.2.3.4">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" id="btn-add" class="btn btn-primary" formaction="?handler=AddZone">Add</button>
+                    <button type="submit" id="btn-save" class="btn btn-warning d-none" formaction="?handler=EditZone">Save</button>
                 </div>
-
-            </div>
-            <div class="modal-footer">
-                <!-- UPDATE BUTTONS -->
-                <div id="update-buttons" class="d-none">
-                    <button type="button" id="btn-cancel" class="btn btn-default me-2" onclick="hideModal()">Cancel</button>
-                    <button type="button" id="btn-save" class="btn btn-save" onclick="save()">Save</button>
-                </div>
-                <!-- CREATE BUTTONS -->
-                <div id="create-buttons">
-                    <button type="button" class="btn btn-secondary me-2" onclick="hideModal()">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="addZone()">Add</button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- ===== CONFIRM DELETE (CUSTOM MODAL, NO BACKDROP) ===== -->
-<div id="confirmModal" class="modal" style="display:none">
-    <div class="modal-content">
-        <p id="confirmMessage" class="mb-2"></p>
-        <div class="modal-buttons">
-            <button id="confirmNo" class="btn btn-default">Cancel</button>
-            <button id="confirmYes" class="btn btn-danger">Delete</button>
+<!-- CONFIRM DELETE (CENTERED) -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" action="?handler=DeleteZone" class="needs-validation" novalidate>
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteLabel">Confirm deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="name" id="delete-zone-name" />
+                    <p class="mb-0">Are you sure you want to delete zone: <strong id="delete-zone-name-view"></strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- ===== DNSSEC KEYS MODAL ===== -->
-<div class="modal fade" id="dnssecKeysModal" tabindex="-1" aria-labelledby="dnssecKeysModalLabel" aria-hidden="true" data-bs-backdrop="false">
-    <div class="modal-dialog modal-lg">
+<!-- DNSSEC KEYS MODAL (CENTERED) -->
+<div class="modal fade" id="dnssecKeysModal" tabindex="-1" aria-labelledby="dnssecKeysLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-warning">
-                <h5 class="modal-title" id="dnssecKeysModalLabel">
-                    <i class="fa fa-key me-2"></i> DNSSEC Keys
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="hideDnssecModal()"></button>
+                <h5 class="modal-title" id="dnssecKeysLabel"><i class="fa fa-key me-2"></i>DNSSEC Keys</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning d-flex align-items-center" role="alert">
                     <i class="fa fa-exclamation-triangle fa-lg me-2"></i>
-                    <div>The DS records below <strong>must</strong> be provided to your domain registrar.</div>
+                    <div>Provide the DS records below to your domain registrar.</div>
                 </div>
-                <div id="dsRecordsContainer" class="vstack gap-2"></div>
+                <div id="dsRecordsContainer" class="vstack gap-2">
+                    <div class="text-muted">Loading…</div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-@Html.AntiForgeryToken()
-
-<!-- PAGE-SPECIFIC LOGIC -->
 @section Scripts {
-<script src="~/js/zone.js"></script>
-<script src="~/js/validation.js"></script>
-<script>
-    // ===== SEARCH WIRING =====
-    document.addEventListener("DOMContentLoaded", () => {
-        const searchInput = document.getElementById("search");
-        const clearButton = document.getElementById("clear-btn");
-
-        const filterTable = () => {
-            const filter = (searchInput.value || "").toLowerCase();
-            const rows = document.querySelectorAll("#main_table tbody tr");
-            rows.forEach(r => {
-                const domainCell = r.querySelector("td:first-child");
-                const txt = (domainCell?.textContent || "").trim().toLowerCase();
-                r.style.display = txt.includes(filter) ? "" : "none";
-            });
-        };
-        const toggleClearButton = () => { clearButton.style.display = searchInput.value.length > 0 ? "inline-block" : "none"; };
-
-        searchInput.addEventListener("input", () => { toggleClearButton(); filterTable(); });
-        window.clearSearch = () => { searchInput.value = ""; filterTable(); toggleClearButton(); };
-    });
-</script>
+    <script src="~/js/zone.js"></script>
 }
