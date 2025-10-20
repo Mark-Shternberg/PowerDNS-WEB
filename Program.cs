@@ -56,18 +56,9 @@ builder.Services
     .AddViewLocalization()
     .AddDataAnnotationsLocalization();
 
-builder.Services.AddRazorPages(options =>
-{
-    options.Conventions.AuthorizeFolder("/");
-    options.Conventions.AllowAnonymousToPage("/login");
-    options.Conventions.AllowAnonymousToPage("/access-denied");
-    options.Conventions.AllowAnonymousToPage("/logout");
-});
-
 // ===== App services =====
 builder.Services.AddSingleton<Functions>();
 builder.Services.AddHttpClient();
-builder.Services.AddRazorPages();
 
 // ===== Authorization =====
 builder.Services.AddAuthorization(options =>

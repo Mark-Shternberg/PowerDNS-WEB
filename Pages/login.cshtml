@@ -1,105 +1,168 @@
 ﻿@page
 @model PowerDNS_Web.Pages.loginModel
+@inject IViewLocalizer L
 @{
     var returnUrl = Request?.Query["ReturnUrl"].ToString();
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = L["Login"];
 }
 
 @if (ViewData["SettingsCheck"]?.ToString() == "False")
 {
-    <div class="alert alert-warning d-flex align-items-center justify-content-center" role="alert">
+    <!-- WARNING MESSAGE -->
+    <div class="alert alert-warning align-items-center justify-content-center" style="display:flex;" role="alert">
         <i class="fa fa-exclamation-triangle fa-2x me-2"></i>
         <div>
-            It seems your settings <strong>are missing</strong>. Go to program folder
-            <code>/var/www/powerdns-web</code> and fill <code>appsettings.json</code>.
+            It seems your settings <strong>are missing</strong>. Go to <code>/var/www/powerdns-web</code> and fill out <code>appsettings.json</code>.
         </div>
     </div>
 }
 else
 {
-    <div class="d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
         <div class="card p-4 shadow-lg" style="width: 360px;">
-            <h3 class="text-center mb-3">Вход</h3>
+            <div class="text-center mb-3">
+                <h3 class="mb-1">@L["Login"]</h3>
+                <div class="text-muted small">@L["Welcome"]</div>
+            </div>
 
-            <form id="loginForm" method="post" action="?handler=Login" novalidate>
-                @Html.AntiForgeryToken()
+            <form id="loginForm" class="needs-validation" novalidate>
                 <input type="hidden" name="ReturnUrl" id="returnUrl" value="@returnUrl" />
 
                 <div class="mb-3">
-                    <label for="username" class="form-label">Логин</label>
-                    <input type="text" class="form-control" id="username" name="username" autocomplete="username" required>
+                    <label for="username" class="form-label">@L["Login"]</label>
+                    <input type="text" class="form-control" id="username" placeholder="@L["Enter_Login"]" required>
+                    <div class="invalid-feedback">@L["Login_Required"]</div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="password" class="form-label">Пароль</label>
-                    <input type="password" class="form-control" id="password" name="password" autocomplete="current-password" required>
+                <div class="mb-2">
+                    <label for="password" class="form-label">@L["Password"]</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="password" placeholder="@L["Enter_Password"]" required>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePw" aria-pressed="false" title="@L["Login_ShowPassword"]">
+                            <i class="fa fa-eye" aria-hidden="true"></i>
+                        </button>
+                        <div class="invalid-feedback">@L["Login_Required"]</div>
+                    </div>
+                    <div class="form-text"><span id="pwHint">@L["Login_PwHint"]</span></div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">Войти</button>
+                <button type="submit" class="btn btn-primary w-100 mt-2" id="btnSignIn">
+                    <i class="fa fa-sign-in me-1"></i>@L["Login_SignIn"]
+                </button>
+
+                @Html.AntiForgeryToken()
             </form>
 
-            <div id="notification-div" class="alert mt-3 d-none" role="alert"></div>
+            <!-- Fallback notification (если нет showToast) -->
+            <div id="notification-div" class="alert mt-3 d-none"></div>
         </div>
     </div>
 }
 
 @section Scripts {
     <script>
-        // === компактное уведомление в div ===
-        function showDivNotification(text, type /*1=ok,2=err,3=warn*/) {
-            const el = document.getElementById('notification-div');
-            el.classList.remove('d-none','alert-success','alert-danger','alert-warning','alert-info');
-            el.classList.add(type===1?'alert-success':type===3?'alert-warning':'alert-danger');
-            el.textContent = text;
-        }
+        (function () {
+            // ---- локализованные строки в JS (корректное экранирование) ----
+            const T = {
+                required: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Login_Required"].Value)),
+                signingIn: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Login_SigningIn"].Value)),
+                success: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Login_SuccessRedirect"].Value)),
+                netErr: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Login_NetworkError"].Value)),
+                errPrefix: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Login_AuthErrorPrefix"].Value)),
+                showPw: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Login_ShowPassword"].Value)),
+                hidePw: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Login_HidePassword"].Value))
+            };
 
-        // === перехватываем submit, шлём JSON с анти-фроджи токеном, учитываем ReturnUrl ===
-        document.addEventListener('DOMContentLoaded', () => {
+            // ---- валидация Bootstrap ----
+            (function () {
+                const forms = document.querySelectorAll('.needs-validation');
+                Array.from(forms).forEach(form => {
+                    form.addEventListener('submit', evt => {
+                        if (!form.checkValidity()) { evt.preventDefault(); evt.stopPropagation(); }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            })();
+
+            // ---- показать/скрыть пароль ----
+            (function () {
+                const btn = document.getElementById('togglePw');
+                const pw = document.getElementById('password');
+                if (!btn || !pw) return;
+                btn.addEventListener('click', () => {
+                    const isText = pw.type === 'text';
+                    pw.type = isText ? 'password' : 'text';
+                    btn.setAttribute('aria-pressed', isText ? 'false' : 'true');
+                    btn.setAttribute('title', isText ? T.showPw : T.hidePw);
+                    const icon = btn.querySelector('i');
+                    if (icon) { icon.classList.toggle('fa-eye'); icon.classList.toggle('fa-eye-slash'); }
+                });
+            })();
+
+            // ---- отправка формы ----
             const form = document.getElementById('loginForm');
             if (!form) return;
 
-            form.addEventListener('submit', async (e) => {
+            const notify = (kind, msg) => {
+                if (typeof window.showToast === 'function') {
+                    const delay = kind === 'danger' ? 6000 : 3500;
+                    window.showToast(kind, msg, delay);
+                    return;
+                }
+                const n = document.getElementById('notification-div');
+                if (!n) return;
+                n.className = `alert mt-3 ${kind === 'success' ? 'alert-success' : kind === 'warning' ? 'alert-warning' : 'alert-danger'}`;
+                n.textContent = msg;
+                n.classList.remove('d-none');
+            };
+
+            form.addEventListener('submit', async function (e) {
                 e.preventDefault();
 
-                const username = (document.getElementById('username').value || '').trim();
-                const password = (document.getElementById('password').value || '').trim();
-                const returnUrl = document.getElementById('returnUrl')?.value || '';
-                const token = form.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-
-                if (!username || !password) {
-                    showDivNotification('Логин и пароль обязательны.', 2);
+                const u = document.getElementById('username').value.trim();
+                const p = document.getElementById('password').value.trim();
+                if (!u || !p) {
+                    notify('warning', T.required);
                     return;
                 }
 
+                const btn = document.getElementById('btnSignIn');
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                const returnUrl = document.getElementById('returnUrl')?.value || '';
+
+                const setBusy = (busy) => {
+                    btn.disabled = busy;
+                    btn.innerHTML = busy ? `<span class="spinner-border spinner-border-sm me-2"></span>${T.signingIn}` : `<i class="fa fa-sign-in me-1"></i>@L["Login_SignIn"]`;
+                };
+
+                setBusy(true);
                 try {
-                    const resp = await fetch('?handler=Login', {
+                    const resp = await fetch('/login?handler=Login', {
                         method: 'POST',
-                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Accept': 'application/json',
                             'RequestVerificationToken': token
                         },
-                        body: JSON.stringify({ username, password, returnUrl })
+                        body: JSON.stringify({ username: u, password: p, returnUrl: returnUrl })
                     });
 
-                    // пробуем распарсить JSON; если сервер отдал HTML (редирект на /login), поймаем исключение
-                    let result = {};
-                    try { result = await resp.json(); } catch { /* no-op */ }
+                    const result = await resp.json().catch(() => ({}));
 
-                    if (resp.ok && result?.success) {
-                        showDivNotification('Авторизация успешна! Перенаправление…', 1);
-                        const target = result.redirect || '/';
-                        // небольшая пауза — чтобы браузер успел записать auth cookie
-                        setTimeout(() => window.location.assign(target), 300);
+                    if (resp.ok && result && result.success) {
+                        notify('success', T.success);
+                        // client-side redirect fallback (server тоже может редиректить после SignIn)
+                        const target = (returnUrl && /^\/(?!\/)/.test(returnUrl)) ? returnUrl : '/';
+                        setTimeout(() => { window.location.href = target; }, 900);
                     } else {
-                        const msg = result?.message || `Ошибка авторизации (HTTP ${resp.status}).`;
-                        showDivNotification(msg, 2);
+                        const msg = (result && result.message) ? String(result.message) : 'Unknown error';
+                        notify('danger', T.errPrefix + msg);
+                        setBusy(false);
                     }
-                } catch (err) {
-                    showDivNotification('Сеть недоступна или сервер не отвечает.', 2);
+                } catch {
+                    notify('danger', T.netErr);
+                    setBusy(false);
                 }
             });
-        });
+        })();
     </script>
 }

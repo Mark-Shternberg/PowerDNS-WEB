@@ -156,7 +156,6 @@
   <data name="Answers.Item.Updated"><value>Изменения сохранены.</value></data>
   <data name="Answers.Item.Deleted"><value>Элемент удалён.</value></data>
   <data name="Answers.Item.Attached"><value>Элемент привязан.</value></data>
-  <data name="Answers.Item.AlreadyAttached"><value>Уже привязано.</value></data>
   <data name="Answers.Item.Deattached"><value>Элемент отвязан.</value></data>
   <data name="Answers.Item.NothingToDetach"><value>Нечего отвязывать.</value></data>
   <data name="Answers.Uploaded"><value>Загружено.</value></data>

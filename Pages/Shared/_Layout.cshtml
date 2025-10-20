@@ -1,8 +1,13 @@
 ﻿@{
     // ===== GET VERSION =====
     @using System.Reflection;
-    var version_full = Assembly.GetExecutingAssembly().GetName().Version;
-    string version = $"{version_full.Major}.{version_full.Minor}.{version_full.Build}";
+    var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+    var v = asm?.GetName().Version ?? new Version(1, 0, 0, 0);
+
+    var build = v.Build >= 0 ? v.Build : 0;
+    var revision = v.Revision >= 0 ? v.Revision : 0;
+
+    string version = $"{v.Major}.{v.Minor}.{build}";
 
     var returnUrl = Context?.Request?.Path + Context?.Request?.QueryString;
 }
@@ -37,6 +42,8 @@
     <script src="~/datepicker/moment.min.js"></script>
     <script src="~/datepicker/daterangepicker.min.js"></script>
     <script src="~/lib/jquery/dist/jquery.inputmask.min.js"></script>
+
+    @RenderSection("Head", required: false)
 </head>
 <body data-role="@((User?.Identity?.IsAuthenticated == true && User.IsInRole("Administrator")) ? "Administrator" : "User")">
 
