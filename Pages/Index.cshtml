@@ -13,12 +13,7 @@
             <div class="text-muted small">Live metrics & recursor stats</div>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <span class="badge text-bg-info-subtle text-info-emphasis">
-                <i class="fa fa-plug me-1"></i> <span id="activePortBadge">--</span>
-            </span>
-            <span class="badge text-bg-secondary-subtle text-secondary-emphasis">
-                <i class="fa fa-clock me-1"></i> <span id="uptimeBadge">--</span>
-            </span>
+
         </div>
     </div>
 
@@ -278,10 +273,8 @@
             const activePort = ("@(ViewData["RecursorEnabled"])".toLowerCase() === "enabled")
                 ? 5300 : 53;
             document.getElementById("activePort").textContent = activePort;
-            document.getElementById("activePortBadge").textContent = `port ${activePort}`;
 
             document.getElementById("uptime").textContent = formatUptime(data.uptime);
-            document.getElementById("uptimeBadge").textContent = formatUptime(data.uptime);
             document.getElementById("totalQueries").textContent = data.totalQueries ?? "--";
 
             // QPS CALC (DELTA / ELAPSED SEC)

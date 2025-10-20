@@ -1,0 +1,170 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- NAV -->
+  <data name="Nav.Dashboard"><value>Dashboard</value></data>
+  <data name="Nav.Invoices"><value>Invoices</value></data>
+  <data name="Nav.CartridgeInventories"><value>Cartridge inventories</value></data>
+  <data name="Nav.Assets"><value>Assets</value></data>
+  <data name="Nav.Lists"><value>Lists</value></data>
+  <data name="Nav.Docs"><value>Documents</value></data>
+  <data name="Nav.Licenses"><value>Licenses</value></data>
+  <data name="Nav.AdminArea"><value>Admin area</value></data>
+  <data name="Nav.Users"><value>Users</value></data>
+  <data name="Nav.License"><value>License</value></data>
+  <data name="Nav.Settings"><value>Settings</value></data>
+  <data name="Nav.Logout"><value>Logout</value></data>
+  <data name="Nav.Signin"><value>Sign in</value></data>
+  <data name="Nav.Documentation"><value>Documentation</value></data>
+
+  <!-- BOOL -->
+  <data name="Bool.Yes"><value>Yes</value></data>
+  <data name="Bool.No"><value>No</value></data>
+  <data name="All"><value>All</value></data>
+
+  <!-- TOP -->
+  <data name="Top.ToggleTheme"><value>Toggle theme</value></data>
+  <data name="A11y.ToggleMenu"><value>Toggle menu</value></data>
+
+  <!-- FOOTER -->
+  <data name="Footer.Version"><value>Version:</value></data>
+
+  <!-- PAGER -->
+  <data name="ShowPerPage"><value>Show per page:</value></data>
+  <data name="First"><value>First</value></data>
+  <data name="Previous"><value>Previous</value></data>
+  <data name="Next"><value>Next</value></data>
+  <data name="Last"><value>Last</value></data>
+
+  <!-- BTNs -->
+  <data name="Btn.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Btn.Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Btn.Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Btn.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Btn.Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Btn.Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Btn.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Btn.Attach" xml:space="preserve"><value>Attach</value></data>
+  <data name="Btn.Deattach" xml:space="preserve"><value>Deattach</value></data>
+  <data name="Btn.AttachToPc" xml:space="preserve"><value>Attach to PC</value></data>
+  <data name="Btn.Attachments" xml:space="preserve"><value>Attachments</value></data>
+  <data name="Btn.AttachToAssetOrPrinter" xml:space="preserve"><value>Attach to asset / printer</value></data>
+  <data name="Btn.Reload" xml:space="preserve"><value>Reload</value></data>
+  <data name="Btn.Upload" xml:space="preserve"><value>Upload</value></data>
+
+  <!-- COMMON -->
+  <data name="Common.NothingFound"><value>Nothing found</value></data>
+  <data name="Common.DeleteSelected"><value>Delete selected</value></data>
+  <data name="Common.Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="Common.Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Common.SearchByName" xml:space="preserve"><value>Search by name</value></data>
+  <data name="Common.Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Common.Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Common.NotFound"><value>Not found</value></data>
+  <data name="Common.UnexpectedError"><value>Unexpected error.</value></data>
+  <data name="Common.Category"><value>Category</value></data>
+  <data name="Common.SelectMultiple"><value>You can select multiple</value></data>
+
+  <data name="Common.Name" xml:space="preserve"><value>Name</value></data>
+
+  <!-- ACTIONS -->
+  <data name="Actions.EditSuccess"><value>Changes saved.</value></data>
+
+  <!-- ERRORS -->
+  <data name="Errors.AccessDenied"><value>Insufficient permissions</value></data>
+  <data name="Errors.LinkNotFound"><value>Link not found</value></data>
+  <data name="Errors.ItemNotFound"><value>Item not found</value></data>
+  <data name="Errors.NoCounterparty"><value>Select or enter a counterparty</value></data>
+  <data name="Errors.IncorrectID"><value>Incorrect identifier</value></data>
+  <data name="Errors.InvalidData"><value>Invalid data</value></data>
+  <data name="Errors.NoneSelected"><value>No items selected</value></data>
+  <data name="Errors.CannotDelete"><value>Can't delete: item is linked {0}. Unlink it first</value></data>
+  <data name="Errors.BulkDelete.SkippedWithLinks"><value>Skipped (has links): {0}</value></data>
+  <data name="Errors.NoName"><value>Provide a name.</value></data>
+  <data name="Errors.LoadPage"><value>Page load error: </value></data>
+  <data name="Errors.SelectAtLeastOne"><value>Select at least one</value></data>
+  <data name="Errors.NoFile"><value>No file</value></data>
+  <data name="Errors.ForbiddenFileExt"><value>Forbidden file extension</value></data>
+  <data name="Errors.Uploads.TooMany"><value>You can upload up to {0} files</value></data>
+  <data name="Errors.NameTooLong"><value>The name is too long</value></data>
+
+  <!-- ANSWERS -->
+  <data name="Answers.Delete.Success"><value>Item deleted.</value></data>
+  <data name="Answers.Delete.Warning"><value>Item not found or already deleted.</value></data>
+  <data name="Answers.BulkDelete.DeletedCount"><value>Deleted: {0}.</value></data>
+  <data name="Answers.BulkDelete.AllInUse"><value>Delete cannot be performed: all selected items are in use.</value></data>
+  <data name="Answers.BulkDelete.Nothing"><value>Nothing to delete.</value></data>
+  <data name="Answers.Item.Added"><value>Item added.</value></data>
+  <data name="Answers.Item.Updated"><value>Item updated.</value></data>
+  <data name="Answers.Item.Deleted"><value>Item deleted.</value></data>
+  <data name="Answers.Item.Attached"><value>Item attached.</value></data>
+  <data name="Answers.Item.Deattached"><value>Item deattached.</value></data>
+  <data name="Answers.Item.NothingToDetach"><value>Nothing to detach.</value></data>
+  <data name="Answers.Uploaded"><value>Uploaded.</value></data>
+  <data name="Answers.UploadFailed"><value>Upload failed.</value></data>
+
+  <!-- SS -->
+  <data name="SS.Vendor" xml:space="preserve"><value>Vendor</value></data>
+  <data name="SS.Counterparty" xml:space="preserve"><value>Counterparty</value></data>
+  <data name="SS.Empty" xml:space="preserve"><value>Nothing found. Press Enter to add.</value></data>
+  <data name="SS.Choose" xml:space="preserve"><value>— choose —</value></data>
+  <data name="SS.Choosed" xml:space="preserve"><value>Choosed: </value></data>
+</root>

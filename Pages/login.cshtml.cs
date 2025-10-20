@@ -36,38 +36,7 @@ namespace PowerDNS_Web.Pages
 
         public async Task OnGet()
         {
-            CheckDTExist();
             ViewData["SettingsCheck"] = (await CheckSettingsExist()).ToString();
-        }
-
-        private void CheckDTExist()
-        {
-            try
-            {
-                using var connection = new MySqlConnection(SqlConnection());
-                connection.Open();
-
-                using var check_table = new MySqlCommand("SHOW TABLES LIKE 'users'", connection);
-                using var create_users = new MySqlCommand(
-                    "CREATE TABLE `users` (" +
-                    "`id` INT NOT NULL AUTO_INCREMENT," +
-                    "`username` VARCHAR(191) NOT NULL," +
-                    "`role` VARCHAR(64) NOT NULL," +
-                    "`password` LONGTEXT NOT NULL," +
-                    "PRIMARY KEY(`id`)," +
-                    "UNIQUE KEY `ux_users_username` (`username`))", connection);
-
-                using var reader_users = check_table.ExecuteReader();
-                if (!reader_users.HasRows)
-                {
-                    reader_users.Close();
-                    create_users.ExecuteNonQuery();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error ensuring users table exists");
-            }
         }
 
         private async Task<bool> CheckSettingsExist()

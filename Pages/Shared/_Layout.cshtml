@@ -3,10 +3,12 @@
     @using System.Reflection;
     var version_full = Assembly.GetExecutingAssembly().GetName().Version;
     string version = $"{version_full.Major}.{version_full.Minor}.{version_full.Build}";
+
+    var returnUrl = Context?.Request?.Path + Context?.Request?.QueryString;
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -73,6 +75,20 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-page="/settings"><i class="fa fa-gear me-1"></i>Settings</a>
                             </li>
+                        }
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="langDrop" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                @((System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ru") ? "RU" : "EN")
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDrop">
+                                <li><a class="dropdown-item" asp-page="/SetCulture" asp-route-culture="ru" asp-route-returnUrl="@returnUrl">Русский</a></li>
+                                <li><a class="dropdown-item" asp-page="/SetCulture" asp-route-culture="en" asp-route-returnUrl="@returnUrl">English</a></li>
+                            </ul>
+                        </li>
+
+                        @if (User?.Identity?.IsAuthenticated == true)
+                        {
                             <li class="nav-item d-none d-lg-block">
                                 <span class="nav-link disabled small">Hello, @User.Identity!.Name!</span>
                             </li>
@@ -84,7 +100,6 @@
                                 </form>
                             </li>
                         }
-
                         <!-- ===== THEME TOGGLE ===== -->
                         <li class="nav-item">
                             <!-- NOTE: USE FA5-LIKE CLASSES FOR COMPAT; AVOID MIXING fa-solid -->
