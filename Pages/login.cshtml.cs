@@ -1,15 +1,9 @@
-﻿using System.Data;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using BCrypt.Net;
 using MySqlConnector;
-using System.Reflection;
 
 namespace PowerDNS_Web.Pages
 {
@@ -30,7 +24,6 @@ namespace PowerDNS_Web.Pages
             var user = _configuration["MySQLConnection:user"];
             var password = _configuration["MySQLConnection:password"];
             var database = _configuration["MySQLConnection:database"];
-
             return $"Server={server};User ID={user};Password={password};Database={database}";
         }
 
@@ -38,6 +31,7 @@ namespace PowerDNS_Web.Pages
         {
             public string? username { get; set; }
             public string? password { get; set; }
+            public string? returnUrl { get; set; }
         }
 
         public async Task OnGet()
@@ -54,34 +48,25 @@ namespace PowerDNS_Web.Pages
                 connection.Open();
 
                 using var check_table = new MySqlCommand("SHOW TABLES LIKE 'users'", connection);
-
-                using var create_users = new MySqlCommand("CREATE TABLE `users` (" +
-                  "`id` INT NOT NULL AUTO_INCREMENT," +
-                  "`username` TEXT NOT NULL," +
-                  "`role` TEXT NOT NULL," +
-                  "`password` LONGTEXT NOT NULL," +
-                  "PRIMARY KEY(`id`)," +
-                  "UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE)", connection);
+                using var create_users = new MySqlCommand(
+                    "CREATE TABLE `users` (" +
+                    "`id` INT NOT NULL AUTO_INCREMENT," +
+                    "`username` VARCHAR(191) NOT NULL," +
+                    "`role` VARCHAR(64) NOT NULL," +
+                    "`password` LONGTEXT NOT NULL," +
+                    "PRIMARY KEY(`id`)," +
+                    "UNIQUE KEY `ux_users_username` (`username`))", connection);
 
                 using var reader_users = check_table.ExecuteReader();
                 if (!reader_users.HasRows)
                 {
                     reader_users.Close();
-                    create_users.Prepare();
                     create_users.ExecuteNonQuery();
                 }
-                else reader_users.Close();
-            }
-            catch (MySqlException ex)
-            {
-                // Получаем код ошибки и её текст от MySQL
-                _logger.LogError(ex.Message, "Error occurred while send mysql command");
-                Console.WriteLine($"MySQL Error Code: {ex.Number}");
-                Console.WriteLine($"Error Message: {ex.Message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                _logger.LogError(ex, "Error ensuring users table exists");
             }
         }
 
@@ -89,137 +74,103 @@ namespace PowerDNS_Web.Pages
         {
             try
             {
-                string connectionString = SqlConnection();
-                using (var connection = new MySqlConnection(connectionString))
-                {
-                    await connection.OpenAsync();
-                }
+                using var connection = new MySqlConnection(SqlConnection());
+                await connection.OpenAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Database connection failed: {ex.Message}");
+                _logger.LogError(ex, "Database connection failed");
                 return false;
             }
         }
 
         public async Task<IActionResult> OnPostLogin([FromBody] UserLogin loginRequest)
         {
-            if (string.IsNullOrWhiteSpace(loginRequest.username) || string.IsNullOrWhiteSpace(loginRequest.password))
+            if (loginRequest == null ||
+                string.IsNullOrWhiteSpace(loginRequest.username) ||
+                string.IsNullOrWhiteSpace(loginRequest.password))
             {
                 return new JsonResult(new { success = false, message = "Логин и пароль обязательны." });
             }
 
-            string username = loginRequest.username;
-            string password = loginRequest.password;
+            var username = loginRequest.username.Trim();
+            var password = loginRequest.password;
+            var desired = loginRequest.returnUrl;
+            var redirect = Url.IsLocalUrl(desired) ? desired : Url.Content("~/");
 
             try
             {
-                // Подключаемся к базе данных
-                using (var connection = new MySqlConnection(SqlConnection()))
+                using var connection = new MySqlConnection(SqlConnection());
+                await connection.OpenAsync();
+
+                // 1) Если пользователей нет — создаём первого админа
+                using (var countCommand = new MySqlCommand("SELECT COUNT(*) FROM users", connection))
                 {
-                    await connection.OpenAsync();
-
-                    // Проверяем количество пользователей в базе данных
-                    using (var countCommand = new MySqlCommand("SELECT COUNT(*) FROM users", connection))
+                    var userCount = Convert.ToInt32(await countCommand.ExecuteScalarAsync());
+                    if (userCount == 0)
                     {
-                        var userCount = Convert.ToInt32(await countCommand.ExecuteScalarAsync());
+                        var hashed = BCrypt.Net.BCrypt.HashPassword(password);
+                        using var insert = new MySqlCommand(
+                            "INSERT INTO users (username, password, role) VALUES (@u, @p, @r)", connection);
+                        insert.Parameters.AddWithValue("@u", username);
+                        insert.Parameters.AddWithValue("@p", hashed);
+                        insert.Parameters.AddWithValue("@r", "Administrator");
+                        await insert.ExecuteNonQueryAsync();
 
-                        if (userCount == 0)
-                        {
-                            // Если пользователей нет, создаем первого пользователя
-                            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
-                            string role = "Administrator"; // Роль для первого пользователя
-
-                            // Добавляем первого пользователя
-                            using (var insertCommand = new MySqlCommand("INSERT INTO users (username, password, role) VALUES (@username, @password, @role)", connection))
-                            {
-                                insertCommand.Parameters.AddWithValue("@username", username);
-                                insertCommand.Parameters.AddWithValue("@password", hashedPassword);
-                                insertCommand.Parameters.AddWithValue("@role", role);
-
-                                await insertCommand.ExecuteNonQueryAsync();
-                            }
-
-                            // Создаем claims для нового пользователя
-                            var claims = new List<Claim>
-                            {
-                                new Claim(ClaimTypes.Name, username),
-                                new Claim(ClaimTypes.Role, role)
-                            };
-
-                            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                            var authProperties = new AuthenticationProperties { IsPersistent = true };
-
-                            // Авторизуем нового пользователя
-                            await HttpContext.SignInAsync(
-                                CookieAuthenticationDefaults.AuthenticationScheme,
-                                new ClaimsPrincipal(claimsIdentity),
-                                authProperties
-                            );
-
-                            return new JsonResult(new { success = true, message = "Пользователь был создан и авторизован." });
-                        }
-                    }
-
-                    // Если пользователей в базе больше одного, проверяем существование введенного пользователя
-                    using (var command = new MySqlCommand("SELECT username, password, role FROM users WHERE username = @username", connection))
-                    {
-                        command.Parameters.AddWithValue("@username", username);
-
-                        using (var reader = await command.ExecuteReaderAsync())
-                        {
-                            if (await reader.ReadAsync())
-                            {
-                                // Если пользователь найден, проверяем пароль
-                                string storedPasswordHash = reader.GetString("password");
-                                string role = reader.GetString("role");
-
-                                if (BCrypt.Net.BCrypt.Verify(password, storedPasswordHash))
-                                {
-                                    // Создаем claims для аутентификации
-                                    var claims = new List<Claim>
-                            {
-                                new Claim(ClaimTypes.Name, username),
-                                new Claim(ClaimTypes.Role, role)
-                            };
-
-                                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                                    var authProperties = new AuthenticationProperties { IsPersistent = true };
-
-                                    // Авторизуем пользователя
-                                    await HttpContext.SignInAsync(
-                                        CookieAuthenticationDefaults.AuthenticationScheme,
-                                        new ClaimsPrincipal(claimsIdentity),
-                                        authProperties
-                                    );
-
-                                    return new JsonResult(new { success = true });
-                                }
-                            }
-                            else
-                            {
-                                return new JsonResult(new { success = false, message = "Неверный логин или пароль." });
-                            }
-                        }
+                        await SignInAsync(username, "Administrator");
+                        return new JsonResult(new { success = true, message = "Пользователь создан и авторизован.", redirect });
                     }
                 }
+
+                // 2) Обычная авторизация
+                using var cmd = new MySqlCommand(
+                    "SELECT username, password, role FROM users WHERE username = @u LIMIT 1", connection);
+                cmd.Parameters.AddWithValue("@u", username);
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    var hash = reader.GetString("password");
+                    var role = reader.GetString("role");
+                    if (BCrypt.Net.BCrypt.Verify(password, hash))
+                    {
+                        await SignInAsync(username, role);
+                        return new JsonResult(new { success = true, redirect });
+                    }
+                }
+
+                return new JsonResult(new { success = false, message = "Неверный логин или пароль." });
             }
             catch (MySqlException ex)
             {
-                // Логирование ошибок от MySQL
-                _logger.LogError(ex.Message, "Error occurred while sending MySQL command");
-                return new JsonResult(new { success = false, message = "Ошибка базы данных: " + ex.Message });
+                _logger.LogError(ex, "MySQL error during login");
+                return new JsonResult(new { success = false, message = "Ошибка базы данных." });
             }
             catch (Exception ex)
             {
-                // Логирование общих ошибок
-                _logger.LogError(ex.Message, "General error");
-                return new JsonResult(new { success = false, message = "Ошибка: " + ex.Message });
+                _logger.LogError(ex, "General error during login");
+                return new JsonResult(new { success = false, message = "Внутренняя ошибка." });
             }
-
-            return new JsonResult(new { success = false, message = "Неверный логин или пароль." });
         }
 
+        private async Task SignInAsync(string username, string role)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, username),
+                new Claim(ClaimTypes.Role, role)
+            };
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            // долговременная кука (можете добавить ExpiresUtc и т.п.)
+            var props = new AuthenticationProperties { IsPersistent = true };
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(identity),
+                props
+            );
+        }
     }
 }
