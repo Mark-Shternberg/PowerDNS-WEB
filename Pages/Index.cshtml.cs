@@ -1,6 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Diagnostics;
+using System.Globalization;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -22,10 +23,10 @@ namespace PowerDNS_Web.Pages
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
-            _apiUrl = configuration["pdns:url"];
-            _apiKey = configuration["pdns:api_key"];
-            _recursorUrl = configuration["recursor:url"];
-            _recursorApiKey = configuration["recursor:api_key"];
+            _apiUrl = configuration["pdns:url"] ?? "";
+            _apiKey = configuration["pdns:api_key"] ?? "";
+            _recursorUrl = configuration["recursor:url"] ?? "";
+            _recursorApiKey = configuration["recursor:api_key"] ?? "";
         }
 
         public void OnGet()
@@ -224,9 +225,7 @@ namespace PowerDNS_Web.Pages
         private List<QueryDetail> ParseTopStats(List<string> rawData)
         {
             var result = new List<QueryDetail>();
-
-            if (rawData == null || rawData.Count == 0)
-                return result;
+            if (rawData == null || rawData.Count == 0) return result;
 
             foreach (var line in rawData.Skip(1))
             {
@@ -235,18 +234,25 @@ namespace PowerDNS_Web.Pages
                 var parts = line.Split('\t');
                 if (parts.Length < 2) continue;
 
-                var percentagePart = parts[0].TrimEnd('%');
-                var queryData = parts[1].Split('|');
+                var percentagePart = parts[0].Trim().TrimEnd('%');
 
-                if (queryData.Length < 2) continue;
-
-                if (double.TryParse(percentagePart, out double percentage))
+                // парсим по invariant (точка как разделитель)
+                if (double.TryParse(percentagePart, NumberStyles.Float, CultureInfo.InvariantCulture, out double pct))
                 {
-                    result.Add(new QueryDetail
+                    var queryData = parts[1].Split('|');
+                    if (queryData.Length >= 2)
                     {
-                        Name = queryData[0].Trim(),
-                        Value = $"{percentage}% ({queryData[1]})"
-                    });
+                        var name = queryData[0].Trim();
+                        var count = queryData[1].Trim();
+
+                        // отображаем процент с учётом текущей локали
+                        var pctStr = pct.ToString("0.##", CultureInfo.CurrentUICulture);
+                        result.Add(new QueryDetail
+                        {
+                            Name = name,
+                            Value = $"{pctStr}% ({count})"
+                        });
+                    }
                 }
             }
 
@@ -256,9 +262,7 @@ namespace PowerDNS_Web.Pages
         private List<QueryDetail> ParseTopRemotes(List<string> rawData)
         {
             var result = new List<QueryDetail>();
-
-            if (rawData == null || rawData.Count == 0)
-                return result;
+            if (rawData == null || rawData.Count == 0) return result;
 
             foreach (var line in rawData.Skip(1))
             {
@@ -267,15 +271,16 @@ namespace PowerDNS_Web.Pages
                 var parts = line.Split('\t');
                 if (parts.Length < 2) continue;
 
-                var percentagePart = parts[0].TrimEnd('%');
+                var percentagePart = parts[0].Trim().TrimEnd('%');
                 var ipAddress = parts[1].Trim();
 
-                if (double.TryParse(percentagePart, out double percentage))
+                if (double.TryParse(percentagePart, NumberStyles.Float, CultureInfo.InvariantCulture, out double pct))
                 {
+                    var pctStr = pct.ToString("0.##", CultureInfo.CurrentUICulture);
                     result.Add(new QueryDetail
                     {
                         Name = ipAddress,
-                        Value = $"{percentage}%"
+                        Value = $"{pctStr}%"
                     });
                 }
             }
@@ -286,14 +291,14 @@ namespace PowerDNS_Web.Pages
 
     public class QueryDetail
     {
-        public string Name { get; set; }
-        public string Value { get; set; }
+        public string? Name { get; set; }
+        public string? Value { get; set; }
     }
 
     public class StatEntry
     {
-        public string Name { get; set; }
-        public string Type { get; set; }
+        public string? Name { get; set; }
+        public string? Type { get; set; }
         public JsonElement Value { get; set; }
 
         public int GetValueAsInt()

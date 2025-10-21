@@ -6,6 +6,7 @@ using Microsoft.Extensions.Localization;
 using MySqlConnector;
 using Newtonsoft.Json;
 using System.Data;
+using System.Reflection;
 
 namespace PowerDNS_Web.Pages
 {
@@ -14,13 +15,14 @@ namespace PowerDNS_Web.Pages
     {
         private readonly ILogger<userModel> _logger;
         private readonly IConfiguration _configuration;
-        private readonly IStringLocalizer<userModel> _L;
+        private readonly IStringLocalizer _L;
 
-        public userModel(ILogger<userModel> logger, IConfiguration configuration, IStringLocalizer<userModel> localizer)
+        public userModel(ILogger<userModel> logger, IConfiguration configuration, IStringLocalizerFactory factory)
         {
             _logger = logger;
             _configuration = configuration;
-            _L = localizer;
+            var asmName = Assembly.GetExecutingAssembly().GetName().Name!;
+            _L = factory.Create("Pages.users", asmName);
         }
 
         private string SqlConnection()
@@ -100,7 +102,7 @@ namespace PowerDNS_Web.Pages
                     string.IsNullOrWhiteSpace(model.role) ||
                     string.IsNullOrWhiteSpace(model.password))
                 {
-                    return new JsonResult(new { success = false, message = _L["UM_Back_InvalidRequest"] });
+                    return new JsonResult(new { success = false, message = _L["UM_Back_InvalidRequest"].Value });
                 }
 
                 await using var connection = new MySqlConnection(SqlConnection());
@@ -114,7 +116,7 @@ namespace PowerDNS_Web.Pages
                     var cnt = Convert.ToInt32(await checkCmd.ExecuteScalarAsync());
                     if (cnt > 0)
                     {
-                        return new JsonResult(new { success = false, message = _L["UM_Back_UserExists"] });
+                        return new JsonResult(new { success = false, message = _L["UM_Back_UserExists"].Value });
                     }
                 }
 
@@ -134,12 +136,12 @@ namespace PowerDNS_Web.Pages
             catch (MySqlException ex)
             {
                 _logger.LogError(ex, "MySQL error on Add user");
-                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_SqlError"], ex.Message) });
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_SqlError"].Value, ex.Message) });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "General error on Add user");
-                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_Error"], ex.Message) });
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_Error"].Value, ex.Message) });
             }
         }
 
@@ -150,7 +152,7 @@ namespace PowerDNS_Web.Pages
             {
                 if (model == null || string.IsNullOrWhiteSpace(model.username) || string.IsNullOrWhiteSpace(model.role))
                 {
-                    return new JsonResult(new { success = false, message = _L["UM_Back_InvalidRequest"] });
+                    return new JsonResult(new { success = false, message = _L["UM_Back_InvalidRequest"].Value });
                 }
 
                 var updatePassword = !string.IsNullOrEmpty(model.password);
@@ -178,12 +180,12 @@ namespace PowerDNS_Web.Pages
             catch (MySqlException ex)
             {
                 _logger.LogError(ex, "MySQL error on Update user");
-                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_SqlError"], ex.Message) });
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_SqlError"].Value, ex.Message) });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "General error on Update user");
-                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_Error"], ex.Message) });
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_Error"].Value, ex.Message) });
             }
         }
 
@@ -191,7 +193,7 @@ namespace PowerDNS_Web.Pages
         public async Task<IActionResult> OnPostDelete_user([FromBody] Row model)
         {
             if (model == null || string.IsNullOrWhiteSpace(model.username))
-                return new JsonResult(new { success = false, message = _L["UM_Back_InvalidRequest"] });
+                return new JsonResult(new { success = false, message = _L["UM_Back_InvalidRequest"].Value });
 
             try
             {
@@ -221,7 +223,7 @@ namespace PowerDNS_Web.Pages
                         if (string.Equals(role, "Administrator", StringComparison.OrdinalIgnoreCase))
                         {
                             LoadMainTable();
-                            return new JsonResult(new { success = false, message = _L["UM_Back_OnlyAdminDeleteForbidden"] });
+                            return new JsonResult(new { success = false, message = _L["UM_Back_OnlyAdminDeleteForbidden"].Value });
                         }
                     }
                 }
@@ -246,12 +248,12 @@ namespace PowerDNS_Web.Pages
             catch (MySqlException ex)
             {
                 _logger.LogError(ex, "MySQL error on Delete user");
-                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_SqlError"], ex.Message) });
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_SqlError"].Value, ex.Message) });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "General error on Delete user");
-                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_Error"], ex.Message) });
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_Error"].Value, ex.Message) });
             }
         }
     }

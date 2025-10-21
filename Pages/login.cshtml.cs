@@ -11,20 +11,13 @@ namespace PowerDNS_Web.Pages
     {
         private readonly ILogger<loginModel> _logger;
         private readonly IConfiguration _configuration;
+        private readonly Functions _functions;
 
-        public loginModel(ILogger<loginModel> logger, IConfiguration configuration)
+        public loginModel(ILogger<loginModel> logger, Functions functions, IConfiguration configuration)
         {
             _logger = logger;
             _configuration = configuration;
-        }
-
-        private string SqlConnection()
-        {
-            var server = _configuration["MySQLConnection:server"];
-            var user = _configuration["MySQLConnection:user"];
-            var password = _configuration["MySQLConnection:password"];
-            var database = _configuration["MySQLConnection:database"];
-            return $"Server={server};User ID={user};Password={password};Database={database}";
+            _functions = functions;
         }
 
         public class UserLogin
@@ -43,7 +36,7 @@ namespace PowerDNS_Web.Pages
         {
             try
             {
-                using var connection = new MySqlConnection(SqlConnection());
+                using var connection = new MySqlConnection(_functions.sql_connection());
                 await connection.OpenAsync();
                 return true;
             }
@@ -70,7 +63,7 @@ namespace PowerDNS_Web.Pages
 
             try
             {
-                using var connection = new MySqlConnection(SqlConnection());
+                using var connection = new MySqlConnection(_functions.sql_connection());
                 await connection.OpenAsync();
 
                 // 1) Если пользователей нет — создаём первого админа

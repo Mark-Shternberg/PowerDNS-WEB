@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace PowerDNS_Web.Pages
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _cfg;
         private readonly ILogger<RecursorModel> _logger;
-        private readonly IStringLocalizer<RecursorModel> _L;
+        private readonly IStringLocalizer _L;
 
         public List<string> AvailableZones { get; private set; } = new();
         public List<ForwardZone> ForwardZones { get; private set; } = new();
@@ -30,16 +31,13 @@ namespace PowerDNS_Web.Pages
         private string RecursorEnabled => _cfg["recursor:Enabled"] ?? _cfg["recursor:enabled"] ?? "Disabled";
         private bool IsRecursorOn => string.Equals(RecursorEnabled, "Enabled", StringComparison.OrdinalIgnoreCase);
 
-        public RecursorModel(
-            IHttpClientFactory httpClientFactory,
-            IConfiguration configuration,
-            ILogger<RecursorModel> logger,
-            IStringLocalizer<RecursorModel> localizer)
+        public RecursorModel(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<RecursorModel> logger, IStringLocalizerFactory factory)
         {
             _httpClientFactory = httpClientFactory;
             _cfg = configuration;
             _logger = logger;
-            _L = localizer;
+            var asmName = Assembly.GetExecutingAssembly().GetName().Name!;
+            _L = factory.Create("Pages.recursor", asmName);
         }
 
         // ===== View models / DTOs =====
@@ -136,10 +134,10 @@ namespace PowerDNS_Web.Pages
         public async Task<IActionResult> OnPostAddForwardZoneAsync([FromBody] ForwardZoneRequest req)
         {
             if (!IsRecursorOn)
-                return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"] });
+                return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"].Value });
 
             if (req == null || string.IsNullOrWhiteSpace(req.Zone))
-                return BadRequest(new { success = false, message = _L["Err.ZoneRequired"] });
+                return BadRequest(new { success = false, message = _L["Err.ZoneRequired"].Value });
 
             try
             {
@@ -157,14 +155,14 @@ namespace PowerDNS_Web.Pages
                 var body = await resp.Content.ReadAsStringAsync();
 
                 if (!resp.IsSuccessStatusCode)
-                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", body] });
+                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", body].Value });
 
-                return new JsonResult(new { success = true, message = _L["Ans.Forward.Added"] });
+                return new JsonResult(new { success = true, message = _L["Ans.Forward.Added"].Value });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "OnPostAddForwardZoneAsync failed");
-                return StatusCode(500, new { success = false, message = _L["Err.Internal"] });
+                return StatusCode(500, new { success = false, message = _L["Err.Internal"].Value });
             }
         }
 
@@ -172,14 +170,14 @@ namespace PowerDNS_Web.Pages
         public async Task<IActionResult> OnPostRemoveForwardZoneAsync([FromBody] ForwardZoneRequest req)
         {
             if (!IsRecursorOn)
-                return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"] });
+                return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"].Value });
 
             if (req == null || string.IsNullOrWhiteSpace(req.Zone))
-                return BadRequest(new { success = false, message = _L["Err.ZoneRequired"] });
+                return BadRequest(new { success = false, message = _L["Err.ZoneRequired"].Value });
 
             var name = EnsureTrailingDot(req.Zone);
             if (name == ".")
-                return BadRequest(new { success = false, message = _L["Err.CannotDeleteRoot"] });
+                return BadRequest(new { success = false, message = _L["Err.CannotDeleteRoot"].Value });
 
             try
             {
@@ -189,14 +187,14 @@ namespace PowerDNS_Web.Pages
                 var body = await resp.Content.ReadAsStringAsync();
 
                 if (!resp.IsSuccessStatusCode)
-                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", body] });
+                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", body].Value });
 
-                return new JsonResult(new { success = true, message = _L["Ans.Forward.Removed"] });
+                return new JsonResult(new { success = true, message = _L["Ans.Forward.Removed"].Value });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "OnPostRemoveForwardZoneAsync failed");
-                return StatusCode(500, new { success = false, message = _L["Err.Internal"] });
+                return StatusCode(500, new { success = false, message = _L["Err.Internal"].Value });
             }
         }
 
@@ -204,10 +202,10 @@ namespace PowerDNS_Web.Pages
         public async Task<IActionResult> OnPostEditZoneAsync([FromBody] UpdateForwardZones req)
         {
             if (!IsRecursorOn)
-                return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"] });
+                return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"].Value });
 
             if (req == null || string.IsNullOrWhiteSpace(req.Name))
-                return BadRequest(new { success = false, message = _L["Err.ZoneRequired"] });
+                return BadRequest(new { success = false, message = _L["Err.ZoneRequired"].Value });
 
             var servers = (req.DnsServers ?? "")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -215,11 +213,11 @@ namespace PowerDNS_Web.Pages
                 .ToList();
 
             if (servers.Count == 0)
-                return BadRequest(new { success = false, message = _L["Err.NoServersProvided"] });
+                return BadRequest(new { success = false, message = _L["Err.NoServersProvided"].Value });
 
             foreach (var s in servers)
                 if (!LooksLikeHostPort(s))
-                    return BadRequest(new { success = false, message = _L["Err.InvalidServerFormat", s] });
+                    return BadRequest(new { success = false, message = _L["Err.InvalidServerFormat", s].Value });
 
             try
             {
@@ -244,14 +242,14 @@ namespace PowerDNS_Web.Pages
                 var body = await resp.Content.ReadAsStringAsync();
 
                 if (!resp.IsSuccessStatusCode)
-                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", body] });
+                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", body].Value });
 
-                return new JsonResult(new { success = true, message = _L["Ans.Forward.Updated"] });
+                return new JsonResult(new { success = true, message = _L["Ans.Forward.Updated"].Value });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "OnPostEditZoneAsync failed");
-                return StatusCode(500, new { success = false, message = _L["Err.Internal"] });
+                return StatusCode(500, new { success = false, message = _L["Err.Internal"].Value });
             }
         }
 

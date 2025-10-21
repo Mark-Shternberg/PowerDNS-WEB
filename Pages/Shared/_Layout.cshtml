@@ -1,6 +1,11 @@
 ﻿@{
     // ===== GET VERSION =====
     @using System.Reflection;
+    @using Microsoft.AspNetCore.Mvc;
+    @using Microsoft.Extensions.Configuration;
+}
+@inject IConfiguration Config
+@{
     var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
     var v = asm?.GetName().Version ?? new Version(1, 0, 0, 0);
 
@@ -8,9 +13,15 @@
     var revision = v.Revision >= 0 ? v.Revision : 0;
 
     string version = $"{v.Major}.{v.Minor}.{build}";
-
     var returnUrl = Context?.Request?.Path + Context?.Request?.QueryString;
+
+    var recursorEnabled = string.Equals(
+        Config["recursor:Enabled"]?.Trim(),
+        "Enabled",
+        StringComparison.OrdinalIgnoreCase
+    );
 }
+
 
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
@@ -65,9 +76,14 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-page="/zones"><i class="fa fa-shield-halved me-1"></i>@S["Nav.Authoritative"].Value</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-page="/recursor"><i class="fa fa-rotate me-1"></i>@S["Nav.Recursor"].Value</a>
-                        </li>
+                        @if (recursorEnabled)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-page="/recursor">
+                                    <i class="fa fa-rotate me-1"></i>@S["Nav.Recursor"].Value
+                                </a>
+                            </li>
+                        }
                     </ul>
 
                     <ul class="navbar-nav align-items-center gap-2">
@@ -102,7 +118,7 @@
                             <li class="nav-item">
                                 <form method="post" asp-page="/logout" class="d-inline">
                                     <button type="submit" class="btn btn-outline-danger btn-sm">
-                                        <i class="fa fa-right-from-bracket me-1"></i>@S["Nav.Logout"]
+                                        <i class="fa fa-right-from-bracket me-1"></i>@S["Nav.Logout"].Value
                                     </button>
                                 </form>
                             </li>
@@ -177,6 +193,8 @@
     </div>
 
     <!-- ===== SCRIPTS ===== -->
+    <script src="~/js/i18n.js"></script>
+    <script src="~/js/validation.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

@@ -21,33 +21,33 @@ else
     <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
         <div class="card p-4 shadow-lg" style="width: 360px;">
             <div class="text-center mb-3">
-                <h3 class="mb-1">@L["Login"]</h3>
-                <div class="text-muted small">@L["Welcome"]</div>
+                <h3 class="mb-1">@L["Login"].Value</h3>
+                <div class="text-muted small">@L["Welcome"].Value</div>
             </div>
 
             <form id="loginForm" class="needs-validation" novalidate>
                 <input type="hidden" name="ReturnUrl" id="returnUrl" value="@returnUrl" />
 
                 <div class="mb-3">
-                    <label for="username" class="form-label">@L["Login"]</label>
-                    <input type="text" class="form-control" id="username" placeholder="@L["Enter_Login"]" required>
-                    <div class="invalid-feedback">@L["Login_Required"]</div>
+                    <label for="username" class="form-label">@L["Login"].Value</label>
+                    <input type="text" class="form-control" id="username" placeholder="@L["Enter_Login"].Value" required>
+                    <div class="invalid-feedback">@L["Login_Required"].Value</div>
                 </div>
 
                 <div class="mb-2">
-                    <label for="password" class="form-label">@L["Password"]</label>
+                    <label for="password" class="form-label">@L["Password"].Value</label>
                     <div class="input-group">
-                        <input type="password" class="form-control" id="password" placeholder="@L["Enter_Password"]" required>
-                        <button class="btn btn-outline-secondary" type="button" id="togglePw" aria-pressed="false" title="@L["Login_ShowPassword"]">
+                        <input type="password" class="form-control" id="password" placeholder="@L["Enter_Password"].Value" required>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePw" aria-pressed="false" title="@L["Login_ShowPassword"].Value">
                             <i class="fa fa-eye" aria-hidden="true"></i>
                         </button>
-                        <div class="invalid-feedback">@L["Login_Required"]</div>
+                        <div class="invalid-feedback">@L["Login_Required"].Value</div>
                     </div>
-                    <div class="form-text"><span id="pwHint">@L["Login_PwHint"]</span></div>
+                    <div class="form-text"><span id="pwHint">@L["Login_PwHint"].Value</span></div>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 mt-2" id="btnSignIn">
-                    <i class="fa fa-sign-in me-1"></i>@L["Login_SignIn"]
+                    <i class="fa fa-sign-in me-1"></i>@L["Login_SignIn"].Value
                 </button>
 
                 @Html.AntiForgeryToken()
@@ -132,7 +132,7 @@ else
 
                 const setBusy = (busy) => {
                     btn.disabled = busy;
-                    btn.innerHTML = busy ? `<span class="spinner-border spinner-border-sm me-2"></span>${T.signingIn}` : `<i class="fa fa-sign-in me-1"></i>@L["Login_SignIn"]`;
+                    btn.innerHTML = busy ? `<span class="spinner-border spinner-border-sm me-2"></span>${T.signingIn}` : `<i class="fa fa-sign-in me-1"></i>@L["Login_SignIn"].Value`;
                 };
 
                 setBusy(true);

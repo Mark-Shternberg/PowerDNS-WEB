@@ -74,5 +74,42 @@
   <data name="Ans.Forward.Updated"><value>Forwarders updated.</value></data>
   <data name="Ans.Forward.Removed"><value>Forward zone removed.</value></data>
 
-  
+  <data name="Recursor_Title" xml:space="preserve"><value>Recursor Forward Zones</value></data>
+  <data name="Recursor_Subtitle" xml:space="preserve"><value>Configure per-zone forwarding (upstream resolvers)</value></data>
+  <data name="Recursor_Disabled_WithLink" xml:space="preserve"><value>Recursor is disabled in {0} page.</value></data>
+  <data name="Link_Settings" xml:space="preserve"><value>settings</value></data>
+
+  <data name="Label_AvailableZones" xml:space="preserve"><value>Available Zones</value></data>
+  <data name="Option_NoZones" xml:space="preserve"><value>No zones available to recurse</value></data>
+  <data name="Btn_Add" xml:space="preserve"><value>Add</value></data>
+
+  <data name="Heading_ConfiguredForwardZones" xml:space="preserve"><value>Configured Forward Zones</value></data>
+  <data name="Th_Zone" xml:space="preserve"><value>Zone</value></data>
+  <data name="Th_ForwardTo" xml:space="preserve"><value>Forward To</value></data>
+  <data name="Th_Actions" xml:space="preserve"><value>Actions</value></data>
+
+  <data name="Btn_Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Btn_Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="Btn_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Btn_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Btn_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Btn_SaveChanges" xml:space="preserve"><value>Save Changes</value></data>
+  <data name="Btn_AddDnsServer" xml:space="preserve"><value>Add DNS Server</value></data>
+
+  <data name="Authoritative_Server_Label" xml:space="preserve"><value>Authoritative server</value></data>
+  <data name="Modal_Edit_TitlePrefix" xml:space="preserve"><value>Edit</value></data>
+  <data name="Modal_Edit_TitleSuffixZone" xml:space="preserve"><value>zone</value></data>
+  <data name="Label_UpstreamDNS" xml:space="preserve"><value>Upstream DNS servers</value></data>
+  <data name="Placeholder_IpPort" xml:space="preserve"><value>IP:Port (e.g., 8.8.8.8:53)</value></data>
+
+  <data name="Toast_SelectZone" xml:space="preserve"><value>Please select a zone.</value></data>
+  <data name="Toast_Added" xml:space="preserve"><value>Zone added successfully</value></data>
+  <data name="Toast_AddFail" xml:space="preserve"><value>Failed to add forward zone.</value></data>
+  <data name="Toast_Removed" xml:space="preserve"><value>Zone removed successfully</value></data>
+  <data name="Toast_RemoveFail" xml:space="preserve"><value>Failed to remove forward zone</value></data>
+  <data name="Toast_SaveOk" xml:space="preserve"><value>DNS servers updated successfully</value></data>
+  <data name="Toast_SaveFail" xml:space="preserve"><value>Failed to save DNS servers</value></data>
+  <data name="Toast_NoDns" xml:space="preserve"><value>At least one DNS server must be specified.</value></data>
+  <data name="Toast_DnsIdx" xml:space="preserve"><value>Error in DNS {n}: {err}</value></data>
+  <data name="Confirm_DeleteMsg" xml:space="preserve"><value>Are you sure you want to remove the forward zone: {name}?</value></data>
 </root>

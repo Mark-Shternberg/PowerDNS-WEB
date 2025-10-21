@@ -24,19 +24,15 @@ namespace PowerDNS_Web.Pages
 
         public List<DnsZone> Zones { get; private set; } = new();
 
-        public ZonesModel(
-            ILogger<ZonesModel> logger,
-            IConfiguration configuration,
-            IHttpClientFactory httpClientFactory,
-            IStringLocalizerFactory locFactory)
+        public ZonesModel(ILogger<ZonesModel> logger, IConfiguration configuration, IHttpClientFactory httpClientFactory, IStringLocalizerFactory factory)
         {
             _logger = logger;
             _configuration = configuration;
             _httpClientFactory = httpClientFactory;
 
             // Берём локалайзер для ресурсов представления "Pages/Zones"
-            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name!;
-            _L = locFactory.Create("Pages/Zones", assemblyName);
+            var asmName = Assembly.GetExecutingAssembly().GetName().Name!;
+            _L = factory.Create("Pages.zones", asmName);
         }
 
         public async Task OnGetAsync()
@@ -162,11 +158,11 @@ namespace PowerDNS_Web.Pages
         {
             var name = EnsureTrailingDot(nameRaw?.Trim());
             if (string.IsNullOrWhiteSpace(name))
-                return (false, _L["Err.ZoneNameEmpty"]);
+                return (false, _L["Err.ZoneNameEmpty"].Value);
 
             var apiBase = _configuration["pdns:url"];
             if (string.IsNullOrWhiteSpace(apiBase))
-                return (false, _L["Err.PdnsUrlMissing"]);
+                return (false, _L["Err.PdnsUrlMissing"].Value);
 
             using var client = NewClientWithPdnsKey();
 
@@ -193,7 +189,7 @@ namespace PowerDNS_Web.Pages
             if (!createResp.IsSuccessStatusCode)
             {
                 _logger.LogError("Create zone failed: {Code} {Body}", createResp.StatusCode, createBody);
-                return (false, _L["Err.PowerDnsApi", createBody]);
+                return (false, _L["Err.PowerDnsApi", createBody].Value);
             }
 
             // 2) DNSSEC keys (if enabled)
@@ -216,7 +212,7 @@ namespace PowerDNS_Web.Pages
                 if (!dnssecResp.IsSuccessStatusCode)
                 {
                     _logger.LogError("Failed to create DNSSEC keys: {Body}", dnssecBody);
-                    return (false, _L["Err.CreateDnssecKeys", dnssecBody]);
+                    return (false, _L["Err.CreateDnssecKeys", dnssecBody].Value);
                 }
             }
 
@@ -261,7 +257,7 @@ namespace PowerDNS_Web.Pages
                 if (!soaResp.IsSuccessStatusCode)
                 {
                     _logger.LogError("Failed to add SOA record: {Body}", soaBody);
-                    return (false, _L["Err.AddSoa", soaBody]);
+                    return (false, _L["Err.AddSoa", soaBody].Value);
                 }
 
                 // 4) Recursor (if enabled)
@@ -288,13 +284,13 @@ namespace PowerDNS_Web.Pages
                         {
                             var err = await rResp.Content.ReadAsStringAsync();
                             _logger.LogError("Zone added, but recursor forward add failed: {Body}", err);
-                            return (true, _L["Msg.ZoneAddedRecursorWarn", err]);
+                            return (true, _L["Msg.ZoneAddedRecursorWarn", err].Value);
                         }
                     }
                 }
             }
 
-            return (true, _L["Msg.ZoneAdded"]);
+            return (true, _L["Msg.ZoneAdded"].Value);
         }
 
         private async Task<(bool ok, string message)> UpdateZoneAsync(string nameRaw, string kind, bool dnssec, long serial)
@@ -302,7 +298,7 @@ namespace PowerDNS_Web.Pages
             var name = EnsureTrailingDot(nameRaw?.Trim());
             var apiBase = _configuration["pdns:url"];
             if (string.IsNullOrWhiteSpace(apiBase))
-                return (false, _L["Err.PdnsUrlMissing"]);
+                return (false, _L["Err.PdnsUrlMissing"].Value);
 
             using var client = NewClientWithPdnsKey();
             var apiUrl = $"{apiBase}/api/v1/servers/localhost/zones/{name}";
@@ -313,7 +309,7 @@ namespace PowerDNS_Web.Pages
             {
                 var err = await currentResp.Content.ReadAsStringAsync();
                 _logger.LogError("Failed to fetch zone '{Zone}': {Err}", name, err);
-                return (false, _L["Err.FetchZone", name, err]);
+                return (false, _L["Err.FetchZone", name, err].Value);
             }
 
             var currentJson = await currentResp.Content.ReadAsStringAsync();
@@ -321,7 +317,7 @@ namespace PowerDNS_Web.Pages
             {
                 PropertyNameCaseInsensitive = true
             });
-            if (currentZone == null) return (false, _L["Err.ParseZoneData"]);
+            if (currentZone == null) return (false, _L["Err.ParseZoneData"].Value);
 
             bool wasDnssec = currentZone.dnssec;
             bool isDnssec = dnssec;
@@ -345,7 +341,7 @@ namespace PowerDNS_Web.Pages
             if (!putResp.IsSuccessStatusCode)
             {
                 _logger.LogError("PowerDNS API error on update: {Code} {Body}", putResp.StatusCode, putBody);
-                return (false, _L["Err.PowerDnsApi", putBody]);
+                return (false, _L["Err.PowerDnsApi", putBody].Value);
             }
 
             // 3) DNSSEC transitions
@@ -358,7 +354,7 @@ namespace PowerDNS_Web.Pages
                 {
                     var err = await kResp.Content.ReadAsStringAsync();
                     _logger.LogError("Failed to create DNSSEC key for '{Zone}': {Err}", name, err);
-                    return (false, _L["Err.CreateDnssecKeyGeneric", err]);
+                    return (false, _L["Err.CreateDnssecKeyGeneric", err].Value);
                 }
             }
             else if (wasDnssec && !isDnssec)
@@ -384,7 +380,7 @@ namespace PowerDNS_Web.Pages
                 }
             }
 
-            return (true, _L["Msg.ZoneUpdated"]);
+            return (true, _L["Msg.ZoneUpdated"].Value);
         }
 
         private async Task<(bool ok, string message)> DeleteZoneAsync(string nameRaw)
@@ -393,7 +389,7 @@ namespace PowerDNS_Web.Pages
             var apiBase = _configuration["pdns:url"];
 
             if (string.IsNullOrWhiteSpace(apiBase))
-                return (false, _L["Err.PdnsUrlMissing"]);
+                return (false, _L["Err.PdnsUrlMissing"].Value);
 
             using var client = NewClientWithPdnsKey();
 
@@ -402,7 +398,7 @@ namespace PowerDNS_Web.Pages
             if (!resp.IsSuccessStatusCode)
             {
                 _logger.LogError("Error deleting zone: {Code} {Body}", resp.StatusCode, body);
-                return (false, _L["Err.PowerDnsApi", body]);
+                return (false, _L["Err.PowerDnsApi", body].Value);
             }
 
             if (_configuration["recursor:Enabled"] == "Enabled")
@@ -418,18 +414,18 @@ namespace PowerDNS_Web.Pages
                         {
                             var err = await rResp.Content.ReadAsStringAsync();
                             _logger.LogError("Error removing forward zone from recursor: {Err}", err);
-                            return (true, _L["Msg.ZoneDeletedRecursorWarn", err]);
+                            return (true, _L["Msg.ZoneDeletedRecursorWarn", err].Value);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Exception while removing forward zone in recursor");
-                    return (true, _L["Msg.ZoneDeletedRecursorWarn2"]);
+                    return (true, _L["Msg.ZoneDeletedRecursorWarn2"].Value);
                 }
             }
 
-            return (true, _L["Msg.ZoneDeleted"]);
+            return (true, _L["Msg.ZoneDeleted"].Value);
         }
 
         // -------------------- Handlers --------------------

@@ -17,8 +17,8 @@ namespace PowerDNS_Web.Pages
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
-            _pdnsUrl = configuration["pdns:url"];
-            _pdnsApiKey = configuration["pdns:api_key"];
+            _pdnsUrl = configuration["pdns:url"] ?? "";
+            _pdnsApiKey = configuration["pdns:api_key"] ?? "";
         }
 
         public async Task<IActionResult> OnGetLogsAsync()

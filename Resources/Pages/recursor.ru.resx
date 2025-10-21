@@ -72,4 +72,44 @@
   <data name="Ans.Forward.Added"><value>Зона пересылки добавлена.</value></data>
   <data name="Ans.Forward.Updated"><value>Список форвардеров обновлён.</value></data>
   <data name="Ans.Forward.Removed"><value>Зона пересылки удалена.</value></data>
+
+  <data name="Recursor_Title" xml:space="preserve"><value>Рекурсор: перенаправление зон</value></data>
+  <data name="Recursor_Subtitle" xml:space="preserve"><value>Настройка переадресации по зонам (вышестоящие резолверы)</value></data>
+  <data name="Recursor_Disabled_WithLink" xml:space="preserve"><value>Рекурсор отключен на странице {0}.</value></data>
+  <data name="Link_Settings" xml:space="preserve"><value>настройки</value></data>
+
+  <data name="Label_AvailableZones" xml:space="preserve"><value>Доступные зоны</value></data>
+  <data name="Option_NoZones" xml:space="preserve"><value>Нет зон для передачи на рекурсор</value></data>
+  <data name="Btn_Add" xml:space="preserve"><value>Добавить</value></data>
+
+  <data name="Heading_ConfiguredForwardZones" xml:space="preserve"><value>Настроенные перенаправляемые зоны</value></data>
+  <data name="Th_Zone" xml:space="preserve"><value>Зона</value></data>
+  <data name="Th_ForwardTo" xml:space="preserve"><value>Перенаправлять на</value></data>
+  <data name="Th_Actions" xml:space="preserve"><value>Действия</value></data>
+
+  <data name="Btn_Edit" xml:space="preserve"><value>Изменить</value></data>
+  <data name="Btn_Remove" xml:space="preserve"><value>Удалить</value></data>
+  <data name="Btn_Delete" xml:space="preserve"><value>Удалить</value></data>
+  <data name="Btn_Cancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="Btn_Close" xml:space="preserve"><value>Закрыть</value></data>
+  <data name="Btn_SaveChanges" xml:space="preserve"><value>Сохранить изменения</value></data>
+  <data name="Btn_AddDnsServer" xml:space="preserve"><value>Добавить DNS-сервер</value></data>
+
+  <data name="Authoritative_Server_Label" xml:space="preserve"><value>Авторитативный сервер</value></data>
+  <data name="Modal_Edit_TitlePrefix" xml:space="preserve"><value>Изменить</value></data>
+  <data name="Modal_Edit_TitleSuffixZone" xml:space="preserve"><value>зону</value></data>
+  <data name="Label_UpstreamDNS" xml:space="preserve"><value>Вышестоящие DNS-серверы</value></data>
+  <data name="Placeholder_IpPort" xml:space="preserve"><value>IP:Порт (например, 8.8.8.8:53)</value></data>
+
+  <data name="Toast_SelectZone" xml:space="preserve"><value>Выберите зону.</value></data>
+  <data name="Toast_Added" xml:space="preserve"><value>Зона успешно добавлена.</value></data>
+  <data name="Toast_AddFail" xml:space="preserve"><value>Не удалось добавить зону.</value></data>
+  <data name="Toast_Removed" xml:space="preserve"><value>Зона успешно удалена.</value></data>
+  <data name="Toast_RemoveFail" xml:space="preserve"><value>Не удалось удалить зону.</value></data>
+  <data name="Toast_SaveOk" xml:space="preserve"><value>DNS-серверы обновлены.</value></data>
+  <data name="Toast_SaveFail" xml:space="preserve"><value>Не удалось сохранить DNS-серверы.</value></data>
+  <data name="Toast_NoDns" xml:space="preserve"><value>Укажите хотя бы один DNS-сервер.</value></data>
+  <data name="Toast_DnsIdx" xml:space="preserve"><value>Ошибка в DNS {n}: {err}</value></data>
+  <data name="Confirm_DeleteMsg" xml:space="preserve"><value>Удалить перенаправление зоны: {name}?</value></data>
+
 </root>
