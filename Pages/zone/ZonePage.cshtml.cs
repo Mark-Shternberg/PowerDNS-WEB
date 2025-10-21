@@ -35,22 +35,23 @@ namespace PowerDNS_Web.Pages.zone
             _configuration = configuration;
 
             _httpClient = httpClientFactory.CreateClient();
-            _apiUrl = configuration["pdns:url"] ?? "";
-            _apiKey = configuration["pdns:api_key"] ?? "";
-            _default_IP = configuration["pdns:default_a"] ?? "";
+            _apiUrl = configuration["pdns:url"] ?? string.Empty;
+            _apiKey = configuration["pdns:api_key"] ?? string.Empty;
+            _default_IP = configuration["pdns:default_a"] ?? string.Empty;
             _recursor_Enabled = configuration["recursor:Enabled"] ?? "Disabled";
         }
 
-        [BindProperty(SupportsGet = true)] public string? ZoneName { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public string? ZoneName { get; set; }
 
         public Dictionary<string, List<DnsRecord>> GroupedRecords { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {
-            if (string.IsNullOrEmpty(ZoneName))
+            if (string.IsNullOrWhiteSpace(ZoneName))
                 return NotFound();
 
-            ZoneName = ZoneName.TrimEnd('.');
+            ZoneName = ZoneName!.TrimEnd('.');
 
             try
             {
@@ -58,33 +59,30 @@ namespace PowerDNS_Web.Pages.zone
                 request.Headers.Add("X-API-Key", _apiKey);
 
                 var response = await _httpClient.SendAsync(request);
-                if (response.IsSuccessStatusCode)
-                {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var zoneData = JsonSerializer.Deserialize<ZoneData>(json, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                    if (zoneData?.Rrsets != null)
-                    {
-                        GroupedRecords = zoneData.Rrsets
-                            .Where(r => r.Records.Count > 0)
-                            .GroupBy(r => GetSubdomain(r.Name))
-                            .ToDictionary(
-                                g => g.Key,
-                                g => g.Select(r => new DnsRecord
-                                {
-                                    Name = r.Name,
-                                    Type = r.Type,
-                                    Content = r.Records.Select(rec => rec.Content).ToList(),
-                                    Ttl = r.Ttl
-                                }).ToList());
-                    }
-                }
-                else
-                {
+                if (!response.IsSuccessStatusCode)
                     return StatusCode((int)response.StatusCode);
+
+                var json = await response.Content.ReadAsStringAsync();
+                var zoneData = JsonSerializer.Deserialize<ZoneData>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (zoneData?.Rrsets != null)
+                {
+                    GroupedRecords = zoneData.Rrsets
+                        .Where(r => !string.IsNullOrEmpty(r.Name) && !string.IsNullOrEmpty(r.Type) && r.Records.Count > 0)
+                        .GroupBy(r => GetSubdomain(r.Name!))
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Select(r => new DnsRecord
+                            {
+                                Name = r.Name!,
+                                Type = r.Type!,
+                                Content = r.Records.Select(rec => rec.Content ?? string.Empty).ToList(),
+                                Ttl = r.Ttl
+                            }).ToList()
+                        );
                 }
             }
             catch (Exception ex)
@@ -98,9 +96,10 @@ namespace PowerDNS_Web.Pages.zone
 
         private string GetSubdomain(string fullRecordName)
         {
-            if (fullRecordName.EndsWith(ZoneName + ".", StringComparison.Ordinal))
+            var zn = ZoneName ?? string.Empty;
+            if (fullRecordName.EndsWith(zn + ".", StringComparison.Ordinal))
             {
-                string subdomain = fullRecordName.Substring(0, fullRecordName.Length - ZoneName.Length - 1);
+                string subdomain = fullRecordName.Substring(0, fullRecordName.Length - zn.Length - 1);
                 return string.IsNullOrEmpty(subdomain) ? "@" : subdomain;
             }
             return fullRecordName;
@@ -110,7 +109,7 @@ namespace PowerDNS_Web.Pages.zone
         public class ZoneData { public List<Rrset> Rrsets { get; set; } = new(); }
         public class Rrset { public string? Name { get; set; } public string? Type { get; set; } public int Ttl { get; set; } public List<Record> Records { get; set; } = new(); }
         public class Record { public string? Content { get; set; } public bool Disabled { get; set; } }
-        public class DnsRecord { public string? Name { get; set; } public string? Type { get; set; } public List<string> Content { get; set; } = new(); public int Ttl { get; set; } }
+        public class DnsRecord { public string Name { get; set; } = string.Empty; public string Type { get; set; } = string.Empty; public List<string> Content { get; set; } = new(); public int Ttl { get; set; } }
 
         public class AddRecordRequest
         {
@@ -147,12 +146,18 @@ namespace PowerDNS_Web.Pages.zone
 
         public class AddSubdomainRequest { public string? Subdomain { get; set; } }
 
-        // === ADD RECORD ===
+        // === ADD RECORD (TempData + Redirect) ===
         public async Task<IActionResult> OnPostAddRecordAsync()
         {
+            if (string.IsNullOrWhiteSpace(ZoneName))
+            {
+                TempData["NoteError"] = _L["Err.ZoneNotSpecified"].Value;
+                return RedirectToPage("/zones");
+            }
+
             try
             {
-                AddRecordRequest request;
+                AddRecordRequest? request;
                 if (Request.HasFormContentType)
                 {
                     request = ParseAddRecordFromForm();
@@ -160,22 +165,19 @@ namespace PowerDNS_Web.Pages.zone
                 else
                 {
                     var body = await new StreamReader(Request.Body).ReadToEndAsync();
-                    request = JsonSerializer.Deserialize<AddRecordRequest>(body, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+                    request = string.IsNullOrWhiteSpace(body)
+                        ? null
+                        : JsonSerializer.Deserialize<AddRecordRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 }
 
                 if (request == null || string.IsNullOrWhiteSpace(request.RecordType))
                 {
-                    var msg = _L["Err.InvalidRequest"].Value;
-                    if (IsAjaxRequest()) return new JsonResult(new { success = false, message = msg }) { StatusCode = 400 };
-                    TempData["NoteError"] = msg;
+                    TempData["NoteError"] = _L["Err.InvalidRequest"].Value;
                     return RedirectToPage(new { ZoneName });
                 }
 
                 var subdomain = (request.Subdomain ?? "@").TrimEnd('.');
-                var fullDomain = subdomain == "@" ? ZoneName : $"{subdomain}.{ZoneName}";
+                var fullDomain = subdomain == "@" ? ZoneName! : $"{subdomain}.{ZoneName}";
 
                 // fetch zone
                 var getReq = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}");
@@ -184,9 +186,7 @@ namespace PowerDNS_Web.Pages.zone
                 if (!getResp.IsSuccessStatusCode)
                 {
                     var errBody = await getResp.Content.ReadAsStringAsync();
-                    var msg = _L["Err.FetchRecords", errBody].Value;
-                    if (IsAjaxRequest()) return new JsonResult(new { success = false, message = msg }) { StatusCode = (int)getResp.StatusCode };
-                    TempData["NoteError"] = msg;
+                    TempData["NoteError"] = _L["Err.FetchRecords", errBody].Value;
                     return RedirectToPage(new { ZoneName });
                 }
 
@@ -194,44 +194,43 @@ namespace PowerDNS_Web.Pages.zone
                 var zoneData = JsonSerializer.Deserialize<ZoneData>(zoneJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 if (zoneData?.Rrsets == null)
                 {
-                    var msg = _L["Err.ZoneEmpty"].Value;
-                    if (IsAjaxRequest()) return new JsonResult(new { success = false, message = msg }) { StatusCode = 500 };
-                    TempData["NoteError"] = msg;
+                    TempData["NoteError"] = _L["Err.ZoneEmpty"].Value;
                     return RedirectToPage(new { ZoneName });
                 }
 
-                var existing = zoneData.Rrsets.FirstOrDefault(r => r.Name == fullDomain && r.Type == request.RecordType);
+                var recordType = request.RecordType!;
+                var existing = zoneData.Rrsets.FirstOrDefault(r => r.Name == fullDomain && r.Type == recordType);
                 var updated = existing?.Records?.ToList() ?? new List<Record>();
 
                 // normalize & build content
-                if (request.RecordType == "NS")
-                    request.Value = request.Value.TrimEnd('.') + ".";
+                var rawVal = request.Value ?? string.Empty;
 
-                string content = request.Value;
-                if (request.RecordType == "MX")
+                if (recordType == "NS")
+                    rawVal = rawVal.TrimEnd('.') + ".";
+
+                string content = rawVal;
+                if (recordType == "MX")
                 {
                     var mx = request.MxPriority ?? 10;
-                    var host = request.Value.TrimEnd('.') + ".";
+                    var host = rawVal.TrimEnd('.') + ".";
                     content = $"{mx} {host}";
                 }
-                else if (request.RecordType == "SRV")
+                else if (recordType == "SRV")
                 {
                     var pr = request.SrvPriority ?? 0;
                     var wt = request.SrvWeight ?? 0;
                     var pt = request.SrvPort ?? 0;
-                    var target = request.Value.TrimEnd('.') + ".";
+                    var target = rawVal.TrimEnd('.') + ".";
                     content = $"{pr} {wt} {pt} {target}";
                 }
-                else if (request.RecordType == "TXT")
+                else if (recordType == "TXT")
                 {
-                    content = FormatTxtForPowerDNS(request.Value);
+                    content = FormatTxtForPowerDNS(rawVal);
                 }
 
-                if (updated.Any(r => r.Content == content))
+                if (updated.Any(r => (r.Content ?? string.Empty) == content))
                 {
-                    var msg = _L["Err.RecordExists"].Value;
-                    if (IsAjaxRequest()) return new JsonResult(new { success = false, message = msg }) { StatusCode = 400 };
-                    TempData["NoteWarn"] = msg;
+                    TempData["NoteWarn"] = _L["Err.RecordExists"].Value;
                     return RedirectToPage(new { ZoneName });
                 }
 
@@ -242,7 +241,7 @@ namespace PowerDNS_Web.Pages.zone
                 var patch = new
                 {
                     rrsets = new[] {
-                        new { name = fullDomain, type = request.RecordType, ttl = ttl, changetype = "REPLACE", records = updated }
+                        new { name = fullDomain, type = recordType, ttl = ttl, changetype = "REPLACE", records = updated }
                     }
                 };
 
@@ -257,48 +256,44 @@ namespace PowerDNS_Web.Pages.zone
                 if (!patchResp.IsSuccessStatusCode)
                 {
                     var err = await patchResp.Content.ReadAsStringAsync();
-                    var msg = _L["Err.AddRecordApi", err].Value;
-                    if (IsAjaxRequest()) return new JsonResult(new { success = false, message = msg }) { StatusCode = (int)patchResp.StatusCode };
-                    TempData["NoteError"] = msg;
+                    TempData["NoteError"] = _L["Err.AddRecordApi", err].Value;
                     return RedirectToPage(new { ZoneName });
                 }
 
-                var okMsg = _L["Ans.Record.Added"].Value;
-                if (IsAjaxRequest()) return new JsonResult(new { success = true, message = okMsg });
-                TempData["NoteSuccess"] = okMsg;
+                TempData["NoteSuccess"] = _L["Ans.Record.Added"].Value;
                 return RedirectToPage(new { ZoneName });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Add record failed for {Zone}", ZoneName);
-                var msg = _L["Err.Internal"].Value;
-                if (IsAjaxRequest()) return new JsonResult(new { success = false, message = msg }) { StatusCode = 500 };
-                TempData["NoteError"] = msg;
+                TempData["NoteError"] = _L["Err.Internal"].Value;
                 return RedirectToPage(new { ZoneName });
             }
         }
 
-        // === DELETE RECORD ===
-        public async Task<IActionResult> OnPostDeleteRecordAsync([FromBody] DeleteRecordRequest request)
+        // === DELETE RECORD (TempData + Redirect) ===
+        public async Task<IActionResult> OnPostDeleteRecordAsync()
         {
+            if (string.IsNullOrWhiteSpace(ZoneName))
+            {
+                TempData["NoteError"] = _L["Err.ZoneNotSpecified"].Value;
+                return RedirectToPage("/zones");
+            }
+
             try
             {
-                if (Request.HasFormContentType && request == null)
+                // из формы
+                var name = Request.Form["Name"].ToString();
+                var type = Request.Form["Type"].ToString();
+                var value = Request.Form["Value"].ToString();
+
+                if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(value))
                 {
-                    request = new DeleteRecordRequest
-                    {
-                        Name = Request.Form["Name"],
-                        Type = Request.Form["Type"],
-                        Value = Request.Form["Value"]
-                    };
+                    TempData["NoteError"] = _L["Err.InvalidRequest"].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
-                if (string.IsNullOrEmpty(request?.Name) || string.IsNullOrEmpty(request.Type) || string.IsNullOrEmpty(request.Value))
-                {
-                    return new JsonResult(new { success = false, message = _L["Err.InvalidRequest"].Value }) { StatusCode = 400 };
-                }
-
-                string name = request.Name.TrimEnd('.') + ".";
+                string fqdn = name.TrimEnd('.') + ".";
 
                 // fetch current
                 var getRequest = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}");
@@ -307,23 +302,26 @@ namespace PowerDNS_Web.Pages.zone
                 if (!getResponse.IsSuccessStatusCode)
                 {
                     var err = await getResponse.Content.ReadAsStringAsync();
-                    return new JsonResult(new { success = false, message = _L["Err.FetchRecords", err].Value }) { StatusCode = (int)getResponse.StatusCode };
+                    TempData["NoteError"] = _L["Err.FetchRecords", err].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
                 var jsonResponse = await getResponse.Content.ReadAsStringAsync();
                 var zoneData = JsonSerializer.Deserialize<ZoneData>(jsonResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 if (zoneData?.Rrsets == null)
                 {
-                    return new JsonResult(new { success = false, message = _L["Err.ZoneEmpty"].Value }) { StatusCode = 500 };
+                    TempData["NoteError"] = _L["Err.ZoneEmpty"].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
-                var recordSet = zoneData.Rrsets.FirstOrDefault(r => r.Name == name && r.Type == request.Type);
+                var recordSet = zoneData.Rrsets.FirstOrDefault(r => r.Name == fqdn && r.Type == type);
                 if (recordSet == null || recordSet.Records == null || recordSet.Records.Count == 0)
                 {
-                    return new JsonResult(new { success = false, message = _L["Err.RecordNotFound"].Value }) { StatusCode = 404 };
+                    TempData["NoteError"] = _L["Err.RecordNotFound"].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
-                var updatedRecords = recordSet.Records.Where(r => r.Content != request.Value).ToList();
+                var updatedRecords = recordSet.Records.Where(r => (r.Content ?? string.Empty) != value).ToList();
                 string changeType = updatedRecords.Count > 0 ? "REPLACE" : "DELETE";
 
                 var deleteRecord = new
@@ -332,11 +330,11 @@ namespace PowerDNS_Web.Pages.zone
                     {
                         new
                         {
-                            name = name,
-                            type = request.Type,
+                            name = fqdn,
+                            type = type,
                             ttl = recordSet.Ttl,
                             changetype = changeType,
-                            records = updatedRecords.Select(r => new { content = r.Content, disabled = false }).ToArray()
+                            records = updatedRecords.Select(r => new { content = r.Content ?? string.Empty, disabled = false }).ToArray()
                         }
                     }
                 };
@@ -353,37 +351,43 @@ namespace PowerDNS_Web.Pages.zone
                 if (!response.IsSuccessStatusCode)
                 {
                     var err = await response.Content.ReadAsStringAsync();
-                    return new JsonResult(new { success = false, message = _L["Err.DeleteRecordApi", err].Value }) { StatusCode = (int)response.StatusCode };
+                    TempData["NoteError"] = _L["Err.DeleteRecordApi", err].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
                 if (_recursor_Enabled == "Enabled") ExecuteBashCommand("rec_control reload-zones");
 
-                var okMsg = _L["Ans.Record.Deleted"].Value;
-                return new JsonResult(new { success = true, message = okMsg });
+                TempData["NoteSuccess"] = _L["Ans.Record.Deleted"].Value;
+                return RedirectToPage(new { ZoneName });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Delete record failed for {Zone}", ZoneName);
-                return new JsonResult(new { success = false, message = _L["Err.Internal"].Value }) { StatusCode = 500 };
+                TempData["NoteError"] = _L["Err.Internal"].Value;
+                return RedirectToPage(new { ZoneName });
             }
         }
 
-        // === EDIT RECORD ===
-        public async Task<IActionResult> OnPostEditRecordAsync([FromBody] EditRecordRequest request)
+        // === EDIT RECORD (TempData + Redirect) ===
+        public async Task<IActionResult> OnPostEditRecordAsync()
         {
+            if (string.IsNullOrWhiteSpace(ZoneName))
+            {
+                TempData["NoteError"] = _L["Err.ZoneNotSpecified"].Value;
+                return RedirectToPage("/zones");
+            }
+
             try
             {
-                if (Request.HasFormContentType && request == null)
+                var req = ParseEditRecordFromForm();
+
+                if (string.IsNullOrWhiteSpace(req.Name) || string.IsNullOrWhiteSpace(req.Type) || string.IsNullOrWhiteSpace(req.Value))
                 {
-                    request = ParseEditRecordFromForm();
+                    TempData["NoteError"] = _L["Err.InvalidRequest"].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
-                if (string.IsNullOrEmpty(request?.Name) || string.IsNullOrEmpty(request.Type) || string.IsNullOrEmpty(request.Value))
-                {
-                    return new JsonResult(new { success = false, message = _L["Err.InvalidRequest"].Value }) { StatusCode = 400 };
-                }
-
-                string name = request.Name.TrimEnd('.') + ".";
+                string fqdn = req.Name.TrimEnd('.') + ".";
 
                 // fetch
                 var getRequest = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}");
@@ -392,61 +396,62 @@ namespace PowerDNS_Web.Pages.zone
                 if (!getResponse.IsSuccessStatusCode)
                 {
                     var err = await getResponse.Content.ReadAsStringAsync();
-                    return new JsonResult(new { success = false, message = _L["Err.FetchRecords", err].Value }) { StatusCode = (int)getResponse.StatusCode };
+                    TempData["NoteError"] = _L["Err.FetchRecords", err].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
                 var jsonResponse = await getResponse.Content.ReadAsStringAsync();
                 var zoneData = JsonSerializer.Deserialize<ZoneData>(jsonResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 if (zoneData?.Rrsets == null)
                 {
-                    return new JsonResult(new { success = false, message = _L["Err.ZoneEmpty"].Value }) { StatusCode = 500 };
+                    TempData["NoteError"] = _L["Err.ZoneEmpty"].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
-                var recordSet = zoneData.Rrsets.FirstOrDefault(r => r.Name == name && r.Type == request.Type);
+                var recordSet = zoneData.Rrsets.FirstOrDefault(r => r.Name == fqdn && r.Type == req.Type);
                 if (recordSet == null || recordSet.Records == null || recordSet.Records.Count == 0)
                 {
-                    return new JsonResult(new { success = false, message = _L["Err.RecordNotFound"].Value }) { StatusCode = 404 };
+                    TempData["NoteError"] = _L["Err.RecordNotFound"].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
                 var remainingRecords = recordSet.Records
-                    .Where(r => r.Content != request.OldValue)
-                    .Select(r => new { content = r.Content, disabled = false })
+                    .Where(r => (r.Content ?? string.Empty) != (req.OldValue ?? string.Empty))
+                    .Select(r => new { content = r.Content ?? string.Empty, disabled = false })
                     .ToList();
 
-                string newRecordContent = request.Value.TrimEnd('.');
+                string newRecordContent = (req.Value ?? string.Empty).TrimEnd('.');
 
-                if (request.Type == "MX")
+                if (req.Type == "MX")
                 {
-                    int mxPriority = request.MxPriority ?? 10;
-                    string[] parts = request.Value.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-                    string mailServer = parts.Length > 1 ? parts.Last() : parts.First();
-                    newRecordContent = $"{mxPriority} {mailServer.TrimEnd('.')}."
-                        .Trim();
+                    int mxPriority = req.MxPriority ?? 10;
+                    string[] parts = (req.Value ?? string.Empty).Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                    string mailServer = parts.Length > 1 ? parts.Last() : parts.FirstOrDefault() ?? string.Empty;
+                    newRecordContent = $"{mxPriority} {mailServer.TrimEnd('.')}.".Trim();
                 }
-                else if (request.Type == "SRV")
+                else if (req.Type == "SRV")
                 {
-                    int srvPriority = request.SrvPriority ?? 0;
-                    int srvWeight = request.SrvWeight ?? 0;
-                    int srvPort = request.SrvPort ?? 0;
-                    string[] parts = request.Value.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-                    string targetServer = parts.Length > 3 ? parts.Last() : parts.First();
-                    newRecordContent = $"{srvPriority} {srvWeight} {srvPort} {targetServer.TrimEnd('.')}."
-                        .Trim();
+                    int srvPriority = req.SrvPriority ?? 0;
+                    int srvWeight = req.SrvWeight ?? 0;
+                    int srvPort = req.SrvPort ?? 0;
+                    string[] parts = (req.Value ?? string.Empty).Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                    string targetServer = parts.Length > 3 ? parts.Last() : parts.FirstOrDefault() ?? string.Empty;
+                    newRecordContent = $"{srvPriority} {srvWeight} {srvPort} {targetServer.TrimEnd('.')}.".Trim();
                 }
-                else if (request.Type == "SOA")
+                else if (req.Type == "SOA")
                 {
-                    string soaNs = (request.SoaNs ?? string.Empty).TrimEnd('.') + ".";
-                    string soaEmail = (request.SoaEmail ?? string.Empty).TrimEnd('.') + ".";
-                    long soaSerial = 0; // серийник обновит сам PowerDNS
-                    int soaRefresh = request.SoaRefresh ?? 10800;
-                    int soaRetry = request.SoaRetry ?? 3600;
-                    int soaExpire = request.SoaExpire ?? 604800;
-                    int soaMinimumTtl = request.SoaMinimumTtl ?? 3600;
+                    string soaNs = ((req.SoaNs ?? string.Empty).TrimEnd('.')) + ".";
+                    string soaEmail = ((req.SoaEmail ?? string.Empty).TrimEnd('.')) + ".";
+                    long soaSerial = 0; // серийник обновит PowerDNS
+                    int soaRefresh = req.SoaRefresh ?? 10800;
+                    int soaRetry = req.SoaRetry ?? 3600;
+                    int soaExpire = req.SoaExpire ?? 604800;
+                    int soaMinimumTtl = req.SoaMinimumTtl ?? 3600;
                     newRecordContent = $"{soaNs} {soaEmail} {soaSerial} {soaRefresh} {soaRetry} {soaExpire} {soaMinimumTtl}";
                 }
-                else if (request.Type == "TXT")
+                else if (req.Type == "TXT")
                 {
-                    newRecordContent = FormatTxtForPowerDNS(request.Value);
+                    newRecordContent = FormatTxtForPowerDNS(req.Value ?? string.Empty);
                 }
 
                 remainingRecords.Add(new { content = newRecordContent, disabled = false });
@@ -455,9 +460,9 @@ namespace PowerDNS_Web.Pages.zone
                 {
                     rrsets = new[] {
                         new {
-                            name = name,
-                            type = request.Type,
-                            ttl = request.Ttl ?? recordSet.Ttl,
+                            name = fqdn,
+                            type = req.Type,
+                            ttl = req.Ttl ?? recordSet.Ttl,
                             changetype = "REPLACE",
                             records = remainingRecords
                         }
@@ -475,38 +480,48 @@ namespace PowerDNS_Web.Pages.zone
                 if (!response.IsSuccessStatusCode)
                 {
                     var err = await response.Content.ReadAsStringAsync();
-                    return new JsonResult(new { success = false, message = _L["Err.UpdateRecordApi", err].Value }) { StatusCode = (int)response.StatusCode };
+                    TempData["NoteError"] = _L["Err.UpdateRecordApi", err].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
                 if (_recursor_Enabled == "Enabled") ExecuteBashCommand("rec_control reload-zones");
 
-                return new JsonResult(new { success = true, message = _L["Ans.Record.Updated"].Value });
+                TempData["NoteSuccess"] = _L["Ans.Record.Updated"].Value;
+                return RedirectToPage(new { ZoneName });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Edit record failed for {Zone}", ZoneName);
-                return new JsonResult(new { success = false, message = _L["Err.Internal"].Value }) { StatusCode = 500 };
+                TempData["NoteError"] = _L["Err.Internal"].Value;
+                return RedirectToPage(new { ZoneName });
             }
         }
 
-        // === ADD SUBDOMAIN (A-запись на дефолтный IP) ===
-        public async Task<IActionResult> OnPostAddSubdomainAsync([FromBody] AddSubdomainRequest request)
+        // === ADD SUBDOMAIN (TempData + Redirect) ===
+        public async Task<IActionResult> OnPostAddSubdomainAsync()
         {
+            if (string.IsNullOrWhiteSpace(ZoneName))
+            {
+                TempData["NoteError"] = _L["Err.ZoneNotSpecified"].Value;
+                return RedirectToPage("/zones");
+            }
+
             try
             {
-                if (string.IsNullOrWhiteSpace(request?.Subdomain))
+                var sub = Request.Form["Subdomain"].ToString();
+                if (string.IsNullOrWhiteSpace(sub))
                 {
-                    return new JsonResult(new { success = false, message = _L["Err.InvalidRequest"].Value }) { StatusCode = 400 };
+                    TempData["NoteError"] = _L["Err.InvalidRequest"].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
                 if (string.IsNullOrWhiteSpace(_default_IP))
                 {
-                    return new JsonResult(new { success = false, message = _L["Err.DefaultARequired"].Value }) { StatusCode = 500 };
+                    TempData["NoteError"] = _L["Err.DefaultARequired"].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
-                string fullSubdomain = $"{request.Subdomain.TrimEnd('.')}.{ZoneName}";
-
-                // (опционально — можно проверять существование)
+                string fullSubdomain = $"{sub.TrimEnd('.')}.{ZoneName}";
 
                 var newRecord = new
                 {
@@ -534,17 +549,20 @@ namespace PowerDNS_Web.Pages.zone
                 if (!response.IsSuccessStatusCode)
                 {
                     var err = await response.Content.ReadAsStringAsync();
-                    return new JsonResult(new { success = false, message = _L["Err.AddSubdomainApi", err].Value }) { StatusCode = (int)response.StatusCode };
+                    TempData["NoteError"] = _L["Err.AddSubdomainApi", err].Value;
+                    return RedirectToPage(new { ZoneName });
                 }
 
                 if (_recursor_Enabled == "Enabled") ExecuteBashCommand("rec_control reload-zones");
 
-                return new JsonResult(new { success = true, message = _L["Ans.Subdomain.Added"].Value });
+                TempData["NoteSuccess"] = _L["Ans.Subdomain.Added"].Value;
+                return RedirectToPage(new { ZoneName });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Add subdomain failed for {Zone}", ZoneName);
-                return new JsonResult(new { success = false, message = _L["Err.Internal"].Value }) { StatusCode = 500 };
+                TempData["NoteError"] = _L["Err.Internal"].Value;
+                return RedirectToPage(new { ZoneName });
             }
         }
 
@@ -563,11 +581,20 @@ namespace PowerDNS_Web.Pages.zone
                     CreateNoWindow = true
                 };
 
-                using var process = Process.Start(psi);
-                process.WaitForExit();
-                var err = process.StandardError.ReadToEnd();
-                if (!string.IsNullOrEmpty(err))
-                    _logger.LogError("Command '{Cmd}' error: {Err}", command, err);
+                var process = Process.Start(psi);
+                if (process == null)
+                {
+                    _logger.LogError("Failed to start process for '{Cmd}'", command);
+                    return;
+                }
+
+                using (process)
+                {
+                    process.WaitForExit();
+                    var err = process.StandardError.ReadToEnd();
+                    if (!string.IsNullOrEmpty(err))
+                        _logger.LogError("Command '{Cmd}' error: {Err}", command, err);
+                }
             }
             catch (Exception ex)
             {
@@ -581,30 +608,20 @@ namespace PowerDNS_Web.Pages.zone
             raw = raw.Trim();
             if (raw.StartsWith("\"")) raw = raw[1..];
             if (raw.EndsWith("\"")) raw = raw[..^1];
-            // raw = raw.Replace("\"", "\\\""); // включить при необходимости
             return $"\"{raw}\"";
-        }
-
-        private bool IsAjaxRequest()
-        {
-            var accept = Request.Headers["Accept"].ToString();
-            var xhr = Request.Headers["X-Requested-With"].ToString();
-            return accept.Contains("application/json", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(xhr, "XMLHttpRequest", StringComparison.OrdinalIgnoreCase)
-                || Request.ContentType?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true;
         }
 
         private AddRecordRequest ParseAddRecordFromForm()
         {
             var type = Request.Form["RecordType"].ToString();
-            string value = Request.Form["Value"];
-            if (type == "TXT") value = Request.Form["TxtValue"];
-            else if (type == "NS") value = Request.Form["NsTarget"];
-            else if (type == "HTTPS") value = Request.Form["HttpsValue"];
+            string value = Request.Form["Value"].ToString();
+            if (type == "TXT") value = Request.Form["TxtValue"].ToString();
+            else if (type == "NS") value = Request.Form["NsTarget"].ToString();
+            else if (type == "HTTPS") value = Request.Form["HttpsValue"].ToString();
 
             return new AddRecordRequest
             {
-                Subdomain = Request.Form["Subdomain"],
+                Subdomain = Request.Form["Subdomain"].ToString(),
                 RecordType = type,
                 Value = value,
                 Ttl = int.TryParse(Request.Form["Ttl"], out var ttl) ? ttl : null,
@@ -619,17 +636,17 @@ namespace PowerDNS_Web.Pages.zone
         {
             return new EditRecordRequest
             {
-                Name = Request.Form["Name"],
-                Type = Request.Form["Type"],
-                OldValue = Request.Form["OldValue"],
-                Value = Request.Form["Value"],
+                Name = Request.Form["Name"].ToString(),
+                Type = Request.Form["Type"].ToString(),
+                OldValue = Request.Form["OldValue"].ToString(),
+                Value = Request.Form["Value"].ToString(),
                 Ttl = int.TryParse(Request.Form["Ttl"], out var ttl) ? ttl : null,
                 MxPriority = int.TryParse(Request.Form["MxPriority"], out var mx) ? mx : null,
                 SrvPriority = int.TryParse(Request.Form["SrvPriority"], out var sp) ? sp : null,
                 SrvWeight = int.TryParse(Request.Form["SrvWeight"], out var sw) ? sw : null,
                 SrvPort = int.TryParse(Request.Form["SrvPort"], out var sport) ? sport : null,
-                SoaNs = Request.Form["SoaNs"],
-                SoaEmail = Request.Form["SoaEmail"],
+                SoaNs = Request.Form["SoaNs"].ToString(),
+                SoaEmail = Request.Form["SoaEmail"].ToString(),
                 SoaRefresh = int.TryParse(Request.Form["SoaRefresh"], out var sr) ? sr : null,
                 SoaRetry = int.TryParse(Request.Form["SoaRetry"], out var sry) ? sry : null,
                 SoaExpire = int.TryParse(Request.Form["SoaExpire"], out var se) ? se : null,
