@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using PowerDNS_Web;
@@ -44,7 +43,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/error/403";
     });
 
-// ===== Auth =====
+// ===== Razor Pages =====
 builder.Services
     .AddRazorPages(options =>
     {
@@ -56,18 +55,9 @@ builder.Services
     .AddViewLocalization()
     .AddDataAnnotationsLocalization();
 
-builder.Services.AddRazorPages(options =>
-{
-    options.Conventions.AuthorizeFolder("/");
-    options.Conventions.AllowAnonymousToPage("/login");
-    options.Conventions.AllowAnonymousToPage("/access-denied");
-    options.Conventions.AllowAnonymousToPage("/logout");
-});
-
 // ===== App services =====
 builder.Services.AddSingleton<Functions>();
 builder.Services.AddHttpClient();
-builder.Services.AddRazorPages();
 
 // ===== Authorization =====
 builder.Services.AddAuthorization(options =>
@@ -86,32 +76,11 @@ using (var scope = app.Services.CreateScope())
     fn.CheckDTExist();
 }
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler(errorApp =>
-    {
-        errorApp.Run(async context =>
-        {
-            var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
-            if (exceptionHandlerFeature?.Error != null)
-            {
-                Log.Error(exceptionHandlerFeature.Error, "An unhandled exception has occurred.");
-            }
-
-            Log.Information("Redirecting to the error page.");
-            context.Response.Redirect("/Error");
-        });
-    });
-}
-else
-{
-    app.UseDeveloperExceptionPage();
-}
-
 var locOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value;
 app.UseRequestLocalization(locOptions);
 
 app.UseStaticFiles();
+
 app.UseRouting();
 
 app.UseAuthentication();
