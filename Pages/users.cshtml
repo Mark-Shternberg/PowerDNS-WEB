@@ -1,36 +1,38 @@
 ﻿@page
 @model PowerDNS_Web.Pages.userModel
+@using System.Text.Json
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer L
 @{
-    ViewData["Title"] = "User Management";
+    ViewData["Title"] = L["UM_Title"];
 }
 
 <div class="container mt-4">
-    <h2 class="text-center mb-4"><i class="fa fa-users me-2"></i>User Management</h2>
+    <h2 class="text-center mb-4"><i class="fa fa-users me-2"></i>@L["UM_Header"]</h2>
 
     <div class="row g-3">
         <!-- ADD USER -->
         <div class="col-md-4">
             <div class="card p-4 shadow-sm">
-                <h5 class="text-center mb-3">Add New User</h5>
+                <h5 class="text-center mb-3">@L["UM_AddNewUser"]</h5>
                 <form id="loginForm" method="post" novalidate>
                     <div class="mb-3">
-                        <input class="form-control" name="username" id="username" type="text" placeholder="Username" required />
+                        <input class="form-control" name="username" id="username" type="text" placeholder="@L["UM_Placeholder_Username"]" required />
                     </div>
 
                     <div class="mb-3">
-                        <label for="role" class="form-label">Select Role</label>
+                        <label for="role" class="form-label">@L["UM_Label_SelectRole"]</label>
                         <select class="form-control" name="role" id="role">
-                            <option value="Administrator">Administrator</option>
-                            <!-- <option value="ReadOnly">ReadOnly</option> -->
+                            <option value="Administrator">@L["UM_Role_Administrator"]</option>
+                            <!-- <option value="ReadOnly">@L["UM_Role_ReadOnly"]</option> -->
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <input class="form-control" name="password" id="password" type="password" placeholder="Password" required />
+                        <input class="form-control" name="password" id="password" type="password" placeholder="@L["UM_Placeholder_Password"]" required />
                     </div>
 
                     <button type="submit" id="btn-save" class="btn btn-primary w-100">
-                        <i class="fa fa-user-plus me-1"></i> Add User
+                        <i class="fa fa-user-plus me-1"></i> @L["UM_Btn_AddUser"]
                     </button>
                 </form>
             </div>
@@ -42,10 +44,10 @@
                 <table class="table table-hover text-center align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th>Username</th>
-                            <th>Role</th>
-                            <th>Password</th>
-                            <th style="width:200px;">Actions</th>
+                            <th>@L["UM_Th_Username"]</th>
+                            <th>@L["UM_Th_Role"]</th>
+                            <th>@L["UM_Th_Password"]</th>
+                            <th style="width:200px;">@L["UM_Th_Actions"]</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,23 +60,23 @@
                                     <td>
                                         <span id="role_old_@item.username">@item.role</span>
                                         <select hidden name="role" id="role_new_@item.username" class="form-control">
-                                            <option value="Administrator" selected="@(item.role == "Administrator" ? "selected" : null)">Administrator</option>
-                                            <!-- <option value="ReadOnly" selected="@(item.role == "ReadOnly" ? "selected" : null)">ReadOnly</option> -->
+                                            <option value="Administrator" selected="@(item.role == "Administrator" ? "selected" : null)">@L["UM_Role_Administrator"]</option>
+                                            <!-- <option value="ReadOnly" selected="@(item.role == "ReadOnly" ? "selected" : null)">@L["UM_Role_ReadOnly"]</option> -->
                                         </select>
                                     </td>
                                     <td>
-                                        <input hidden name="password" id="password_new_@item.username" class="form-control" placeholder="New password">
+                                        <input hidden name="password" id="password_new_@item.username" class="form-control" placeholder="@L["UM_Placeholder_NewPassword"]">
                                     </td>
                                     <td>
                                         <div class="d-flex justify-content-center gap-2">
-                                            <button type="button" class="btn btn-warning btn-sm btn-edit" data-id="@item.username" title="Edit">
+                                            <button type="button" class="btn btn-warning btn-sm btn-edit" data-id="@item.username" title="@L["UM_Btn_Edit"]">
                                                 <i class="fa fa-edit"></i>
                                             </button>
-                                            <button hidden type="button" id="cancel_@item.username" class="btn btn-sm btn-default" data-id="@item.username">Cancel</button>
-                                            <button hidden type="button" class="btn btn-success btn-sm btn-save-edit" data-id="@item.username">
-                                                <i class="fa fa-save"></i> Save
+                                            <button hidden type="button" id="cancel_@item.username" class="btn btn-sm btn-default" data-id="@item.username">@L["UM_Btn_Cancel"]</button>
+                                            <button hidden type="button" class="btn btn-success btn-sm btn-save-edit" data-id="@item.username" title="@L["UM_Btn_Save"]">
+                                                <i class="fa fa-save"></i> @L["UM_Btn_Save"]
                                             </button>
-                                            <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="@item.username" title="Delete">
+                                            <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="@item.username" title="@L["UM_Btn_Delete"]">
                                                 <i class="fa fa-trash"></i>
                                             </button>
                                         </div>
@@ -94,15 +96,15 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmModalLabel">Confirm Deletion</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="confirmModalLabel">@L["UM_Modal_ConfirmDeletion"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["UM_Btn_Cancel"]"></button>
             </div>
             <div class="modal-body">
                 <p id="confirmMessage" class="mb-0"></p>
             </div>
             <div class="modal-footer">
-                <button id="confirmNo" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button id="confirmYes" class="btn btn-danger">Delete</button>
+                <button id="confirmNo" class="btn btn-secondary" data-bs-dismiss="modal">@L["UM_Btn_Cancel"]</button>
+                <button id="confirmYes" class="btn btn-danger">@L["UM_Btn_Delete"]</button>
             </div>
         </div>
     </div>
@@ -112,6 +114,19 @@
 
 @section Scripts {
     <script>
+        // Локализованные строки в JS
+        const T = {
+            fillAll: @Html.Raw(JsonSerializer.Serialize(L["UM_Msg_FillAll"].Value)),
+            usernameShort: @Html.Raw(JsonSerializer.Serialize(L["UM_Msg_UsernameTooShort"].Value)),
+            regError: @Html.Raw(JsonSerializer.Serialize(L["UM_Msg_RegistrationError"].Value)),
+            userAdded: @Html.Raw(JsonSerializer.Serialize(L["UM_Msg_UserAdded"].Value)),
+            saveError: @Html.Raw(JsonSerializer.Serialize(L["UM_Msg_SaveError"].Value)),
+            saveOk: @Html.Raw(JsonSerializer.Serialize(L["UM_Msg_SaveOk"].Value)),
+            confirmDeletePrefix: @Html.Raw(JsonSerializer.Serialize(L["UM_Modal_ConfirmDelete_Prefix"].Value)),
+            deletionError: @Html.Raw(JsonSerializer.Serialize(L["UM_Msg_UserDeletionError"].Value)),
+            deletedPrefix: @Html.Raw(JsonSerializer.Serialize(L["UM_Msg_UserDeletedPrefix"].Value))
+        };
+
         // ===== CSRF =====
         function getCsrf() {
             const el = document.querySelector('input[name="__RequestVerificationToken"]');
@@ -127,11 +142,11 @@
             const password = document.getElementById('password').value;
 
             if (!username || !password) {
-                showToast('warning', 'Fill all fields.');
+                showToast('warning', T.fillAll);
                 return;
             }
             if (username.length < 3) {
-                showToast('warning', 'Username must be at least 3 characters.');
+                showToast('warning', T.usernameShort);
                 return;
             }
 
@@ -149,12 +164,12 @@
                 });
 
                 const data = await resp.json();
-                if (!resp.ok || !data?.success) throw new Error(data?.message || 'Registration error.');
+                if (!resp.ok || !data?.success) throw new Error(data?.message || T.regError);
 
-                showToast('success', 'User added!');
+                showToast('success', T.userAdded);
                 setTimeout(() => location.reload(), 600);
             } catch (err) {
-                showToast('danger', err.message || 'Registration error.');
+                showToast('danger', err.message || T.regError);
             } finally {
                 document.getElementById('btn-save').disabled = false;
             }
@@ -229,9 +244,9 @@
                 });
 
                 const data = await resp.json();
-                if (!resp.ok || !data?.success) throw new Error(data?.message || 'Save error.');
+                if (!resp.ok || !data?.success) throw new Error(data?.message || T.saveError);
 
-                showToast('success', 'Save successful!');
+                showToast('success', T.saveOk);
                 // UPDATE ROW UI
                 row.querySelector('#password_new_' + id).value = '';
                 row.querySelector('#password_new_' + id).hidden = true;
@@ -245,7 +260,7 @@
                 row.querySelector('.btn-delete[data-id="' + id + '"]').hidden = false;
 
             } catch (err) {
-                showToast('danger', err.message || 'Save error.');
+                showToast('danger', err.message || T.saveError);
             } finally {
                 btn.disabled = false;
             }
@@ -258,7 +273,7 @@
             const username = btn.dataset.id;
             pendingDelete = { username, rowId: 'row_' + username };
 
-            document.getElementById('confirmMessage').textContent = `Are you sure you want to delete user: "${username}"?`;
+            document.getElementById('confirmMessage').textContent = `${T.confirmDeletePrefix} "${username}"?`;
 
             // RESET "YES" HANDLER TO AVOID ACCUMULATION
             const yes = document.getElementById('confirmYes');
@@ -287,15 +302,15 @@
                 });
 
                 const data = await resp.json();
-                if (!resp.ok || !data?.success) throw new Error(data?.message || 'User deletion error.');
+                if (!resp.ok || !data?.success) throw new Error(data?.message || T.deletionError);
 
                 // CLOSE MODAL + REMOVE ROW + TOAST
                 bootstrap.Modal.getInstance(document.getElementById('confirmModal'))?.hide();
                 document.getElementById(rowId)?.remove();
-                showToast('success', `User "${username}" deleted.`);
+                showToast('success', `${T.deletedPrefix} "${username}".`);
 
             } catch (err) {
-                showToast('danger', err.message || 'User deletion error.');
+                showToast('danger', err.message || T.deletionError);
             }
         }
     </script>

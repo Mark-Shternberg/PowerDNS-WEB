@@ -1,7 +1,8 @@
 ﻿@page
 @model PowerDNS_Web.Pages.ZonesModel
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer L
 @{
-    ViewData["Title"] = "Zones";
+    ViewData["Title"] = L["Title"];
 }
 
 <div class="container py-3">
@@ -9,8 +10,8 @@
     <!-- HEADER -->
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <div>
-            <h2 class="mb-0"><i class="fa fa-shield-halved me-2"></i>Zones</h2>
-            <div class="text-muted small">Authoritative zones management</div>
+            <h2 class="mb-0"><i class="fa fa-shield-halved me-2"></i>@L["Header.Title"]</h2>
+            <div class="text-muted small">@L["Header.Subtitle"]</div>
         </div>
         @if (User.IsInRole("Administrator"))
         {
@@ -20,14 +21,14 @@
                         data-bs-toggle="modal"
                         data-bs-target="#addEditZoneModal"
                         data-mode="add-forward">
-                    <i class="fa fa-plus me-1"></i> Add forward zone
+                    <i class="fa fa-plus me-1"></i> @L["Btn.AddForward"]
                 </button>
                 <button type="button"
                         class="btn btn-outline-primary js-open-add"
                         data-bs-toggle="modal"
                         data-bs-target="#addEditZoneModal"
                         data-mode="add-reverse">
-                    <i class="fa fa-plus me-1"></i> Add reverse zone
+                    <i class="fa fa-plus me-1"></i> @L["Btn.AddReverse"]
                 </button>
             </div>
         }
@@ -37,8 +38,8 @@
     <div class="d-flex justify-content-center mb-3">
         <div class="input-group" style="max-width: 560px;">
             <span class="input-group-text"><i class="fa fa-search"></i></span>
-            <input class="form-control" id="search" type="text" placeholder="Search by domain">
-            <button type="button" id="clear-btn" class="btn btn-default" style="display:none">Clear</button>
+            <input class="form-control" id="search" type="text" placeholder="@L["Search.Placeholder"]">
+            <button type="button" id="clear-btn" class="btn btn-default" style="display:none">@L["Search.Clear"]</button>
         </div>
     </div>
 
@@ -47,12 +48,12 @@
         <table class="table table-hover align-middle" id="main_table">
             <thead class="table-dark">
                 <tr>
-                    <th>Domain</th>
-                    <th style="width: 180px;">Master</th>
-                    <th style="width: 160px;">Type</th>
-                    <th style="width: 220px;">DNSSEC</th>
-                    <th style="width: 140px;">Serial</th>
-                    <th style="width: 240px;">Actions</th>
+                    <th>@L["Th.Domain"]</th>
+                    <th style="width: 180px;">@L["Th.Master"]</th>
+                    <th style="width: 160px;">@L["Th.Type"]</th>
+                    <th style="width: 220px;">@L["Th.DNSSEC"]</th>
+                    <th style="width: 140px;">@L["Th.Serial"]</th>
+                    <th style="width: 240px;">@L["Th.Actions"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -68,21 +69,18 @@
                         <td>
                             @if (type == "Master")
                             {
-                                <span class="badge bg-primary"><i class="fa fa-server me-1"></i>Master</span>
+                                <span class="badge bg-primary"><i class="fa fa-server me-1"></i>@L["Type.Master"]</span>
                             }
                             else if (type == "Slave")
                             {
-
-                                <span class="badge bg-secondary"><i class="fa fa-cloud me-1"></i>Slave</span>
+                                <span class="badge bg-secondary"><i class="fa fa-cloud me-1"></i>@L["Type.Slave"]</span>
                             }
                             else if (type == "Native")
                             {
-
-                                <span class="badge bg-info text-dark"><i class="fa fa-database me-1"></i>Native</span>
+                                <span class="badge bg-info text-dark"><i class="fa fa-database me-1"></i>@L["Type.Native"]</span>
                             }
                             else
                             {
-
                                 <span class="badge bg-warning text-dark"><i class="fa fa-question-circle me-1"></i>@type</span>
                             }
                         </td>
@@ -90,19 +88,19 @@
                             @if (isDnssec)
                             {
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                                    <span class="badge bg-success"><i class="fa fa-key me-1"></i>Enabled</span>
+                                    <span class="badge bg-success"><i class="fa fa-key me-1"></i>@L["Dnssec.Enabled"]</span>
                                     <button type="button"
                                             class="btn btn-sm btn-outline-secondary js-keys"
                                             data-bs-toggle="modal"
                                             data-bs-target="#dnssecKeysModal"
                                             data-zone="@zone.name">
-                                        <i class="fa fa-key me-1"></i>Keys
+                                        <i class="fa fa-key me-1"></i>@L["Btn.Keys"]
                                     </button>
                                 </div>
                             }
                             else
                             {
-                                <span class="badge bg-danger"><i class="fa fa-ban me-1"></i>Disabled</span>
+                                <span class="badge bg-danger"><i class="fa fa-ban me-1"></i>@L["Dnssec.Disabled"]</span>
                             }
                         </td>
                         <td class="text-muted">@zone.serial</td>
@@ -118,15 +116,15 @@
                                         data-master="@zone.Master"
                                         data-dnssec="@(zone.dnssec ? "Enabled" : "Disabled")"
                                         data-serial="@zone.serial">
-                                    <i class="fa fa-edit"></i> Edit
+                                    <i class="fa fa-edit"></i> @L["Btn.Edit"]
                                 </button>
 
                                 <button type="button"
-                                        class="btn btn-sm btn-delete"
+                                        class="btn btn-sm btn-delete btn-danger"
                                         data-bs-toggle="modal"
                                         data-bs-target="#confirmDeleteModal"
                                         data-name="@zone.name">
-                                    <i class="fa fa-trash"></i> Delete
+                                    <i class="fa fa-trash"></i> @L["Btn.Delete"]
                                 </button>
                             </div>
                         </td>
@@ -144,65 +142,70 @@
             <form id="zoneForm" class="needs-validation" method="post" novalidate>
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="Mode" id="form-mode" value="add-forward" />
-
-                <!-- ВАЖНО: hidden kind для disabled select -->
+                <!-- hidden kind for disabled select -->
                 <input type="hidden" id="zone-kind-hidden" name="kind" value="Native" />
 
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addEditZoneLabel">Add zone</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title"
+                        id="addEditZoneLabel"
+                        data-title-add-forward="@L["Modal.AddForwardTitle"]"
+                        data-title-add-reverse="@L["Modal.AddReverseTitle"]"
+                        data-title-edit="@L["Modal.EditTitle"]">
+                        @L["Modal.AddGenericTitle"]
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"]"></button>
                 </div>
 
                 <div class="modal-body">
 
                     <!-- FORWARD NAME -->
                     <div class="mb-3" id="forward-block">
-                        <label for="zone-name" class="form-label">Zone name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="zone-name" name="name" placeholder="example.com" />
-                        <div class="invalid-feedback">Please enter a valid zone name.</div>
+                        <label for="zone-name" class="form-label">@L["Field.ZoneName"] <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="zone-name" name="name" placeholder="@L["Field.ZoneName.Ph"]" />
+                        <div class="invalid-feedback">@L["Field.ZoneName.Invalid"]</div>
                     </div>
 
                     <!-- REVERSE PREFIX -->
                     <div class="mb-3 d-none" id="reverse-block">
-                        <label for="reverse-prefix" class="form-label">Reverse prefix <span class="text-danger">*</span></label>
+                        <label for="reverse-prefix" class="form-label">@L["Field.RevPrefix"] <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="reverse-prefix" name="revprefix" placeholder="192.168.0." />
-                        <div class="form-text">Network prefix (no last octet), e.g. <code>192.168.0.</code></div>
-                        <div class="invalid-feedback">Please enter reverse prefix like 192.168.0.</div>
+                        <div class="form-text">@L["Field.RevPrefix.HelpHtml"]</div>
+                        <div class="invalid-feedback">@L["Field.RevPrefix.Invalid"]</div>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-sm-6">
-                            <label for="zone-kind" class="form-label">Zone type <span class="text-danger">*</span></label>
+                            <label for="zone-kind" class="form-label">@L["Field.ZoneType"] <span class="text-danger">*</span></label>
                             <select id="zone-kind" class="form-select" required>
-                                <option value="Native">Native</option>
-                                <option value="Master">Master</option>
-                                <option value="Slave">Slave</option>
+                                <option value="Native">@L["Type.Native"]</option>
+                                <option value="Master">@L["Type.Master"]</option>
+                                <option value="Slave">@L["Type.Slave"]</option>
                             </select>
-                            <div class="invalid-feedback">Please select zone type.</div>
+                            <div class="invalid-feedback">@L["Field.ZoneType.Invalid"]</div>
                         </div>
                         <div class="col-sm-6">
                             <label for="zone-dnssec" class="form-label">DNSSEC <span class="text-danger">*</span></label>
                             <select id="zone-dnssec" name="dnssec" class="form-select" required>
-                                <option value="Enabled" selected>Enabled</option>
-                                <option value="Disabled">Disabled</option>
+                                <option value="Enabled" selected>@L["Dnssec.Enabled"]</option>
+                                <option value="Disabled">@L["Dnssec.Disabled"]</option>
                             </select>
-                            <div class="invalid-feedback">Please choose DNSSEC state.</div>
+                            <div class="invalid-feedback">@L["Field.Dnssec.Invalid"]</div>
                         </div>
                     </div>
 
                     <div id="slave-block" class="mt-3 d-none">
-                        <label for="zone-master" class="form-label">Master server <span class="text-danger">*</span></label>
+                        <label for="zone-master" class="form-label">@L["Field.MasterServer"] <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="zone-master" name="Master" placeholder="1.2.3.4" />
-                        <div class="invalid-feedback">Master server IP is required for Slave zone.</div>
+                        <div class="invalid-feedback">@L["Field.MasterServer.Invalid"]</div>
                     </div>
 
                     <input type="hidden" id="zone-serial" name="serial" value="0" />
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" id="btn-add" class="btn btn-primary" formaction="?handler=AddZone">Add</button>
-                    <button type="submit" id="btn-save" class="btn btn-warning d-none" formaction="?handler=EditZone">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@L["Btn.Close"]</button>
+                    <button type="submit" id="btn-add" class="btn btn-primary" formaction="?handler=AddZone">@L["Btn.Add"]</button>
+                    <button type="submit" id="btn-save" class="btn btn-warning d-none" formaction="?handler=EditZone">@L["Btn.Save"]</button>
                 </div>
             </form>
         </div>
@@ -216,16 +219,16 @@
             <form method="post" action="?handler=DeleteZone" class="needs-validation" novalidate>
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
-                    <h5 class="modal-title" id="confirmDeleteLabel">Confirm deletion</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="confirmDeleteLabel">@L["Confirm.Title"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"]"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="name" id="delete-zone-name" />
-                    <p class="mb-0">Are you sure you want to delete zone: <strong id="delete-zone-name-view"></strong>?</p>
+                    <p class="mb-0">@L["Confirm.TextPrefix"] <strong id="delete-zone-name-view"></strong>?</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">@L["Btn.Cancel"]</button>
+                    <button type="submit" class="btn btn-danger">@L["Btn.Delete"]</button>
                 </div>
             </form>
         </div>
@@ -237,16 +240,16 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-warning">
-                <h5 class="modal-title" id="dnssecKeysLabel"><i class="fa fa-key me-2"></i>DNSSEC Keys</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="dnssecKeysLabel"><i class="fa fa-key me-2"></i>@L["Keys.Title"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"]"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning d-flex align-items-center" role="alert">
                     <i class="fa fa-exclamation-triangle fa-lg me-2"></i>
-                    <div>Provide the DS records below to your domain registrar.</div>
+                    <div>@L["Keys.Warning"]</div>
                 </div>
                 <div id="dsRecordsContainer" class="vstack gap-2">
-                    <div class="text-muted">Loading…</div>
+                    <div class="text-muted">@L["Common.Loading"]</div>
                 </div>
             </div>
         </div>

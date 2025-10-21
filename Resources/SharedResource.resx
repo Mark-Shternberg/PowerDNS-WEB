@@ -42,19 +42,15 @@
 
   <!-- NAV -->
   <data name="Nav.Dashboard"><value>Dashboard</value></data>
-  <data name="Nav.Invoices"><value>Invoices</value></data>
-  <data name="Nav.CartridgeInventories"><value>Cartridge inventories</value></data>
-  <data name="Nav.Assets"><value>Assets</value></data>
-  <data name="Nav.Lists"><value>Lists</value></data>
-  <data name="Nav.Docs"><value>Documents</value></data>
-  <data name="Nav.Licenses"><value>Licenses</value></data>
   <data name="Nav.AdminArea"><value>Admin area</value></data>
   <data name="Nav.Users"><value>Users</value></data>
-  <data name="Nav.License"><value>License</value></data>
   <data name="Nav.Settings"><value>Settings</value></data>
   <data name="Nav.Logout"><value>Logout</value></data>
+  <data name="Nav.Logs"><value>Logs</value></data>
   <data name="Nav.Signin"><value>Sign in</value></data>
   <data name="Nav.Documentation"><value>Documentation</value></data>
+  <data name="Nav.Authoritative"><value>Authoritative</value></data>
+  <data name="Nav.Recursor"><value>Recursor</value></data>
 
   <!-- BOOL -->
   <data name="Bool.Yes"><value>Yes</value></data>

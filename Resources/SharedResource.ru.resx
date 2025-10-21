@@ -42,19 +42,15 @@
   
   <!-- NAV -->
   <data name="Nav.Dashboard"><value>Панель</value></data>
-  <data name="Nav.Invoices"><value>Счета</value></data>
-  <data name="Nav.CartridgeInventories"><value>Инвентаризации картриджей</value></data>
-  <data name="Nav.Assets"><value>Активы</value></data>
-  <data name="Nav.Lists"><value>Списки</value></data>
-  <data name="Nav.Docs"><value>Документы</value></data>
-  <data name="Nav.Licenses"><value>Лицензии</value></data>
   <data name="Nav.AdminArea"><value>Админ-раздел</value></data>
   <data name="Nav.Users"><value>Пользователи</value></data>
-  <data name="Nav.License"><value>Лицензия</value></data>
   <data name="Nav.Settings"><value>Настройки</value></data>
   <data name="Nav.Logout"><value>Выйти</value></data>
+  <data name="Nav.Logs"><value>Логи</value></data>
   <data name="Nav.Signin"><value>Войти</value></data>
   <data name="Nav.Documentation"><value>Документация</value></data>
+  <data name="Nav.Authoritative"><value>Авторитарный DNS</value></data>
+  <data name="Nav.Recursor"><value>Рекурсор</value></data>
 
   <!-- BOOL -->
   <data name="Bool.Yes"><value>Да</value></data>

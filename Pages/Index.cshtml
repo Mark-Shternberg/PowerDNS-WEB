@@ -1,7 +1,18 @@
 ﻿@page
 @model PowerDNS_Web.Pages.IndexModel
+@using System.Text.Json
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer L
 @{
-    ViewData["Title"] = "PowerDNS Statistics";
+    ViewData["Title"] = L["Title"];
+    // пакуем строки для JS (безопасно экранируется JSON'ом)
+    var i18n = new
+    {
+        NoData = L["Common.NoData"].Value,
+        Loading = L["Common.Loading"].Value,
+        ChartQpsLabel = L["Chart.Dataset.Qps"].Value,
+        TimeH = L["Time.H"].Value,
+        TimeM = L["Time.M"].Value
+    };
 }
 
 <div class="container mt-3">
@@ -9,11 +20,10 @@
     <!-- ===== PAGE HEADER ===== -->
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <div>
-            <h2 class="mb-0"><i class="fa fa-chart-line me-2"></i>PowerDNS Overview</h2>
-            <div class="text-muted small">Live metrics & recursor stats</div>
+            <h2 class="mb-0"><i class="fa fa-chart-line me-2"></i>@L["OverviewTitle"]</h2>
+            <div class="text-muted small">@L["OverviewSubtitle"]</div>
         </div>
         <div class="d-flex align-items-center gap-2">
-
         </div>
     </div>
 
@@ -22,7 +32,7 @@
         <div class="col">
             <div class="card stat-card h-100">
                 <div class="card-body">
-                    <div class="stat-label">Active Port</div>
+                    <div class="stat-label">@L["Metric.ActivePort"]</div>
                     <div class="stat-value" id="activePort">--</div>
                 </div>
             </div>
@@ -30,7 +40,7 @@
         <div class="col">
             <div class="card stat-card h-100">
                 <div class="card-body">
-                    <div class="stat-label">Uptime</div>
+                    <div class="stat-label">@L["Metric.Uptime"]</div>
                     <div class="stat-value" id="uptime">--</div>
                 </div>
             </div>
@@ -38,7 +48,7 @@
         <div class="col">
             <div class="card stat-card h-100">
                 <div class="card-body">
-                    <div class="stat-label">Total Queries</div>
+                    <div class="stat-label">@L["Metric.TotalQueries"]</div>
                     <div class="stat-value" id="totalQueries">--</div>
                 </div>
             </div>
@@ -46,7 +56,7 @@
         <div class="col">
             <div class="card stat-card h-100">
                 <div class="card-body">
-                    <div class="stat-label">QPS (approx)</div>
+                    <div class="stat-label">@L["Metric.QpsApprox"]</div>
                     <div class="stat-value" id="qps">--</div>
                 </div>
             </div>
@@ -54,35 +64,35 @@
     </div>
 
     <!-- ===== DETAIL LISTS ===== -->
-    <h5 class="mt-4 mb-2 text-center">Statistics</h5>
+    <h5 class="mt-4 mb-2 text-center">@L["Section.Statistics"]</h5>
     <div class="row g-3">
         <div class="col-12 col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-header text-center bg-body-secondary">
-                    <h6 class="mb-0 text-warning-emphasis"><i class="fa fa-exclamation-triangle me-1"></i>Queries for Missing Types</h6>
+                    <h6 class="mb-0 text-warning-emphasis"><i class="fa fa-exclamation-triangle me-1"></i>@L["Card.MissingTypes"]</h6>
                 </div>
                 <div class="card-body">
-                    <pre id="noerror-queries" class="log-container">Loading...</pre>
+                    <pre id="noerror-queries" class="log-container">@L["Common.Loading"]</pre>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-header text-center bg-body-secondary">
-                    <h6 class="mb-0 text-danger-emphasis"><i class="fa fa-exclamation-circle me-1"></i>Queries for Nonexistent Records</h6>
+                    <h6 class="mb-0 text-danger-emphasis"><i class="fa fa-exclamation-circle me-1"></i>@L["Card.Nonexistent"]</h6>
                 </div>
                 <div class="card-body">
-                    <pre id="nxdomain-queries" class="log-container">Loading...</pre>
+                    <pre id="nxdomain-queries" class="log-container">@L["Common.Loading"]</pre>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-header text-center bg-body-secondary">
-                    <h6 class="mb-0 text-success-emphasis"><i class="fa fa-check-circle me-1"></i>UDP Queries Received</h6>
+                    <h6 class="mb-0 text-success-emphasis"><i class="fa fa-check-circle me-1"></i>@L["Card.UdpReceived"]</h6>
                 </div>
                 <div class="card-body">
-                    <pre id="queries" class="log-container">Loading...</pre>
+                    <pre id="queries" class="log-container">@L["Common.Loading"]</pre>
                 </div>
             </div>
         </div>
@@ -91,13 +101,13 @@
     @if (ViewData["RecursorEnabled"]?.ToString() == "Enabled")
     {
         <!-- ===== RECURSOR METRICS ===== -->
-        <h5 class="mt-5 mb-2 text-center"><i class="fa fa-database me-2"></i>Recursor</h5>
+        <h5 class="mt-5 mb-2 text-center"><i class="fa fa-database me-2"></i>@L["Recursor.Title"]</h5>
 
         <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-lg-4">
             <div class="col">
                 <div class="card stat-card h-100">
                     <div class="card-body">
-                        <div class="stat-label">Recursor Port</div>
+                        <div class="stat-label">@L["Recursor.Port"]</div>
                         <div class="stat-value">53</div>
                     </div>
                 </div>
@@ -105,7 +115,7 @@
             <div class="col">
                 <div class="card stat-card h-100">
                     <div class="card-body">
-                        <div class="stat-label">Recursor Uptime</div>
+                        <div class="stat-label">@L["Recursor.Uptime"]</div>
                         <div class="stat-value" id="recursorUptime">--</div>
                     </div>
                 </div>
@@ -113,7 +123,7 @@
             <div class="col">
                 <div class="card stat-card h-100">
                     <div class="card-body">
-                        <div class="stat-label">Cache Hits</div>
+                        <div class="stat-label">@L["Recursor.CacheHits"]</div>
                         <div class="stat-value" id="recursorCacheHits">--</div>
                     </div>
                 </div>
@@ -121,8 +131,12 @@
             <div class="col">
                 <div class="card stat-card h-100">
                     <div class="card-body">
-                        <div class="stat-label">Cache Misses · Hit Ratio</div>
-                        <div class="stat-value"><span id="recursorCacheMisses">--</span><span class="mx-2 text-muted">·</span><span id="recursorHitRatio">--</span></div>
+                        <div class="stat-label">@L["Recursor.CacheMissesRatio"]</div>
+                        <div class="stat-value">
+                            <span id="recursorCacheMisses">--</span>
+                            <span class="mx-2 text-muted">·</span>
+                            <span id="recursorHitRatio">--</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -133,20 +147,20 @@
             <div class="col-12 col-md-6">
                 <div class="card shadow-sm h-100">
                     <div class="card-header text-center bg-body-secondary">
-                        <h6 class="mb-0">Top Requests</h6>
+                        <h6 class="mb-0">@L["Recursor.TopRequests"]</h6>
                     </div>
                     <div class="card-body">
-                        <pre id="top-queries" class="log-container">Loading...</pre>
+                        <pre id="top-queries" class="log-container">@L["Common.Loading"]</pre>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-md-6">
                 <div class="card shadow-sm h-100">
                     <div class="card-header text-center bg-body-secondary">
-                        <h6 class="mb-0"><i class="fa fa-network-wired me-1"></i>Top Remotes</h6>
+                        <h6 class="mb-0"><i class="fa fa-network-wired me-1"></i>@L["Recursor.TopRemotes"]</h6>
                     </div>
                     <div class="card-body">
-                        <pre id="top-remotes" class="log-container">Loading...</pre>
+                        <pre id="top-remotes" class="log-container">@L["Common.Loading"]</pre>
                     </div>
                 </div>
             </div>
@@ -155,7 +169,7 @@
 
     <!-- ===== CHART: QPS LAST 5 MIN ===== -->
     <div class="mt-5">
-        <h6 class="text-muted mb-2">Query rate (QPS), last 5 minutes</h6>
+        <h6 class="text-muted mb-2">@L["Chart.QpsLast5m"]</h6>
         <canvas id="queryChart"></canvas>
     </div>
 </div>
@@ -166,156 +180,156 @@
 <script src="~/js/chart.js"></script>
 
 @section Scripts {
-<script>
-    // ===== SAFE NUMBER PARSING =====
-    const N = v => Number.isFinite(+v) ? +v : 0;
+    <script>
+        // i18n strings from server
+        const I18N = @Html.Raw(JsonSerializer.Serialize(i18n));
 
-    // ===== FORMAT UPTIME (H:M) =====
-    function formatUptime(seconds) {
-        const s = N(seconds);
-        const h = Math.floor(s / 3600);
-        const m = Math.floor((s % 3600) / 60);
-        return `${h}h ${m}m`;
-    }
+        // ===== SAFE NUMBER PARSING =====
+        const N = v => Number.isFinite(+v) ? +v : 0;
 
-    // ===== UPDATE TYPED LIST INTO PRE (NO NESTED <PRE>) =====
-    function updateQueryList(elementId, data) {
-        const container = document.getElementById(elementId);
-        if (!container) return;
-
-        if (!data || data.length === 0) {
-            container.textContent = "No data available";
-            return;
+        // ===== FORMAT UPTIME (H:M) =====
+        function formatUptime(seconds) {
+            const s = N(seconds);
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            return `${h}${I18N.TimeH} ${m}${I18N.TimeM}`;
         }
 
-        const maxNameLength = 40;
-        const maxValueLength = 8;
+        // ===== UPDATE TYPED LIST INTO PRE (NO NESTED <PRE>) =====
+        function updateQueryList(elementId, data) {
+            const container = document.getElementById(elementId);
+            if (!container) return;
 
-        const lines = data.map(entry => {
-            const fullName = String(entry?.name ?? "");
-            const shortName = fullName.length > maxNameLength
-                ? fullName.substring(0, maxNameLength - 3) + "..."
-                : fullName;
-
-            const value = String(entry?.value ?? "").padStart(maxValueLength, " ");
-            return `<span class="query-item" title="${fullName}">${shortName}</span> <span class="query-value">${value}</span>`;
-        });
-
-        container.innerHTML = lines.join("\n");
-    }
-
-    // ===== QPS ROLLING BUFFER (5 MIN  5s) =====
-    const BUFFER_POINTS = 60; // 60 * 5s = 5 minutes
-    const labels = [];
-    const qpsData = [];
-    let lastTotal = null;
-    let lastTs = null;
-
-    // ===== CHART INIT (SINGLE DATASET) =====
-    let qpsChart = null;
-    function ensureChart() {
-        if (qpsChart) return qpsChart;
-        const ctx = document.getElementById('queryChart');
-        if (!ctx) return null;
-
-        // NOTE: COLORS LEFT DEFAULT (MATCHES CURRENT THEME)
-        qpsChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'QPS',
-                    data: qpsData,
-                    tension: 0.25,
-                    pointRadius: 0,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: { ticks: { maxTicksLimit: 10 } },
-                    y: { beginAtZero: true }
-                },
-                plugins: {
-                    legend: { display: false }
-                }
+            if (!data || data.length === 0) {
+                container.textContent = I18N.NoData;
+                return;
             }
-        });
-        // GIVE CANVAS SOME HEIGHT
-        ctx.parentElement.style.height = '260px';
-        return qpsChart;
-    }
 
-    function pushQpsPoint(qps) {
-        const now = new Date();
-        const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        labels.push(label);
-        qpsData.push(qps);
+            const maxNameLength = 40;
+            const maxValueLength = 8;
 
-        if (labels.length > BUFFER_POINTS) { labels.shift(); qpsData.shift(); }
-        const c = ensureChart();
-        if (c) c.update('none'); // NO ANIMATION FOR SNAPPY UPDATES
-    }
+            const lines = data.map(entry => {
+                const fullName = String(entry?.name ?? "");
+                const shortName = fullName.length > maxNameLength
+                    ? fullName.substring(0, maxNameLength - 3) + "..."
+                    : fullName;
 
-    // ===== FETCH & RENDER POWERDNS STATS =====
-    async function fetchPowerDNSStats() {
-        try {
-            const resp = await fetch("/Index?handler=Stats", {
-                method: "GET",
-                headers: { "Accept": "application/json" }
+                const value = String(entry?.value ?? "").padStart(maxValueLength, " ");
+                return `<span class="query-item" title="${fullName}">${shortName}</span> <span class="query-value">${value}</span>`;
             });
-            const data = await resp.json();
-            if (!data?.success) { console.error("Stats error:", data?.message); return; }
 
-            // CORE METRICS
-            const activePort = ("@(ViewData["RecursorEnabled"])".toLowerCase() === "enabled")
-                ? 5300 : 53;
-            document.getElementById("activePort").textContent = activePort;
-
-            document.getElementById("uptime").textContent = formatUptime(data.uptime);
-            document.getElementById("totalQueries").textContent = data.totalQueries ?? "--";
-
-            // QPS CALC (DELTA / ELAPSED SEC)
-            const ts = Date.now();
-            if (lastTotal !== null && lastTs !== null) {
-                const delta = Math.max(0, N(data.totalQueries) - N(lastTotal));
-                const elapsed = Math.max(1, (ts - lastTs) / 1000.0);
-                const qps = +(delta / elapsed).toFixed(2);
-                document.getElementById("qps").textContent = qps.toString();
-                pushQpsPoint(qps);
-            }
-            lastTotal = N(data.totalQueries);
-            lastTs = ts;
-
-            // LISTS
-            updateQueryList("noerror-queries", data.noerrorQueries);
-            updateQueryList("nxdomain-queries", data.nxdomainQueries);
-            updateQueryList("queries", data.queries);
-
-            // RECURSOR (IF DOM NODES EXIST)
-            const haveRecursor = document.getElementById("recursorCacheHits");
-            if (haveRecursor) {
-                const hits = N(data.recursorCacheHits);
-                const misses = N(data.recursorCacheMisses);
-                const total = hits + misses;
-
-                document.getElementById("recursorCacheHits").textContent = (hits || hits === 0) ? hits : "--";
-                document.getElementById("recursorCacheMisses").textContent = (misses || misses === 0) ? misses : "--";
-                document.getElementById("recursorUptime").textContent = formatUptime(data.recursorUptime ?? 0);
-                document.getElementById("recursorHitRatio").textContent = total > 0 ? ((hits / total) * 100).toFixed(1) + "%" : "--";
-
-                updateQueryList("top-queries", data.topQueries);
-                updateQueryList("top-remotes", data.topRemotes);
-            }
-        } catch (e) {
-            console.error("Failed to load stats:", e);
+            container.innerHTML = lines.join("\n");
         }
-    }
 
-    // ===== INIT =====
-    fetchPowerDNSStats();
-    setInterval(fetchPowerDNSStats, 5000);
-</script>
+        // ===== QPS ROLLING BUFFER (5 MIN  5s) =====
+        const BUFFER_POINTS = 60; // 60 * 5s = 5 minutes
+        const labels = [];
+        const qpsData = [];
+        let lastTotal = null;
+        let lastTs = null;
+
+        // ===== CHART INIT (SINGLE DATASET) =====
+        let qpsChart = null;
+        function ensureChart() {
+            if (qpsChart) return qpsChart;
+            const ctx = document.getElementById('queryChart');
+            if (!ctx) return null;
+
+            qpsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: I18N.ChartQpsLabel,
+                        data: qpsData,
+                        tension: 0.25,
+                        pointRadius: 0,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { maxTicksLimit: 10 } },
+                        y: { beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+            ctx.parentElement.style.height = '260px';
+            return qpsChart;
+        }
+
+        function pushQpsPoint(qps) {
+            const now = new Date();
+            const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            labels.push(label);
+            qpsData.push(qps);
+
+            if (labels.length > BUFFER_POINTS) { labels.shift(); qpsData.shift(); }
+            const c = ensureChart();
+            if (c) c.update('none');
+        }
+
+        // ===== FETCH & RENDER POWERDNS STATS =====
+        async function fetchPowerDNSStats() {
+            try {
+                const resp = await fetch("/Index?handler=Stats", {
+                    method: "GET",
+                    headers: { "Accept": "application/json" }
+                });
+                const data = await resp.json();
+                if (!data?.success) { console.error("Stats error:", data?.message); return; }
+
+                // CORE METRICS
+                const activePort = ("@(ViewData["RecursorEnabled"])".toLowerCase() === "enabled") ? 5300 : 53;
+                document.getElementById("activePort").textContent = activePort;
+
+                document.getElementById("uptime").textContent = formatUptime(data.uptime);
+                document.getElementById("totalQueries").textContent = data.totalQueries ?? "--";
+
+                // QPS CALC
+                const ts = Date.now();
+                if (lastTotal !== null && lastTs !== null) {
+                    const delta = Math.max(0, N(data.totalQueries) - N(lastTotal));
+                    const elapsed = Math.max(1, (ts - lastTs) / 1000.0);
+                    const qps = +(delta / elapsed).toFixed(2);
+                    document.getElementById("qps").textContent = qps.toString();
+                    pushQpsPoint(qps);
+                }
+                lastTotal = N(data.totalQueries);
+                lastTs = ts;
+
+                // LISTS
+                updateQueryList("noerror-queries", data.noerrorQueries);
+                updateQueryList("nxdomain-queries", data.nxdomainQueries);
+                updateQueryList("queries", data.queries);
+
+                // RECURSOR (IF DOM NODES EXIST)
+                const haveRecursor = document.getElementById("recursorCacheHits");
+                if (haveRecursor) {
+                    const hits = N(data.recursorCacheHits);
+                    const misses = N(data.recursorCacheMisses);
+                    const total = hits + misses;
+
+                    document.getElementById("recursorCacheHits").textContent = (hits || hits === 0) ? hits : "--";
+                    document.getElementById("recursorCacheMisses").textContent = (misses || misses === 0) ? misses : "--";
+                    document.getElementById("recursorUptime").textContent = formatUptime(data.recursorUptime ?? 0);
+                    document.getElementById("recursorHitRatio").textContent = total > 0 ? ((hits / total) * 100).toFixed(1) + "%" : "--";
+
+                    updateQueryList("top-queries", data.topQueries);
+                    updateQueryList("top-remotes", data.topRemotes);
+                }
+            } catch (e) {
+                console.error("Failed to load stats:", e);
+            }
+        }
+
+        // ===== INIT =====
+        fetchPowerDNSStats();
+        setInterval(fetchPowerDNSStats, 5000);
+    </script>
 }

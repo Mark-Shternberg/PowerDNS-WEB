@@ -1,38 +1,59 @@
 ﻿@page
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject IViewLocalizer L
 @model PowerDNS_Web.Pages.SettingsModel
 @{
-    ViewData["Title"] = "Settings";
+    ViewData["Title"] = L["Settings_Title"];
 }
 
 <div class="container mt-4">
-    <h2 class="text-center mb-4"><i class="fa fa-gear me-2"></i>Settings</h2>
+    <h2 class="text-center mb-4"><i class="fa fa-gear me-2"></i>@L["Settings_Title"]</h2>
 
     <form id="settingsForm" novalidate>
         <div class="row g-4">
+
             <!-- MYSQL SETTINGS -->
             <div class="col-md-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title mb-3">MySQL Settings</h5>
+                        <h5 class="card-title mb-3">@L["Section_MySQL"]</h5>
 
                         <div class="mb-2">
-                            <label class="form-label">Server</label>
-                            <input type="text" id="mysqlServer" class="form-control" value="@Model.Settings.MySQL.Server" placeholder="127.0.0.1 or host">
+                            <label class="form-label">@L["Label_Server"]</label>
+                            <input type="text"
+                                   id="mysqlServer"
+                                   class="form-control"
+                                   value="@Model.Settings.MySQL.Server"
+                                   placeholder="@L["Placeholder_MySQLServer"]" />
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">User</label>
-                            <input type="text" id="mysqlUser" class="form-control" value="@Model.Settings.MySQL.User">
+                            <label class="form-label">@L["Label_User"]</label>
+                            <input type="text"
+                                   id="mysqlUser"
+                                   class="form-control"
+                                   value="@Model.Settings.MySQL.User" />
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">Password</label>
+                            <label class="form-label">@L["Label_Password"]</label>
                             <div class="input-group">
-                                <input type="password" id="mysqlPassword" class="form-control" value="@Model.Settings.MySQL.Password">
-                                <button class="btn btn-outline-secondary" type="button" data-toggle-vis="#mysqlPassword" title="Show/Hide"><i class="fa fa-eye"></i></button>
+                                <input type="password"
+                                       id="mysqlPassword"
+                                       class="form-control"
+                                       value="@Model.Settings.MySQL.Password" />
+                                <button class="btn btn-outline-secondary"
+                                        type="button"
+                                        data-toggle-vis="#mysqlPassword"
+                                        title="@L["Title_ShowHide"]">
+                                    <i class="fa fa-eye"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">Database</label>
-                            <input type="text" id="mysqlDatabase" class="form-control" value="@Model.Settings.MySQL.Database">
+                            <label class="form-label">@L["Label_Database"]</label>
+                            <input type="text"
+                                   id="mysqlDatabase"
+                                   class="form-control"
+                                   value="@Model.Settings.MySQL.Database" />
                         </div>
                     </div>
                 </div>
@@ -42,32 +63,56 @@
             <div class="col-md-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title mb-3">PowerDNS Settings</h5>
+                        <h5 class="card-title mb-3">@L["Section_PowerDNS"]</h5>
 
                         <div class="mb-2">
-                            <label class="form-label">API URL</label>
-                            <input type="text" id="pdnsUrl" class="form-control" value="@Model.Settings.PowerDNS.Url" placeholder="http://127.0.0.1:8081/api/v1">
+                            <label class="form-label">@L["Label_ApiUrl"]</label>
+                            <input type="text"
+                                   id="pdnsUrl"
+                                   class="form-control"
+                                   value="@Model.Settings.PowerDNS.Url"
+                                   placeholder="@L["Placeholder_PowerDNSUrl"]" />
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">API Key</label>
+                            <label class="form-label">@L["Label_ApiKey"]</label>
                             <div class="input-group">
-                                <input type="password" id="pdnsApiKey" class="form-control" value="@Model.Settings.PowerDNS.Api_Key">
-                                <button class="btn btn-outline-secondary" type="button" data-toggle-vis="#pdnsApiKey" title="Show/Hide"><i class="fa fa-eye"></i></button>
+                                <input type="password"
+                                       id="pdnsApiKey"
+                                       class="form-control"
+                                       value="@Model.Settings.PowerDNS.Api_Key" />
+                                <button class="btn btn-outline-secondary"
+                                        type="button"
+                                        data-toggle-vis="#pdnsApiKey"
+                                        title="@L["Title_ShowHide"]">
+                                    <i class="fa fa-eye"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">Default A Record</label>
-                            <input type="text" id="pdnsDefaultA" class="form-control ip-input" value="@Model.Settings.PowerDNS.Default_A" placeholder="A record IPv4 (e.g., 203.0.113.10)">
+                            <label class="form-label">@L["Label_DefaultA"]</label>
+                            <input type="text"
+                                   id="pdnsDefaultA"
+                                   class="form-control ip-input"
+                                   value="@Model.Settings.PowerDNS.Default_A"
+                                   placeholder="@L["Placeholder_DefaultA"]" />
                         </div>
 
-                        <h6 class="mt-3">SOA Configuration</h6>
+                        <h6 class="mt-3">@L["Heading_SOA"]</h6>
                         <div class="mb-2">
-                            <label class="form-label">Primary NS</label>
-                            <input type="text" id="pdnsSoaNs" class="form-control" value="@Model.Settings.PowerDNS.SOA.Ns" placeholder="ns1.example.com">
+                            <label class="form-label">@L["Label_SoaNs"]</label>
+                            <input type="text"
+                                   id="pdnsSoaNs"
+                                   class="form-control"
+                                   value="@Model.Settings.PowerDNS.SOA.Ns"
+                                   placeholder="@L["Placeholder_SoaNs"]" />
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">Admin Email</label>
-                            <input type="text" id="pdnsSoaMail" class="form-control" value="@Model.Settings.PowerDNS.SOA.Mail" placeholder="admin@example.com">
+                            <label class="form-label">@L["Label_SoaMail"]</label>
+                            <input type="text"
+                                   id="pdnsSoaMail"
+                                   class="form-control"
+                                   value="@Model.Settings.PowerDNS.SOA.Mail"
+                                   placeholder="@L["Placeholder_SoaMail"]" />
                         </div>
                     </div>
                 </div>
@@ -77,39 +122,62 @@
             <div class="col-md-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title mb-3">Recursor Settings</h5>
+                        <h5 class="card-title mb-3">@L["Section_Recursor"]</h5>
 
                         <div class="mb-2">
-                            <label class="form-label">Recursor Status</label>
+                            <label class="form-label">@L["Label_RecursorStatus"]</label>
                             <select id="recursorStatus" class="form-select" onchange="toggleRecursorFields()">
-                                <option value="Enabled" selected="@(Model.Settings.Recursor.Enabled == "Enabled" ? "selected" : null)">Enabled</option>
-                                <option value="Disabled" selected="@(Model.Settings.Recursor.Enabled == "Disabled" ? "selected" : null)">Disabled</option>
+                                <!-- значения оставляем как 'Enabled'/'Disabled' для бэка; текст локализуем -->
+                                <option value="Enabled" selected="@(Model.Settings.Recursor.Enabled == "Enabled" ? "selected" : null)">
+                                    @L["Option_Enabled"]
+                                </option>
+                                <option value="Disabled" selected="@(Model.Settings.Recursor.Enabled == "Disabled" ? "selected" : null)">
+                                    @L["Option_Disabled"]
+                                </option>
                             </select>
                         </div>
 
                         <div id="recursorFields">
                             <div class="mb-2">
-                                <label class="form-label">Recursor URL</label>
-                                <input type="text" id="recursorUrl" class="form-control" value="@Model.Settings.Recursor.Url" placeholder="http://127.0.0.1:8082/api/v1">
+                                <label class="form-label">@L["Label_RecursorUrl"]</label>
+                                <input type="text"
+                                       id="recursorUrl"
+                                       class="form-control"
+                                       value="@Model.Settings.Recursor.Url"
+                                       placeholder="http://127.0.0.1:8082/api/v1" />
                             </div>
                             <div class="mb-2">
-                                <label class="form-label">API Key</label>
+                                <label class="form-label">@L["Label_ApiKey"]</label>
                                 <div class="input-group">
-                                    <input type="password" id="recursorApiKey" class="form-control" value="@Model.Settings.Recursor.Api_Key">
-                                    <button class="btn btn-outline-secondary" type="button" data-toggle-vis="#recursorApiKey" title="Show/Hide"><i class="fa fa-eye"></i></button>
+                                    <input type="password"
+                                           id="recursorApiKey"
+                                           class="form-control"
+                                           value="@Model.Settings.Recursor.Api_Key" />
+                                    <button class="btn btn-outline-secondary"
+                                            type="button"
+                                            data-toggle-vis="#recursorApiKey"
+                                            title="@L["Title_ShowHide"]">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="text-muted small mt-2">Tip: you can point some zones to authoritative via <code>127.0.0.1:5300</code> on the Recursor page.</div>
+                        <div class="text-muted small mt-2">
+                            @L["Tip_RecursorAuthoritativeHint"] <code>127.0.0.1:5300</code>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="d-flex justify-content-center">
-            <button type="button" id="btnSaveSettings" class="btn btn-primary mt-4" style="min-width:260px;" onclick="saveSettings()">
-                <i class="fa fa-save me-1"></i> Save Settings
+            <button type="button"
+                    id="btnSaveSettings"
+                    class="btn btn-primary mt-4"
+                    style="min-width:260px;"
+                    onclick="saveSettings()">
+                <i class="fa fa-save me-1"></i> @L["Btn_SaveSettings"]
             </button>
         </div>
     </form>
@@ -120,6 +188,19 @@
 @section Scripts {
 <script src="~/js/validation.js"></script>
 <script>
+    // ===== LOCALIZED MESSAGES =====
+    // безопасно внедряем строки в JS
+    const M = {
+        mysqlRequired: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_MySQL_Required"].Value)),
+        pdnsUrlBad: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_PowerDNS_Url"].Value)),
+        defaultAInvalid: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_DefaultA_Invalid"].Value)),
+        soaNsInvalid: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_SoaNs_Invalid"].Value)),
+        soaEmailInvalid: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_SoaEmail_Invalid"].Value)),
+        recursorUrlBad: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_Recursor_Url"].Value)),
+        saveOk: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Save_Success"].Value)),
+        saveFail: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Save_Failed"].Value))
+    };
+
     // ===== UTIL: CSRF =====
     function getCsrf() {
         const el = document.querySelector('input[name="__RequestVerificationToken"]');
@@ -150,22 +231,19 @@
     function isHttpUrl(u) {
         try { const x = new URL(u); return x.protocol === 'http:' || x.protocol === 'https:'; } catch { return false; }
     }
-    function isEmail(s) {
-        return /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test((s||'').trim());
-    }
 
-    // Use validation.js helpers where appropriate
-    function mustIPv4OrEmpty(v, fieldLabel) {
+    function mustIPv4OrEmpty(v) {
         if (!v) return true;
-        const err = validateIPv4(v); // returns "" if valid
-        if (err) { showToast('warning', `${fieldLabel}: ${err}`); return false; }
-        return true;
+        const err = validateIPv4(v); // из validation.js; "" если ОК
+        return !err;
     }
-    function mustFqdnOrEmpty(v, fieldLabel) {
+    function mustFqdnOrEmpty(v) {
         if (!v) return true;
-        const err = validateForwardZoneName(v); // FQDN validator (no trailing dot)
-        if (err) { showToast('warning', `${fieldLabel}: ${err}`); return false; }
-        return true;
+        const err = validateForwardZoneName(v); // без конечной точки
+        return !err;
+    }
+    function isEmail(s) {
+        return /\^[^\s@@]+@@[^\s@@]+\.[^\s@@]+\$/.test((s||'').trim());
     }
 
     // ===== COLLECT + SAVE SETTINGS =====
@@ -197,32 +275,31 @@
         };
 
         // === CLIENT-SIDE VALIDATION ===
-        // MySQL basics
         if (!settingsData.MySQL.Server || !settingsData.MySQL.User || !settingsData.MySQL.Database) {
-            showToast('warning', 'MySQL: server, user and database are required.');
+            showToast('warning', M.mysqlRequired);
             btn.disabled = false; return;
         }
 
-        // PowerDNS
         if (!isHttpUrl(settingsData.PowerDNS.Url)) {
-            showToast('warning', 'PowerDNS: API URL must be http(s)://…');
+            showToast('warning', M.pdnsUrlBad);
             btn.disabled = false; return;
         }
-        if (!mustIPv4OrEmpty(settingsData.PowerDNS.Default_A, 'Default A Record')) {
+        if (!mustIPv4OrEmpty(settingsData.PowerDNS.Default_A)) {
+            showToast('warning', M.defaultAInvalid);
             btn.disabled = false; return;
         }
-        if (!mustFqdnOrEmpty(settingsData.PowerDNS.SOA.Ns, 'SOA Primary NS')) {
+        if (!mustFqdnOrEmpty(settingsData.PowerDNS.SOA.Ns)) {
+            showToast('warning', M.soaNsInvalid);
             btn.disabled = false; return;
         }
         if (settingsData.PowerDNS.SOA.Mail && !isEmail(settingsData.PowerDNS.SOA.Mail)) {
-            showToast('warning', 'SOA Admin Email: invalid email.');
+            showToast('warning', M.soaEmailInvalid);
             btn.disabled = false; return;
         }
 
-        // Recursor (if enabled)
         if (settingsData.Recursor.Enabled === 'Enabled') {
             if (!isHttpUrl(settingsData.Recursor.Url)) {
-                showToast('warning', 'Recursor: URL must be http(s)://…');
+                showToast('warning', M.recursorUrlBad);
                 btn.disabled = false; return;
             }
         }
@@ -240,13 +317,13 @@
 
             const payload = await response.json();
             if (!response.ok || payload?.success === false) {
-                throw new Error(payload?.message || 'Save failed.');
+                throw new Error(payload?.message || M.saveFail);
             }
 
-            showToast('success', payload?.message || 'Settings saved');
+            showToast('success', payload?.message || M.saveOk);
         } catch (err) {
             console.error(err);
-            showToast('danger', err.message || 'Error while saving settings');
+            showToast('danger', err.message || M.saveFail);
         } finally {
             btn.disabled = false;
         }

@@ -1,321 +1,332 @@
-﻿@page
-@model PowerDNS_Web.Pages.RecursorModel
-@{
-    ViewData["Title"] = "Recursor Forward Zones";
-}
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 
-@if (ViewData["RecursorEnabled"]?.ToString() != "Enabled")
+namespace PowerDNS_Web.Pages
 {
-    <div class="alert alert-warning d-flex align-items-center" role="alert">
-        <i class="fa fa-exclamation-triangle fa-2x me-2"></i>
-        <div>
-            Recursor is disabled in <a href="/settings">settings</a> page.
-        </div>
-    </div>
-}
+    public class RecursorModel : PageModel
+    {
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<RecursorModel>
+    _logger;
+    private readonly IConfiguration _cfg;
+    private readonly IStringLocalizer<RecursorModel>
+        _L;
 
-<div class="container mt-4">
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-        <h2 class="mb-0"><i class="fa fa-rotate me-2"></i>Recursor Forward Zones</h2>
-        <div class="text-muted small">Configure per-zone forwarding (upstream resolvers)</div>
-    </div>
+        private string PdnsUrl => _cfg["pdns:url"] ?? "";
+        private string PdnsKey => _cfg["pdns:api_key"] ?? "";
+        private string RecursorUrl => _cfg["recursor:url"] ?? "";
+        private string RecursorKey => _cfg["recursor:api_key"] ?? "";
+        private string RecursorEnabled => _cfg["recursor:Enabled"] ?? "Disabled";
 
-    <!-- ADD NEW FORWARD ZONE -->
-    <div class="row g-3 align-items-end">
-        <div class="col-md-6">
-            <label for="availableZones" class="form-label">Available Zones</label>
-            @if (Model.AvailableZones.Count == 0)
-            {
-                <select id="availableZones" class="form-select" disabled>
-                    <option>No zones available to recurse</option>
-                </select>
-            }
-            else
-            {
-                <select id="availableZones" class="form-select">
-                    @foreach (var zone in Model.AvailableZones)
-                    {
-                        <option value="@zone">@zone</option>
-                    }
-                </select>
-            }
-        </div>
-        <div class="col-md-2">
-            @if (Model.AvailableZones.Count == 0)
-            {
-                <button class="btn btn-primary w-100" disabled>Add</button>
-            }
-            else
-            {
-                <button class="btn btn-primary w-100" onclick="addForwardZone()">
-                    <i class="fa fa-plus me-1"></i> Add
-                </button>
-            }
-        </div>
-    </div>
+        public List<string>
+            AvailableZones { get; private set; } = new();
+            public List<ForwardZoneVm>
+                ForwardZones { get; private set; } = new();
 
-    <!-- FORWARD ZONES TABLE -->
-    <h4 class="mt-4">Configured Forward Zones</h4>
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>Zone</th>
-                    <th>Forward To</th>
-                    <th style="width:220px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="forwardZonesTable">
-                @foreach (var zone in Model.ForwardZones.OrderBy(g => g.Name != "." ? 1 : 0))
-                {
-                    <tr>
-                        <td>@zone.Name</td>
-                        <td>
-                            @{
-                                var displayList = zone.ForwardTo.Select(f => f.Trim() == "127.0.0.1:5300" ? "Authoritative server" : f);
-                                @string.Join(", ", displayList)
+                public RecursorModel(
+                IHttpClientFactory httpClientFactory,
+                ILogger<RecursorModel>
+                    logger,
+                    IConfiguration configuration,
+                    IStringLocalizer<RecursorModel>
+                        localizer)
+                        {
+                        _httpClientFactory = httpClientFactory;
+                        _logger = logger;
+                        _cfg = configuration;
+                        _L = localizer;
+                        }
+
+                        public class ForwardZoneVm
+                        {
+                        public string Name { get; set; } = "";
+                        public List<string>
+                            ForwardTo { get; set; } = new();
                             }
-                        </td>
-                        <td>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-warning btn-sm" onclick="editZone('@zone.Name','@string.Join(", ", zone.ForwardTo)')">
-                                    <i class="fa fa-edit"></i> Edit
-                                </button>
-                                @if (zone.Name != ".")
-                                {
-                                    <button class="btn btn-danger btn-sm" onclick="removeForwardZone('@zone.Name')">
-                                        <i class="fa fa-trash"></i> Remove
-                                    </button>
+
+                            // === DTOs for PDNS/Recursor APIs ===
+                            private class AuthZoneDto
+                            {
+                            public string Name { get; set; } = "";
+                            public string Kind { get; set; } = "";
+                            }
+                            private class RecursorZoneDto
+                            {
+                            public string Name { get; set; } = "";
+                            public string Kind { get; set; } = "";
+                            public List<string>
+                                Servers { get; set; } = new();
+                                public bool? Recursion_Desired { get; set; }
                                 }
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
 
-<!-- Confirm delete Modal (custom, no backdrop) -->
-<div id="confirmModal" class="modal" style="display:none">
-    <div class="modal-content">
-        <p id="confirmMessage"></p>
-        <div class="modal-buttons">
-            <button id="confirmNo" class="btn btn-default">Cancel</button>
-            <button id="confirmYes" class="btn btn-danger">Delete</button>
-        </div>
-    </div>
-</div>
+                                public async Task OnGetAsync()
+                                {
+                                ViewData["RecursorEnabled"] = RecursorEnabled;
 
-<!-- EDIT ZONE MODAL -->
-<div class="modal fade" id="editZoneModal" tabindex="-1" aria-labelledby="editZoneModalLabel" aria-hidden="true" data-bs-backdrop="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editZoneModalLabel">Edit <span id="zone_name-modal"></span> zone</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">Upstream DNS servers</label>
-                    <div id="editZoneDNSContainer"></div>
-                    <button type="button" class="btn btn-primary mt-2 w-100" onclick="addDnsField()">
-                        <i class="fa fa-plus"></i> Add DNS Server
-                    </button>
-                </div>
+                                // 1) authoritative zones (для списка "Available Zones")
+                                var authZones = await SafeGetAuthZonesAsync();
 
-                <div class="alert alert-info w-100 text-center m-0" role="alert">
-                    <i class="fa fa-info-circle"></i> 127.0.0.1:5300 — Authoritative server
-                </div>
+                                // 2) recursor forward zones
+                                var recForward = (RecursorEnabled == "Enabled")
+                                ? await SafeGetRecursorZonesAsync()
+                                : new List<RecursorZoneDto>
+                                    ();
 
-                <button type="button" class="btn btn-warning w-100 mt-3" onclick="saveRecord()">Save Changes</button>
-            </div>
-        </div>
-    </div>
-</div>
+                                    // View models
+                                    ForwardZones = recForward
+                                    .Where(z => string.Equals(z.Kind, "Forwarded", StringComparison.OrdinalIgnoreCase))
+                                    .Select(z => new ForwardZoneVm
+                                    {
+                                    Name = z.Name,
+                                    ForwardTo = z.Servers ?? new List<string>
+                                        ()
+                                        })
+                                        .OrderBy(z => z.Name != "." ? 1 : 0)
+                                        .ThenBy(z => z.Name)
+                                        .ToList();
 
-<script src="~/js/validation.js"></script>
-@Html.AntiForgeryToken()
+                                        // Available = все авторитативные зоны за вычетом уже сконфигурированных forward-зон
+                                        var forwardedNames = new HashSet<string>
+                                            (
+                                            ForwardZones.Select(z => z.Name),
+                                            StringComparer.OrdinalIgnoreCase);
 
-<script>
-    // ===== ANTIFORGERY =====
-    function getCsrf() {
-        const el = document.querySelector('input[name="__RequestVerificationToken"]');
-        return el ? el.value : '';
-    }
+                                            AvailableZones = authZones
+                                            .Select(z => EnsureTrailingDot(z.Name))
+                                            .Where(n => !forwardedNames.Contains(n))
+                                            .OrderBy(n => n)
+                                            .ToList();
+                                            }
 
-    // ===== ADD FORWARD ZONE =====
-    async function addForwardZone() {
-        const selectedZone = document.getElementById("availableZones")?.value;
-        if (!selectedZone) {
-            showToast('warning', 'Please select a zone.');
-            return;
-        }
+                                            // ===== Handlers =====
 
-        try {
-            const response = await fetch(window.location.pathname + "?handler=AddForwardZone", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "RequestVerificationToken": getCsrf()
-                },
-                body: JSON.stringify({ Zone: selectedZone })
-            });
+                                            // Add forward zone (default server 127.0.0.1:5300)
+                                            public async Task<IActionResult>
+                                                OnPostAddForwardZoneAsync()
+                                                {
+                                                try
+                                                {
+                                                var body = await new System.IO.StreamReader(Request.Body).ReadToEndAsync();
+                                                var obj = JsonSerializer.Deserialize<Dictionary<string, string>>(body, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
 
-            const result = await response.json();
-            if (!response.ok || !result.success) throw new Error(result.message || "Failed to add forward zone.");
+                var zone = obj != null && obj.TryGetValue("Zone", out var z) ? z?.Trim() : null;
+                if (string.IsNullOrWhiteSpace(zone))
+                    return BadRequest(new { success = false, message = _L["Err.ZoneRequired"] });
 
-            showToast('success', result.message || 'Zone added successfully');
-            setTimeout(() => location.reload(), 600);
-        } catch (error) {
-            showToast('danger', error.message || 'Unexpected error while adding forward zone');
-        }
-    }
+                if (RecursorEnabled != "Enabled")
+                    return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"] });
 
-    // ===== DELETE FLOW =====
-    let deleteTarget = null;
+                var name = EnsureTrailingDot(zone);
+                var payload = new
+                {
+                    name,
+                    kind = "Forwarded",
+                    servers = new[] { "127.0.0.1:5300" },
+                    recursion_desired = false
+                };
 
-    function removeForwardZone(name) {
-        deleteTarget = name;
-        document.getElementById("confirmMessage").textContent = `Are you sure you want to remove the forward zone: ${name}?`;
-        document.getElementById("confirmModal").style.display = "block";
-    }
+                using var client = NewRecursorClient();
+                var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+                var resp = await client.PostAsync($"{RecursorUrl}/api/v1/servers/localhost/zones", content);
+                var respBody = await resp.Content.ReadAsStringAsync();
 
-    document.getElementById("confirmNo").addEventListener("click", () => {
-        document.getElementById("confirmModal").style.display = "none";
-        deleteTarget = null;
-    });
+                if (!resp.IsSuccessStatusCode)
+                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", respBody] });
 
-    document.getElementById("confirmYes").addEventListener("click", async () => {
-        if (!deleteTarget) return;
-        document.getElementById("confirmModal").style.display = "none";
-        const name = deleteTarget;
-        deleteTarget = null;
-
-        try {
-            const response = await fetch(window.location.pathname + "?handler=RemoveForwardZone", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "RequestVerificationToken": getCsrf()
-                },
-                body: JSON.stringify({ Zone: name })
-            });
-
-            const result = await response.json();
-            if (!response.ok || !result.success) throw new Error(result.message || "Failed to remove forward zone");
-
-            showToast('success', result.message || 'Zone removed successfully');
-            setTimeout(() => location.reload(), 600);
-        } catch (error) {
-            showToast('danger', error.message || 'Unexpected error while removing forward zone');
-        }
-    });
-
-    // ===== EDIT ZONE =====
-    function editZone(name, forwardTo) {
-        const dnsContainer = document.getElementById("editZoneDNSContainer");
-        dnsContainer.innerHTML = "";
-
-        // ORIGINAL VALUES FROM BACKEND (NOT DISPLAY-LIST)
-        const dnsList = (forwardTo || "")
-            .split(",")
-            .map(x => x.trim())
-            .filter(Boolean);
-
-        if (dnsList.length === 0) dnsList.push("");
-
-        dnsList.forEach((dns, idx) => addDnsField(dns, idx > 0));
-        document.getElementById("zone_name-modal").textContent = name;
-
-        new bootstrap.Modal(document.getElementById("editZoneModal"), { backdrop: false }).show();
-    }
-
-    // ===== ADD DNS FIELD ROW =====
-    function addDnsField(value = "", showRemoveButton = true) {
-        const dnsContainer = document.getElementById("editZoneDNSContainer");
-
-        const row = document.createElement("div");
-        row.className = "input-group mb-2";
-
-        const input = document.createElement("input");
-        input.type = "text";
-        input.className = "form-control";
-        input.placeholder = "IP:Port (e.g., 8.8.8.8:53)";
-        input.value = value;
-
-        row.appendChild(input);
-
-        if (showRemoveButton) {
-            const removeButton = document.createElement("button");
-            removeButton.type = "button";
-            removeButton.className = "btn btn-danger";
-            removeButton.innerHTML = '<i class="fa fa-trash"></i>';
-            removeButton.addEventListener("click", () => {
-                dnsContainer.removeChild(row);
-                updateRemoveButtons();
-            });
-            row.appendChild(removeButton);
-        }
-
-        dnsContainer.appendChild(row);
-        updateRemoveButtons();
-    }
-
-    // ===== TOGGLE REMOVE BUTTONS =====
-    function updateRemoveButtons() {
-        const rows = document.querySelectorAll("#editZoneDNSContainer .input-group");
-        const removeButtons = document.querySelectorAll("#editZoneDNSContainer .btn-danger");
-        if (rows.length <= 1) removeButtons.forEach(b => b.style.display = "none");
-        else removeButtons.forEach(b => b.style.display = "inline-block");
-    }
-
-    // ===== SAVE CHANGES =====
-    async function saveRecord() {
-        const inputs = document.querySelectorAll("#editZoneDNSContainer input");
-        const dnsServers = Array.from(inputs)
-            .map(i => i.value.trim())
-            .filter(Boolean);
-
-        const name = document.getElementById("zone_name-modal").textContent;
-
-        if (dnsServers.length === 0) {
-            showToast('warning', 'At least one DNS server must be specified.');
-            return;
-        }
-
-        for (let i = 0; i < dnsServers.length; i++) {
-            const err = validateIPv4withPort(dnsServers[i]); // from validation.js
-            if (err) {
-                showToast('warning', `Error in DNS ${i + 1}: ${err}`);
-                return;
+                return new JsonResult(new { success = true, message = _L["Ans.Forward.Added"] });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AddForwardZone failed");
+                return StatusCode(500, new { success = false, message = _L["Err.Internal"] });
             }
         }
 
-        try {
-            const response = await fetch(window.location.pathname + "?handler=editZone", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "RequestVerificationToken": getCsrf()
-                },
-                body: JSON.stringify({ Name: name, DnsServers: dnsServers.join(",") })
-            });
+        // Remove forward zone
+        public async Task<IActionResult> OnPostRemoveForwardZoneAsync()
+        {
+            try
+            {
+                var body = await new System.IO.StreamReader(Request.Body).ReadToEndAsync();
+                var obj = JsonSerializer.Deserialize<Dictionary<string, string>>(body, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
 
-            const result = await response.json();
-            if (!response.ok || !result.success) throw new Error(result.message || "Failed to save DNS servers");
+                var zone = obj != null && obj.TryGetValue("Zone", out var z) ? z?.Trim() : null;
+                if (string.IsNullOrWhiteSpace(zone))
+                    return BadRequest(new { success = false, message = _L["Err.ZoneRequired"] });
 
-            showToast('success', result.message || 'DNS servers updated successfully');
-            // CLOSE MODAL + RELOAD
-            const modal = bootstrap.Modal.getInstance(document.getElementById("editZoneModal"));
-            modal?.hide();
-            setTimeout(() => location.reload(), 600);
+                var name = EnsureTrailingDot(zone);
+                if (name == ".")
+                    return BadRequest(new { success = false, message = _L["Err.CannotDeleteRoot"] });
 
-        } catch (error) {
-            showToast('danger', error.message || 'Unexpected error while saving DNS servers');
+                if (RecursorEnabled != "Enabled")
+                    return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"] });
+
+                using var client = NewRecursorClient();
+                var resp = await client.DeleteAsync($"{RecursorUrl}/api/v1/servers/localhost/zones/{name}");
+                var respBody = await resp.Content.ReadAsStringAsync();
+
+                if (!resp.IsSuccessStatusCode)
+                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", respBody] });
+
+                return new JsonResult(new { success = true, message = _L["Ans.Forward.Removed"] });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "RemoveForwardZone failed");
+                return StatusCode(500, new { success = false, message = _L["Err.Internal"] });
+            }
+        }
+
+        // Edit forwarders list for zone
+        public async Task<IActionResult> OnPostEditZoneAsync()
+        {
+            try
+            {
+                var body = await new System.IO.StreamReader(Request.Body).ReadToEndAsync();
+                var obj = JsonSerializer.Deserialize<Dictionary<string, string>>(body, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                var nameRaw = obj != null && obj.TryGetValue("Name", out var n) ? n?.Trim() : null;
+                var dnsCsv = obj != null && obj.TryGetValue("DnsServers", out var s) ? s : null;
+
+                if (string.IsNullOrWhiteSpace(nameRaw))
+                    return BadRequest(new { success = false, message = _L["Err.ZoneRequired"] });
+
+                var servers = (dnsCsv ?? "")
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                if (servers.Count == 0)
+                    return BadRequest(new { success = false, message = _L["Err.NoServersProvided"] });
+
+                // (минимальная валидация "IP:port")
+                foreach (var sv in servers)
+                {
+                    if (!LooksLikeHostPort(sv))
+                        return BadRequest(new { success = false, message = _L["Err.InvalidServerFormat", sv] });
+                }
+
+                if (RecursorEnabled != "Enabled")
+                    return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"] });
+
+                var name = EnsureTrailingDot(nameRaw);
+
+                var payload = new
+                {
+                    name,
+                    kind = "Forwarded",
+                    servers,
+                    recursion_desired = false
+                };
+
+                using var client = NewRecursorClient();
+                var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+                // PUT на конкретную зону
+                var resp = await client.PutAsync($"{RecursorUrl}/api/v1/servers/localhost/zones/{name}", content);
+                var respBody = await resp.Content.ReadAsStringAsync();
+
+                if (!resp.IsSuccessStatusCode)
+                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", respBody] });
+
+                return new JsonResult(new { success = true, message = _L["Ans.Forward.Updated"] });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "EditZone (forwarders) failed");
+                return StatusCode(500, new { success = false, message = _L["Err.Internal"] });
+            }
+        }
+
+        // ===== helpers =====
+        private async Task<List<AuthZoneDto>> SafeGetAuthZonesAsync()
+        {
+            try
+            {
+                using var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Remove("X-API-Key");
+                client.DefaultRequestHeaders.Add("X-API-Key", PdnsKey);
+
+                var resp = await client.GetAsync($"{PdnsUrl}/api/v1/servers/localhost/zones");
+                if (!resp.IsSuccessStatusCode) return new List<AuthZoneDto>();
+
+                var json = await resp.Content.ReadAsStringAsync();
+                var all = JsonSerializer.Deserialize<List<AuthZoneDto>>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new();
+
+                return all;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to get authoritative zones");
+                return new List<AuthZoneDto>();
+            }
+        }
+
+        private async Task<List<RecursorZoneDto>> SafeGetRecursorZonesAsync()
+        {
+            var list = new List<RecursorZoneDto>();
+            try
+            {
+                using var client = NewRecursorClient();
+                var resp = await client.GetAsync($"{RecursorUrl}/api/v1/servers/localhost/zones");
+                if (!resp.IsSuccessStatusCode) return list;
+
+                var json = await resp.Content.ReadAsStringAsync();
+                list = JsonSerializer.Deserialize<List<RecursorZoneDto>>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to get recursor zones");
+            }
+            return list;
+        }
+
+        private HttpClient NewRecursorClient()
+        {
+            var c = _httpClientFactory.CreateClient();
+            c.DefaultRequestHeaders.Remove("X-API-Key");
+            c.DefaultRequestHeaders.Add("X-API-Key", RecursorKey);
+            return c;
+        }
+
+        private static string EnsureTrailingDot(string s)
+            => string.IsNullOrWhiteSpace(s) ? s : (s.EndsWith('.') ? s : s + ".");
+
+        private static bool LooksLikeHostPort(string s)
+        {
+            // допускаем IPv4:port или hostname:port (очень грубо)
+            var idx = s.LastIndexOf(':');
+            if (idx <= 0 || idx >= s.Length - 1) return false;
+            var portStr = s[(idx + 1)..];
+            if (!int.TryParse(portStr, out var port) || port < 1 || port > 65535) return false;
+            // host часть не пустая
+            return !string.IsNullOrWhiteSpace(s[..idx]);
         }
     }
-</script>
+}

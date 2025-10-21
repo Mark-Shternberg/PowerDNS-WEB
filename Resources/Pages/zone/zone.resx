@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <!-- Title / Header -->
+  <data name="Title.ManageZone"><value>Manage Zone: {0}</value></data>
+  <data name="Hdr.Zone"><value>Zone</value></data>
+  <data name="Hdr.Subtitle"><value>Manage DNS records for this zone</value></data>
+
+  <!-- Buttons / Common -->
+  <data name="Btn.ExpandAll"><value>Expand all</value></data>
+  <data name="Btn.CollapseAll"><value>Collapse all</value></data>
+  <data name="Btn.Add"><value>Add</value></data>
+  <data name="Btn.SaveChanges"><value>Save Changes</value></data>
+  <data name="Btn.Close"><value>Close</value></data>
+  <data name="Btn.Cancel"><value>Cancel</value></data>
+  <data name="Btn.Delete"><value>Delete</value></data>
+  <data name="Btn.Copy"><value>Copy</value></data>
+  <data name="Btn.Edit"><value>Edit</value></data>
+  <data name="Btn.Clear"><value>Clear</value></data>
+
+  <!-- Quick Add -->
+  <data name="AddRecord.Title"><value>Add Record</value></data>
+  <data name="Form.Subdomain"><value>Subdomain</value></data>
+  <data name="Form.Root"><value>(Root)</value></data>
+  <data name="Form.SubdomainAdd"><value>Add subdomain</value></data>
+  <data name="Form.Type"><value>Type</value></data>
+  <data name="Form.Value"><value>Value</value></data>
+  <data name="Form.TxtValue"><value>TXT Value</value></data>
+  <data name="Form.NsTarget"><value>NS Target</value></data>
+  <data name="Form.HttpsParams"><value>HTTPS Parameters</value></data>
+  <data name="Form.Priority"><value>Priority</value></data>
+  <data name="Form.Weight"><value>Weight</value></data>
+  <data name="Form.Port"><value>Port</value></data>
+
+  <!-- Placeholders / Help -->
+  <data name="Ph.Value.Generic"><value>e.g. 203.0.113.10 or target.example.com.</value></data>
+  <data name="Ph.Filter"><value>Filter by name/value/type</value></data>
+  <data name="Help.Generic"><value>For A/AAAA — IP; CNAME/NS/SRV target must end with a dot.</value></data>
+  <data name="Help.TxtNoQuotes"><value>Do not wrap with quotes — we will add them automatically.</value></data>
+  <data name="Help.TxtAutoQuotes"><value>We’ll wrap it with quotes automatically.</value></data>
+
+  <!-- Validation -->
+  <data name="Val.SelectSubdomain"><value>Select subdomain.</value></data>
+  <data name="Val.SelectType"><value>Select record type.</value></data>
+  <data name="Val.ValueRequired"><value>Value is required.</value></data>
+  <data name="Val.TxtRequired"><value>TXT value is required.</value></data>
+  <data name="Val.NsRequired"><value>NS target is required.</value></data>
+  <data name="Val.HttpsRequired"><value>HTTPS value is required.</value></data>
+  <data name="Val.MxPriority"><value>1…1000.</value></data>
+  <data name="Val.SubdomainRequired"><value>Enter subdomain.</value></data>
+
+  <!-- Records table -->
+  <data name="Hdr.Existing"><value>Existing Records</value></data>
+  <data name="Th.Subdomain"><value>Subdomain</value></data>
+  <data name="Th.Type"><value>Type</value></data>
+  <data name="Th.Value"><value>Value</value></data>
+  <data name="Th.Actions"><value>Actions</value></data>
+
+  <!-- Edit modal -->
+  <data name="Edit.Title"><value>Edit Record</value></data>
+
+  <!-- SOA -->
+  <data name="Soa.Title"><value>SOA Record Details</value></data>
+  <data name="Soa.PrimaryNs"><value>Primary NS</value></data>
+  <data name="Soa.AdminEmail"><value>Admin Email</value></data>
+  <data name="Soa.Refresh"><value>Refresh</value></data>
+  <data name="Soa.Retry"><value>Retry</value></data>
+  <data name="Soa.Expire"><value>Expire</value></data>
+  <data name="Soa.MinimumTtl"><value>Minimum TTL</value></data>
+
+  <!-- Subdomain modal -->
+  <data name="Sub.Title"><value>Add Subdomain</value></data>
+  <data name="Sub.Name"><value>Subdomain Name</value></data>
+
+  <!-- Delete modal -->
+  <data name="Del.Title"><value>Confirm deletion</value></data>
+  <data name="Del.ConfirmTpl"><value>Delete {0} {1} for {2}?</value></data>
+
+  <!-- JS toasts -->
+  <data name="Copy.Success"><value>Copied to clipboard</value></data>
+  <data name="Copy.Fail"><value>Copy failed</value></data>
+
+  <!-- Errors -->
+  <data name="Err.InvalidRequest"><value>Invalid request.</value></data>
+  <data name="Err.FetchRecords"><value>Error fetching records: {0}</value></data>
+  <data name="Err.ZoneEmpty"><value>Zone data is empty.</value></data>
+  <data name="Err.RecordExists"><value>Record already exists.</value></data>
+  <data name="Err.AddRecordApi"><value>Error adding record: {0}</value></data>
+  <data name="Err.DeleteRecordApi"><value>Error deleting record: {0}</value></data>
+  <data name="Err.UpdateRecordApi"><value>Error updating record: {0}</value></data>
+  <data name="Err.RecordNotFound"><value>Record not found.</value></data>
+  <data name="Err.Internal"><value>Internal server error.</value></data>
+  <data name="Err.DefaultARequired"><value>Default A record IP is not set in configuration.</value></data>
+  <data name="Err.AddSubdomainApi"><value>Error adding subdomain: {0}</value></data>
+
+  <!-- Answers -->
+  <data name="Ans.Record.Added"><value>Record added successfully!</value></data>
+  <data name="Ans.Record.Deleted"><value>Record deleted successfully!</value></data>
+  <data name="Ans.Record.Updated"><value>Record updated successfully!</value></data>
+  <data name="Ans.Subdomain.Added"><value>Subdomain added successfully!</value></data>
+</root>

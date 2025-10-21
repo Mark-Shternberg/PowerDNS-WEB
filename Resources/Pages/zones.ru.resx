@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <data name="Title"><value>Зоны</value></data>
+  <data name="Header.Title"><value>Зоны</value></data>
+  <data name="Header.Subtitle"><value>Управление авторитативными зонами</value></data>
+
+  <data name="Btn.AddForward"><value>Добавить прямую зону</value></data>
+  <data name="Btn.AddReverse"><value>Добавить обратную зону</value></data>
+  <data name="Btn.Edit"><value>Изменить</value></data>
+  <data name="Btn.Delete"><value>Удалить</value></data>
+  <data name="Btn.Close"><value>Закрыть</value></data>
+  <data name="Btn.Add"><value>Добавить</value></data>
+  <data name="Btn.Save"><value>Сохранить</value></data>
+  <data name="Btn.Cancel"><value>Отмена</value></data>
+  <data name="Btn.Keys"><value>Ключи</value></data>
+
+  <data name="Search.Placeholder"><value>Поиск по домену</value></data>
+  <data name="Search.Clear"><value>Очистить</value></data>
+
+  <data name="Th.Domain"><value>Домен</value></data>
+  <data name="Th.Master"><value>Мастер</value></data>
+  <data name="Th.Type"><value>Тип</value></data>
+  <data name="Th.DNSSEC"><value>DNSSEC</value></data>
+  <data name="Th.Serial"><value>Серийный</value></data>
+  <data name="Th.Actions"><value>Действия</value></data>
+
+  <data name="Type.Master"><value>Master</value></data>
+  <data name="Type.Slave"><value>Slave</value></data>
+  <data name="Type.Native"><value>Native</value></data>
+
+  <data name="Dnssec.Enabled"><value>Включён</value></data>
+  <data name="Dnssec.Disabled"><value>Отключён</value></data>
+
+  <data name="Modal.AddGenericTitle"><value>Добавить зону</value></data>
+  <data name="Modal.AddForwardTitle"><value>Добавить прямую зону</value></data>
+  <data name="Modal.AddReverseTitle"><value>Добавить обратную зону</value></data>
+  <data name="Modal.EditTitle"><value>Редактировать зону</value></data>
+
+  <data name="Field.ZoneName"><value>Имя зоны</value></data>
+  <data name="Field.ZoneName.Ph"><value>example.com</value></data>
+  <data name="Field.ZoneName.Invalid"><value>Введите корректное имя зоны.</value></data>
+
+  <data name="Field.RevPrefix"><value>Префикс обратной зоны</value></data>
+  <data name="Field.RevPrefix.HelpHtml"><value>Префикс сети (без последнего октета), напр. <code>192.168.0.</code></value></data>
+  <data name="Field.RevPrefix.Invalid"><value>Введите префикс вида 192.168.0.</value></data>
+
+  <data name="Field.ZoneType"><value>Тип зоны</value></data>
+  <data name="Field.ZoneType.Invalid"><value>Выберите тип зоны.</value></data>
+
+  <data name="Field.Dnssec.Invalid"><value>Выберите состояние DNSSEC.</value></data>
+
+  <data name="Field.MasterServer"><value>Мастер-сервер</value></data>
+  <data name="Field.MasterServer.Invalid"><value>Для Slave-зоны нужен IP мастер-сервера.</value></data>
+
+  <data name="Confirm.Title"><value>Подтвердите удаление</value></data>
+  <data name="Confirm.TextPrefix"><value>Удалить зону:</value></data>
+
+  <data name="Keys.Title"><value>DNSSEC-ключи</value></data>
+  <data name="Keys.Warning"><value>Передайте DS-записи ниже вашему регистратору доменов.</value></data>
+
+  <data name="Common.Loading"><value>Загрузка…</value></data>
+
+  <data name="Msg.ZoneAdded"><value>Зона добавлена.</value></data>
+  <data name="Msg.ZoneUpdated"><value>Зона обновлена.</value></data>
+  <data name="Msg.ZoneDeleted"><value>Зона удалена.</value></data>
+  <data name="Msg.ZoneAddedRecursorWarn"><value>Зона добавлена. Ошибка при добавлении форвард-зоны в recursor: {0}</value></data>
+  <data name="Msg.ZoneDeletedRecursorWarn"><value>Зона удалена. Ошибка при удалении форвард-зоны в recursor: {0}</value></data>
+  <data name="Msg.ZoneDeletedRecursorWarn2"><value>Зона удалена. Предупреждение: ошибка удаления форвард-зоны в recursor.</value></data>
+
+  <data name="Err.PdnsUrlMissing"><value>Не задан URL PowerDNS.</value></data>
+  <data name="Err.ZoneNameEmpty"><value>Имя зоны пустое.</value></data>
+  <data name="Err.InvalidReversePrefix"><value>Неверный префикс обратной зоны.</value></data>
+  <data name="Err.InvalidParams"><value>Некорректные параметры запроса.</value></data>
+  <data name="Err.PowerDnsApi"><value>Ошибка PowerDNS API: {0}</value></data>
+  <data name="Err.CreateDnssecKeys"><value>Не удалось создать DNSSEC-ключи: {0}</value></data>
+  <data name="Err.AddSoa"><value>Не удалось добавить запись SOA: {0}</value></data>
+  <data name="Err.FetchZone"><value>Не удалось получить данные зоны «{0}»: {1}</value></data>
+  <data name="Err.ParseZoneData"><value>Не удалось распарсить данные зоны.</value></data>
+  <data name="Err.CreateDnssecKeyGeneric"><value>Не удалось создать DNSSEC-ключ: {0}</value></data>
+
+  <data name="Err.ConnPdns"><value>Ошибка подключения к PowerDNS API.</value></data>
+  <data name="Err.InternalAdd"><value>Внутренняя ошибка при добавлении зоны.</value></data>
+  <data name="Err.InternalEdit"><value>Внутренняя ошибка при обновлении зоны.</value></data>
+  <data name="Err.InternalDelete"><value>Внутренняя ошибка при удалении зоны.</value></data>
+  <data name="Err.InternalGeneric"><value>Внутренняя ошибка: {0}</value></data>
+</root>

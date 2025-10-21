@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <data name="Title"><value>Статистика PowerDNS</value></data>
+  <data name="OverviewTitle"><value>Обзор PowerDNS</value></data>
+  <data name="OverviewSubtitle"><value>Онлайн-метрики и статистика рекурсора</value></data>
+
+  <data name="Metric.ActivePort"><value>Активный порт</value></data>
+  <data name="Metric.Uptime"><value>Время работы</value></data>
+  <data name="Metric.TotalQueries"><value>Всего запросов</value></data>
+  <data name="Metric.QpsApprox"><value>QPS (прибл.)</value></data>
+
+  <data name="Section.Statistics"><value>Статистика</value></data>
+  <data name="Card.MissingTypes"><value>Запросы к отсутствующим типам</value></data>
+  <data name="Card.Nonexistent"><value>Запросы к несуществующим записям</value></data>
+  <data name="Card.UdpReceived"><value>Получено UDP-запросов</value></data>
+
+  <data name="Recursor.Title"><value>Рекурсор</value></data>
+  <data name="Recursor.Port"><value>Порт рекурсора</value></data>
+  <data name="Recursor.Uptime"><value>Время работы рекурсора</value></data>
+  <data name="Recursor.CacheHits"><value>Попадания в кэш</value></data>
+  <data name="Recursor.CacheMissesRatio"><value>Промахи кэша · Доля попаданий</value></data>
+  <data name="Recursor.TopRequests"><value>Топ запросов</value></data>
+  <data name="Recursor.TopRemotes"><value>Топ удалённых клиентов</value></data>
+
+  <data name="Chart.QpsLast5m"><value>Скорость запросов (QPS), последние 5 минут</value></data>
+  <data name="Chart.Dataset.Qps"><value>QPS</value></data>
+
+  <data name="Common.Loading"><value>Загрузка…</value></data>
+  <data name="Common.NoData"><value>Нет данных</value></data>
+
+  <data name="Time.H"><value>ч</value></data>
+  <data name="Time.M"><value>м</value></data>
+</root>

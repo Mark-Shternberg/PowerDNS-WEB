@@ -1,15 +1,19 @@
 ﻿@page
+@using System.Text.Json
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer T
 @model PowerDNS_Web.Pages.logsModel
 @{
-    ViewData["Title"] = "PowerDNS Logs";
+    ViewData["Title"] = T["Logs_Title"];
 }
 
 <div class="container mt-4">
-    <h2 class="mb-4 text-center"><i class="fa fa-file-alt"></i> PowerDNS Logs</h2>
+    <h2 class="mb-4 text-center">
+        <i class="fa fa-file-alt"></i> @T["Logs_Title"]
+    </h2>
 
     <!-- BUTTON TO REFRESH LOGS -->
     <div class="text-center mb-3">
-        <button class="btn btn-primary" onclick="fetchPDNSLogs()">Refresh Logs</button>
+        <button class="btn btn-primary" onclick="fetchPDNSLogs()">@T["Logs_Refresh"]</button>
     </div>
 
     <div class="row justify-content-center">
@@ -17,10 +21,10 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header bg-dark text-white text-center">
-                    <h5><i class="fa fa-server"></i> PowerDNS Server Logs</h5>
+                    <h5><i class="fa fa-server"></i> @T["Logs_ServerHeader"]</h5>
                 </div>
                 <div class="card-body">
-                    <pre id="authoritativeLogs" class="log-container">Loading...</pre>
+                    <pre id="authoritativeLogs" class="log-container">@T["Logs_Loading"]</pre>
                 </div>
             </div>
         </div>
@@ -30,6 +34,13 @@
 @Html.AntiForgeryToken()
 
 <script>
+    // Локализованные строки для JS
+    const L = {
+        Loading: @Html.Raw(JsonSerializer.Serialize(T["Logs_Loading"].Value)),
+        NoLogs: @Html.Raw(JsonSerializer.Serialize(T["Logs_NoLogs"].Value)),
+        FetchError: @Html.Raw(JsonSerializer.Serialize(T["Logs_FetchError"].Value))
+    };
+
     async function fetchPDNSLogs() {
         try {
             const response = await fetch(window.location.pathname + "?handler=Logs", {
@@ -39,12 +50,12 @@
                     "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]').value
                 }
             });
-            const data = await response.json();
 
-            document.getElementById("authoritativeLogs").innerText = data.authoritativeLogs || "No logs available.";
+            const data = await response.json();
+            document.getElementById("authoritativeLogs").innerText = data.authoritativeLogs || L.NoLogs;
         } catch (error) {
             console.error("Failed to load logs:", error);
-            document.getElementById("authoritativeLogs").innerText = "Error fetching logs.";
+            document.getElementById("authoritativeLogs").innerText = L.FetchError;
         }
     }
 

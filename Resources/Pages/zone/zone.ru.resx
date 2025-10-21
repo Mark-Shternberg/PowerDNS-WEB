@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <!-- Title / Header -->
+  <data name="Title.ManageZone"><value>Управление зоной: {0}</value></data>
+  <data name="Hdr.Zone"><value>Зона</value></data>
+  <data name="Hdr.Subtitle"><value>Управление DNS-записями для этой зоны</value></data>
+
+  <!-- Buttons / Common -->
+  <data name="Btn.ExpandAll"><value>Раскрыть всё</value></data>
+  <data name="Btn.CollapseAll"><value>Свернуть всё</value></data>
+  <data name="Btn.Add"><value>Добавить</value></data>
+  <data name="Btn.SaveChanges"><value>Сохранить изменения</value></data>
+  <data name="Btn.Close"><value>Закрыть</value></data>
+  <data name="Btn.Cancel"><value>Отмена</value></data>
+  <data name="Btn.Delete"><value>Удалить</value></data>
+  <data name="Btn.Copy"><value>Копировать</value></data>
+  <data name="Btn.Edit"><value>Редактировать</value></data>
+  <data name="Btn.Clear"><value>Очистить</value></data>
+
+  <!-- Quick Add -->
+  <data name="AddRecord.Title"><value>Добавить запись</value></data>
+  <data name="Form.Subdomain"><value>Поддомен</value></data>
+  <data name="Form.Root"><value>(Корень)</value></data>
+  <data name="Form.SubdomainAdd"><value>Добавить поддомен</value></data>
+  <data name="Form.Type"><value>Тип</value></data>
+  <data name="Form.Value"><value>Значение</value></data>
+  <data name="Form.TxtValue"><value>Значение TXT</value></data>
+  <data name="Form.NsTarget"><value>Целевой NS</value></data>
+  <data name="Form.HttpsParams"><value>Параметры HTTPS</value></data>
+  <data name="Form.Priority"><value>Приоритет</value></data>
+  <data name="Form.Weight"><value>Вес</value></data>
+  <data name="Form.Port"><value>Порт</value></data>
+
+  <!-- Placeholders / Help -->
+  <data name="Ph.Value.Generic"><value>например, 203.0.113.10 или target.example.com.</value></data>
+  <data name="Ph.Filter"><value>Фильтр по имени/значению/типу</value></data>
+  <data name="Help.Generic"><value>Для A/AAAA — IP; для CNAME/NS/SRV целевой хост должен оканчиваться точкой.</value></data>
+  <data name="Help.TxtNoQuotes"><value>Не заключайте в кавычки — мы добавим их автоматически.</value></data>
+  <data name="Help.TxtAutoQuotes"><value>Кавычки будут добавлены автоматически.</value></data>
+
+  <!-- Validation -->
+  <data name="Val.SelectSubdomain"><value>Выберите поддомен.</value></data>
+  <data name="Val.SelectType"><value>Выберите тип записи.</value></data>
+  <data name="Val.ValueRequired"><value>Укажите значение.</value></data>
+  <data name="Val.TxtRequired"><value>Укажите значение TXT.</value></data>
+  <data name="Val.NsRequired"><value>Укажите целевой NS.</value></data>
+  <data name="Val.HttpsRequired"><value>Укажите значение HTTPS.</value></data>
+  <data name="Val.MxPriority"><value>1…1000.</value></data>
+  <data name="Val.SubdomainRequired"><value>Введите поддомен.</value></data>
+
+  <!-- Records table -->
+  <data name="Hdr.Existing"><value>Существующие записи</value></data>
+  <data name="Th.Subdomain"><value>Поддомен</value></data>
+  <data name="Th.Type"><value>Тип</value></data>
+  <data name="Th.Value"><value>Значение</value></data>
+  <data name="Th.Actions"><value>Действия</value></data>
+
+  <!-- Edit modal -->
+  <data name="Edit.Title"><value>Редактировать запись</value></data>
+
+  <!-- SOA -->
+  <data name="Soa.Title"><value>Параметры записи SOA</value></data>
+  <data name="Soa.PrimaryNs"><value>Основной NS</value></data>
+  <data name="Soa.AdminEmail"><value>Адрес администратора</value></data>
+  <data name="Soa.Refresh"><value>Обновление (Refresh)</value></data>
+  <data name="Soa.Retry"><value>Повтор (Retry)</value></data>
+  <data name="Soa.Expire"><value>Истечение (Expire)</value></data>
+  <data name="Soa.MinimumTtl"><value>Минимальный TTL</value></data>
+
+  <!-- Subdomain modal -->
+  <data name="Sub.Title"><value>Добавить поддомен</value></data>
+  <data name="Sub.Name"><value>Имя поддомена</value></data>
+
+  <!-- Delete modal -->
+  <data name="Del.Title"><value>Подтверждение удаления</value></data>
+  <data name="Del.ConfirmTpl"><value>Удалить {0} {1} для {2}?</value></data>
+
+  <!-- JS toasts -->
+  <data name="Copy.Success"><value>Скопировано в буфер обмена</value></data>
+  <data name="Copy.Fail"><value>Не удалось скопировать</value></data>
+</root>

@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Titles / Sections -->
+  <data name="Settings_Title"><value>Настройки</value></data>
+  <data name="Section_MySQL"><value>Параметры MySQL</value></data>
+  <data name="Section_PowerDNS"><value>Параметры PowerDNS</value></data>
+  <data name="Section_Recursor"><value>Параметры Recursor</value></data>
+
+  <!-- Labels -->
+  <data name="Label_Server"><value>Сервер</value></data>
+  <data name="Label_User"><value>Пользователь</value></data>
+  <data name="Label_Password"><value>Пароль</value></data>
+  <data name="Label_Database"><value>База данных</value></data>
+  <data name="Label_ApiUrl"><value>API URL</value></data>
+  <data name="Label_ApiKey"><value>API-ключ</value></data>
+  <data name="Label_DefaultA"><value>IPv4 по умолчанию (A)</value></data>
+  <data name="Heading_SOA"><value>Конфигурация SOA</value></data>
+  <data name="Label_SoaNs"><value>Основной NS</value></data>
+  <data name="Label_SoaMail"><value>Почта администратора</value></data>
+  <data name="Label_RecursorStatus"><value>Статус Recursor</value></data>
+  <data name="Label_RecursorUrl"><value>URL Recursor</value></data>
+
+  <!-- Options -->
+  <data name="Option_Enabled"><value>Включён</value></data>
+  <data name="Option_Disabled"><value>Отключён</value></data>
+
+  <!-- Buttons / tips -->
+  <data name="Btn_SaveSettings"><value>Сохранить настройки</value></data>
+  <data name="Title_ShowHide"><value>Показать/скрыть</value></data>
+  <data name="Tip_RecursorAuthoritativeHint"><value>Подсказка: на странице Recursor можно направить некоторые зоны на авторитативный сервер через</value></data>
+
+  <!-- Placeholders -->
+  <data name="Placeholder_MySQLServer"><value>127.0.0.1 или имя хоста</value></data>
+  <data name="Placeholder_PowerDNSUrl"><value>http://127.0.0.1:8081/api/v1</value></data>
+  <data name="Placeholder_DefaultA"><value>IPv4 для A-записи (напр., 203.0.113.10)</value></data>
+  <data name="Placeholder_SoaNs"><value>ns1.example.com</value></data>
+  <data name="Placeholder_SoaMail"><value>admin@example.com</value></data>
+
+  <!-- Validation / Toast messages -->
+  <data name="Validation_MySQL_Required"><value>MySQL: необходимо указать сервер, пользователя и базу данных.</value></data>
+  <data name="Validation_PowerDNS_Url"><value>PowerDNS: API URL должен быть в формате http(s)://…</value></data>
+  <data name="Validation_DefaultA_Invalid"><value>IPv4 по умолчанию: некорректный адрес.</value></data>
+  <data name="Validation_SoaNs_Invalid"><value>Основной NS: некорректное имя хоста.</value></data>
+  <data name="Validation_SoaEmail_Invalid"><value>Почта администратора SOA: некорректный e-mail.</value></data>
+  <data name="Validation_Recursor_Url"><value>Recursor: URL должен быть в формате http(s)://…</value></data>
+
+  <!-- Save results -->
+  <data name="Save_Success"><value>Настройки сохранены.</value></data>
+  <data name="Save_Failed"><value>Не удалось сохранить настройки.</value></data>
+
+  <!-- Success -->
+  <data name="Msg_SettingsSaved"><value>Настройки сохранены.</value></data>
+
+  <!-- Generic errors -->
+  <data name="Err_Save"><value>Ошибка сохранения настроек.</value></data>
+  <data name="Err_SaveDetailed"><value>Ошибка сохранения настроек: {0}</value></data>
+  <data name="Err_ConfigNotFound"><value>Файл конфигурации не найден.</value></data>
+
+  <!-- Validation errors -->
+  <data name="Err_MySQL_Required"><value>MySQL: необходимо указать сервер, пользователя и базу данных.</value></data>
+  <data name="Err_PowerDNS_Required"><value>PowerDNS: необходимо указать API URL и API-ключ.</value></data>
+  <data name="Err_Recursor_Required"><value>Recursor: URL и API-ключ обязательны, если Recursor включён.</value></data>
+
+  <!-- External errors -->
+  <data name="Err_MySqlConnection"><value>Ошибка подключения к MySQL: {0}</value></data>
+</root>

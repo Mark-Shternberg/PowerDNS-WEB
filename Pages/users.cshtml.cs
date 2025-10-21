@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Localization;
 using MySqlConnector;
 using Newtonsoft.Json;
 using System.Data;
-using Microsoft.AspNetCore.Authorization;
 
 namespace PowerDNS_Web.Pages
 {
@@ -12,246 +13,246 @@ namespace PowerDNS_Web.Pages
     public class userModel : PageModel
     {
         private readonly ILogger<userModel> _logger;
-        private readonly IConfiguration Configuration;
+        private readonly IConfiguration _configuration;
+        private readonly IStringLocalizer<userModel> _L;
 
-        public userModel(ILogger<userModel> logger, IConfiguration configuration)
+        public userModel(ILogger<userModel> logger, IConfiguration configuration, IStringLocalizer<userModel> localizer)
         {
             _logger = logger;
-            Configuration = configuration;
+            _configuration = configuration;
+            _L = localizer;
         }
 
-        public string sql_connection()
+        private string SqlConnection()
         {
-
-            var server = Configuration["MySQLConnection:server"];
-            var user = Configuration["MySQLConnection:user"];
-            var password = Configuration["MySQLConnection:password"];
-            var database = Configuration["MySQLConnection:database"];
-
-            return "Server=" + server + ";User ID=" + user + ";Password=" + password + ";Database=" + database;
+            var server = _configuration["MySQLConnection:server"];
+            var user = _configuration["MySQLConnection:user"];
+            var password = _configuration["MySQLConnection:password"];
+            var database = _configuration["MySQLConnection:database"];
+            return $"Server={server};User ID={user};Password={password};Database={database}";
         }
 
-        public class new_user
-        {
-            public string? username { get; set; }
-            public string? role { get; set; }
-            public string? password { get; set; }
-        }
-
-        public class main_table_model
+        public class NewUser
         {
             public string? username { get; set; }
             public string? role { get; set; }
             public string? password { get; set; }
         }
 
-        public List<main_table_model>? main_table { get; set; }
+        public class Row
+        {
+            public string? username { get; set; }
+            public string? role { get; set; }
+            public string? password { get; set; }
+        }
+
+        public List<Row>? main_table { get; set; }
 
         public void OnGet()
         {
             try
             {
-                using (var connection = new MySqlConnection(sql_connection()))
-                {
-                    connection.Open();
+                using var connection = new MySqlConnection(SqlConnection());
+                connection.Open();
 
-                    // Проверяем количество администраторов
-                    string checkAdminCountQuery = "SELECT COUNT(*) FROM users WHERE role = 'Administrator'";
-                    using (var checkCommand = new MySqlCommand(checkAdminCountQuery, connection))
-                    {
-                        int adminCount = Convert.ToInt32(checkCommand.ExecuteScalar());
-
-                        // Передаём в ViewData, чтобы использовать в Razor
-                        ViewData["AdminCount"] = adminCount;
-                    }
-                }
+                const string checkAdminCountQuery = "SELECT COUNT(*) FROM users WHERE role = 'Administrator'";
+                using var checkCommand = new MySqlCommand(checkAdminCountQuery, connection);
+                var adminCount = Convert.ToInt32(checkCommand.ExecuteScalar());
+                ViewData["AdminCount"] = adminCount;
             }
             catch (MySqlException ex)
             {
-                _logger.LogError(ex, "Error");
+                _logger.LogError(ex, "MySQL error in OnGet()");
             }
 
             LoadMainTable();
         }
 
-        private void LoadMainTable() // LOAD USERS
+        private void LoadMainTable()
         {
-            using var connection = new MySqlConnection(sql_connection());
+            using var connection = new MySqlConnection(SqlConnection());
             connection.Open();
 
-            using var command = new MySqlCommand("SELECT username,role FROM users ORDER BY id DESC", connection);
+            using var command = new MySqlCommand("SELECT username, role FROM users ORDER BY id DESC", connection);
+            using var reader = command.ExecuteReader();
 
-            using var reader_main = command.ExecuteReader();
-            if (reader_main.HasRows)
+            if (reader.HasRows)
             {
-                DataTable dt = new DataTable();
-                dt.Load(reader_main);
+                var dt = new DataTable();
+                dt.Load(reader);
 
-                string serializeObject = JsonConvert.SerializeObject(dt);
-                var dataTableObjectInPOCO = JsonConvert.DeserializeObject<List<main_table_model>>(serializeObject);
-                main_table = dataTableObjectInPOCO;
+                var json = JsonConvert.SerializeObject(dt);
+                main_table = JsonConvert.DeserializeObject<List<Row>>(json);
             }
-            else main_table = null;
-        }
-
-        public async Task<IActionResult> OnPostAdd_new_user([FromBody] new_user model) //ADDING NEW USER
-        {
-            try
+            else
             {
-                using var connection = new MySqlConnection(sql_connection());
-                await connection.OpenAsync(); 
-
-                // CHECK FOR DUPLICATES
-                string checkQuery = "SELECT COUNT(*) FROM users WHERE username = @username";
-                using (var cmd = new MySqlCommand(checkQuery, connection))
-                {
-                    cmd.Parameters.AddWithValue("@username", model.username);
-                    var result = await cmd.ExecuteScalarAsync(); 
-                    if (Convert.ToInt32(result) > 0)
-                    {
-                        return new JsonResult(new { success = false, message = "A user with such a login already exists." });
-                    }
-                }
-
-                // ADD NEW USER
-                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(model.password);
-                string insertQuery = "INSERT INTO users (username, role, password) VALUES (@username, @role, @password)";
-                using (var cmd = new MySqlCommand(insertQuery, connection))
-                {
-                    cmd.Parameters.AddWithValue("@username", model.username);
-                    cmd.Parameters.AddWithValue("@role", model.role);
-                    cmd.Parameters.AddWithValue("@password", hashedPassword);
-                    await cmd.ExecuteNonQueryAsync(); 
-                }
-
-                return new JsonResult(new { success = true });
-            }
-            catch (MySqlException ex)
-            {
-                _logger.LogError(ex.Message, "Error occurred while sending MySQL command");
-                return new JsonResult(new { success = false, message = "SQL error: " + ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message, "General error");
-                return new JsonResult(new { success = false, message = "Error: " + ex.Message });
+                main_table = null;
             }
         }
 
-        public async Task<IActionResult> OnPostUpdate_user([FromBody] new_user model) // UPDATE USER
+        // ============= ADD NEW USER =============
+        public async Task<IActionResult> OnPostAdd_new_user([FromBody] NewUser model)
         {
             try
             {
-                string sql;
-                if (model.password == "") sql = "UPDATE users SET role=@role WHERE (username=@username)";
-                else sql = "UPDATE users SET role=@role, password=@password WHERE (username=@username)";
+                if (model == null ||
+                    string.IsNullOrWhiteSpace(model.username) ||
+                    string.IsNullOrWhiteSpace(model.role) ||
+                    string.IsNullOrWhiteSpace(model.password))
+                {
+                    return new JsonResult(new { success = false, message = _L["UM_Back_InvalidRequest"] });
+                }
 
-                using var connection = new MySqlConnection(sql_connection());
+                await using var connection = new MySqlConnection(SqlConnection());
                 await connection.OpenAsync();
 
-                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(model.password);
-                using (var cmd = new MySqlCommand(sql, connection))
+                // duplicates
+                const string checkQuery = "SELECT COUNT(*) FROM users WHERE username = @username";
+                await using (var checkCmd = new MySqlCommand(checkQuery, connection))
                 {
-                    cmd.Parameters.AddWithValue("@username", model.username);
-                    cmd.Parameters.AddWithValue("@role", model.role);
-                    cmd.Parameters.AddWithValue("@password", hashedPassword);
-                    await cmd.ExecuteNonQueryAsync();
+                    checkCmd.Parameters.AddWithValue("@username", model.username.Trim());
+                    var cnt = Convert.ToInt32(await checkCmd.ExecuteScalarAsync());
+                    if (cnt > 0)
+                    {
+                        return new JsonResult(new { success = false, message = _L["UM_Back_UserExists"] });
+                    }
+                }
+
+                // insert
+                var hashed = BCrypt.Net.BCrypt.HashPassword(model.password);
+                const string insertQuery = "INSERT INTO users (username, role, password) VALUES (@username, @role, @password)";
+                await using (var insert = new MySqlCommand(insertQuery, connection))
+                {
+                    insert.Parameters.AddWithValue("@username", model.username.Trim());
+                    insert.Parameters.AddWithValue("@role", model.role.Trim());
+                    insert.Parameters.AddWithValue("@password", hashed);
+                    await insert.ExecuteNonQueryAsync();
                 }
 
                 return new JsonResult(new { success = true });
             }
             catch (MySqlException ex)
             {
-                _logger.LogError(ex.Message, "Error occurred while sending MySQL command");
-                return new JsonResult(new { success = false, message = "SQL error: " + ex.Message });
+                _logger.LogError(ex, "MySQL error on Add user");
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_SqlError"], ex.Message) });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message, "General error");
-                return new JsonResult(new { success = false, message = "Error: " + ex.Message });
+                _logger.LogError(ex, "General error on Add user");
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_Error"], ex.Message) });
             }
         }
 
-        public async Task<IActionResult> OnPostDelete_user([FromBody] main_table_model model) // DELETE USER
+        // ============= UPDATE USER =============
+        public async Task<IActionResult> OnPostUpdate_user([FromBody] NewUser model)
         {
-            int adminCount;
             try
             {
-                string sqlExpression = "DELETE FROM users WHERE (username = ?username)";
-
-                using (var connection = new MySqlConnection(sql_connection()))
+                if (model == null || string.IsNullOrWhiteSpace(model.username) || string.IsNullOrWhiteSpace(model.role))
                 {
-                    connection.Open();
-
-                    // CHECK IF THERE IS ONLY ONE ADMIN
-                    string checkAdminCountQuery = "SELECT COUNT(*) FROM users WHERE role = 'Administrator'";
-                    using (var checkCommand = new MySqlCommand(checkAdminCountQuery, connection))
-                    {
-                        adminCount = Convert.ToInt32(checkCommand.ExecuteScalar());
-                        ViewData["AdminCount"] = adminCount;
-                    }
-
-                    if (adminCount <= 1)
-                    {
-                        string checkIfAdmin = "SELECT role FROM users WHERE username = @username";
-                        using (var checkCommand = new MySqlCommand(checkIfAdmin, connection))
-                        {
-                            checkCommand.Parameters.AddWithValue("@username", model.username);
-
-                            using (var reader = checkCommand.ExecuteReader())
-                            {
-                                if (reader.Read())
-                                {
-                                    string role = reader.GetString(0); 
-                                    if (role == "Administrator")
-                                    {
-                                        LoadMainTable();
-                                        return new JsonResult(new { success = false, message = "You cannot delete the only administrator!" });
-                                    }
-                                }
-                            }
-                        }
-
-                    }
-                    //--------------------------------
-
-                    using var command = new MySqlCommand(sqlExpression, connection);
-
-                    command.Prepare();
-
-                    int error = 0;
-                    if (model.username != null && model.username != "")
-                    {
-                        command.Parameters.AddWithValue("?username", model.username);
-                    }
-                    else error++;
-
-                    //---------EXECUTE------------
-                    if (error == 0)
-                    {
-                        command.ExecuteNonQuery();
-                    }
-
-                    // RECOUNT ADMINS
-                    using (var checkCommand = new MySqlCommand(checkAdminCountQuery, connection))
-                    {
-                        ViewData["AdminCount"] = Convert.ToInt32(checkCommand.ExecuteScalar());
-                    }
+                    return new JsonResult(new { success = false, message = _L["UM_Back_InvalidRequest"] });
                 }
+
+                var updatePassword = !string.IsNullOrEmpty(model.password);
+
+                string sql = updatePassword
+                    ? "UPDATE users SET role=@role, password=@password WHERE username=@username"
+                    : "UPDATE users SET role=@role WHERE username=@username";
+
+                await using var connection = new MySqlConnection(SqlConnection());
+                await connection.OpenAsync();
+
+                await using var cmd = new MySqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("@username", model.username.Trim());
+                cmd.Parameters.AddWithValue("@role", model.role.Trim());
+
+                if (updatePassword)
+                {
+                    var hashed = BCrypt.Net.BCrypt.HashPassword(model.password);
+                    cmd.Parameters.AddWithValue("@password", hashed);
+                }
+
+                await cmd.ExecuteNonQueryAsync();
+                return new JsonResult(new { success = true });
             }
             catch (MySqlException ex)
             {
-                _logger.LogError(ex.Message, "Error occurred while send mysql command");
-                return new JsonResult(new { success = false, message = "Error: " + ex.Message });
+                _logger.LogError(ex, "MySQL error on Update user");
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_SqlError"], ex.Message) });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message, "General error");
-                return new JsonResult(new { success = false, message = "Error: " + ex.ToString() });
+                _logger.LogError(ex, "General error on Update user");
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_Error"], ex.Message) });
             }
-            LoadMainTable();
-            return new JsonResult(new { success = true });
         }
 
+        // ============= DELETE USER =============
+        public async Task<IActionResult> OnPostDelete_user([FromBody] Row model)
+        {
+            if (model == null || string.IsNullOrWhiteSpace(model.username))
+                return new JsonResult(new { success = false, message = _L["UM_Back_InvalidRequest"] });
+
+            try
+            {
+                const string checkAdminCountQuery = "SELECT COUNT(*) FROM users WHERE role = 'Administrator'";
+                await using var connection = new MySqlConnection(SqlConnection());
+                await connection.OpenAsync();
+
+                // check admins count
+                int adminCount;
+                await using (var checkCount = new MySqlCommand(checkAdminCountQuery, connection))
+                {
+                    adminCount = Convert.ToInt32(await checkCount.ExecuteScalarAsync());
+                    ViewData["AdminCount"] = adminCount;
+                }
+
+                if (adminCount <= 1)
+                {
+                    // if only one admin exists, forbid deleting that admin
+                    const string checkIfAdminSql = "SELECT role FROM users WHERE username = @username";
+                    await using var checkRole = new MySqlCommand(checkIfAdminSql, connection);
+                    checkRole.Parameters.AddWithValue("@username", model.username.Trim());
+
+                    await using var reader = await checkRole.ExecuteReaderAsync();
+                    if (await reader.ReadAsync())
+                    {
+                        var role = reader.GetString(0);
+                        if (string.Equals(role, "Administrator", StringComparison.OrdinalIgnoreCase))
+                        {
+                            LoadMainTable();
+                            return new JsonResult(new { success = false, message = _L["UM_Back_OnlyAdminDeleteForbidden"] });
+                        }
+                    }
+                }
+
+                // delete
+                const string deleteSql = "DELETE FROM users WHERE username = @username";
+                await using (var deleteCmd = new MySqlCommand(deleteSql, connection))
+                {
+                    deleteCmd.Parameters.AddWithValue("@username", model.username.Trim());
+                    await deleteCmd.ExecuteNonQueryAsync();
+                }
+
+                // recount
+                await using (var recount = new MySqlCommand(checkAdminCountQuery, connection))
+                {
+                    ViewData["AdminCount"] = Convert.ToInt32(await recount.ExecuteScalarAsync());
+                }
+
+                LoadMainTable();
+                return new JsonResult(new { success = true });
+            }
+            catch (MySqlException ex)
+            {
+                _logger.LogError(ex, "MySQL error on Delete user");
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_SqlError"], ex.Message) });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "General error on Delete user");
+                return new JsonResult(new { success = false, message = string.Format(_L["UM_Back_Error"], ex.Message) });
+            }
+        }
     }
 }

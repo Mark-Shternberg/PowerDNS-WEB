@@ -1,286 +1,323 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 
 namespace PowerDNS_Web.Pages
 {
     public class RecursorModel : PageModel
     {
-        private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _cfg;
         private readonly ILogger<RecursorModel> _logger;
+        private readonly IStringLocalizer<RecursorModel> _L;
 
-        public List<string> AvailableZones { get; set; } = new();
-        public List<ForwardZone> ForwardZones { get; set; } = new();
+        public List<string> AvailableZones { get; private set; } = new();
+        public List<ForwardZone> ForwardZones { get; private set; } = new();
 
-        public RecursorModel(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<RecursorModel> logger)
+        private string PdnsUrl => _cfg["pdns:url"] ?? "";
+        private string PdnsKey => _cfg["pdns:api_key"] ?? "";
+        private string RecursorUrl => _cfg["recursor:url"] ?? "";
+        private string RecursorKey => _cfg["recursor:api_key"] ?? "";
+        private string RecursorEnabled => _cfg["recursor:Enabled"] ?? _cfg["recursor:enabled"] ?? "Disabled";
+        private bool IsRecursorOn => string.Equals(RecursorEnabled, "Enabled", StringComparison.OrdinalIgnoreCase);
+
+        public RecursorModel(
+            IHttpClientFactory httpClientFactory,
+            IConfiguration configuration,
+            ILogger<RecursorModel> logger,
+            IStringLocalizer<RecursorModel> localizer)
         {
-            _httpClient = httpClientFactory.CreateClient();
-            _configuration = configuration;
+            _httpClientFactory = httpClientFactory;
+            _cfg = configuration;
             _logger = logger;
+            _L = localizer;
         }
 
+        // ===== View models / DTOs =====
+        public class ForwardZone
+        {
+            public string Name { get; set; } = "";
+            public List<string> ForwardTo { get; set; } = new();
+        }
+
+        private class AuthZoneDto
+        {
+            public string Name { get; set; } = "";
+            public string Kind { get; set; } = "";
+        }
+
+        private class RecursorZoneDto
+        {
+            public string Name { get; set; } = "";
+            public string Kind { get; set; } = "";
+            public List<string> Servers { get; set; } = new();
+            public bool? Recursion_Desired { get; set; }
+        }
+
+        public class ForwardZoneRequest { public string Zone { get; set; } = ""; }
+        public class UpdateForwardZones
+        {
+            public string Name { get; set; } = "";
+            public string DnsServers { get; set; } = "";
+        }
+
+        // ===== Page GET =====
         public async Task OnGetAsync()
         {
-            ViewData["RecursorEnabled"] = _configuration["recursor:Enabled"] ?? "Disabled";
-            if (_configuration["recursor:enabled"] == "Enabled") await LoadZonesAsync();
-        }
+            ViewData["RecursorEnabled"] = IsRecursorOn ? "Enabled" : "Disabled";
+            if (!IsRecursorOn) return;
 
-        private async Task LoadZonesAsync()
-        {
-            try
+            // 1) авторитативные зоны (для списка "Available")
+            var authZones = await SafeGetAuthZonesAsync();
+
+            // 2) сконфигурированные у Recursor forward-зоны
+            var recZones = await SafeGetRecursorZonesAsync();
+
+            ForwardZones = recZones
+                .Where(z => string.Equals(z.Kind, "Forwarded", StringComparison.OrdinalIgnoreCase))
+                .Select(z => new ForwardZone { Name = z.Name, ForwardTo = z.Servers ?? new List<string>() })
+                .OrderBy(z => z.Name != "." ? 1 : 0)
+                .ThenBy(z => z.Name)
+                .ToList();
+
+            // если нет корневой зоны – создадим дефолтную (как у вас было: 1.1.1.1:53)
+            if (!ForwardZones.Any(z => z.Name == "."))
             {
-                var pdnsUrl = _configuration["pdns:url"];
-                var pdnsApiKey = _configuration["pdns:api_key"];
-                var recursorUrl = _configuration["recursor:url"];
-                var recursorApiKey = _configuration["recursor:api_key"];
-
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Add("X-API-Key", pdnsApiKey);
-
-                // FETCH AUTHORITATIVE ZONES
-                var authResponse = await _httpClient.GetAsync($"{pdnsUrl}/api/v1/servers/localhost/zones");
-                var authZones = JsonSerializer.Deserialize<List<DnsZone>>(await authResponse.Content.ReadAsStringAsync(),
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<DnsZone>();
-
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
-
-                // FETCH FORWARD ZONES FROM RECURSOR
-                var recursorResponse = await _httpClient.GetAsync($"{recursorUrl}/api/v1/servers/localhost/zones");
-                var recursorZones = JsonSerializer.Deserialize<List<RecursorZone>>(
-                    await recursorResponse.Content.ReadAsStringAsync(),
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                    ?? new List<RecursorZone>();
-
-                var forwardZones = recursorZones
-                    .Where(z => z.Kind != null && z.Kind.Equals("Forwarded", StringComparison.OrdinalIgnoreCase))
-                    .Select(z => new ForwardZone { Name = z.Name, ForwardTo = z.Servers })
-                    .ToList();
-
-                // CHECK IF ZONE "." EXISTS
-                bool hasRootZone = forwardZones.Any(z => z.Name == ".");
-
-                if (!hasRootZone)
+                try
                 {
-                    // DEFINE DEFAULT FORWARD SETTINGS
-                    var forwardZoneData = new
+                    using var c = NewRecursorClient();
+                    var payload = new
                     {
                         name = ".",
                         kind = "Forwarded",
                         servers = new[] { "1.1.1.1:53" },
                         recursion_desired = false
                     };
+                    var resp = await c.PostAsync($"{RecursorUrl}/api/v1/servers/localhost/zones",
+                        new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"));
 
-                    var content = new StringContent(JsonSerializer.Serialize(forwardZoneData), Encoding.UTF8, "application/json");
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
-
-                    var response = await _httpClient.PostAsync($"{recursorUrl}/api/v1/servers/localhost/zones", content);
-
-                    if (!response.IsSuccessStatusCode)
+                    if (resp.IsSuccessStatusCode)
                     {
-                        var errorMessage = await response.Content.ReadAsStringAsync();
-                        _logger.LogError($"Failed to create root zone '.': {errorMessage}");
+                        ForwardZones.Insert(0, new ForwardZone { Name = ".", ForwardTo = new List<string> { "1.1.1.1:53" } });
                     }
                     else
                     {
-                        forwardZones.Add(new ForwardZone
-                        {
-                            Name = ".",
-                            ForwardTo = new List<string> { "1.1.1.1:53" }
-                        });
+                        var body = await resp.Content.ReadAsStringAsync();
+                        _logger.LogError("Failed to create root forward zone '.': {Body}", body);
                     }
                 }
-
-                AvailableZones = authZones
-                    .Select(z => z.Name)
-                    .Except(forwardZones.Select(fz => fz.Name))
-                    .ToList();
-
-                ForwardZones = forwardZones;
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Exception while creating root forward zone '.'");
+                }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                _logger.LogError($"EXCEPTION IN LoadZonesAsync: {ex.Message}");
-            }
+
+            // 3) доступные для добавления (в авторитативных, но ещё не во forward)
+            var forwarded = new HashSet<string>(ForwardZones.Select(f => EnsureTrailingDot(f.Name)), StringComparer.OrdinalIgnoreCase);
+            AvailableZones = authZones
+                .Select(a => EnsureTrailingDot(a.Name))
+                .Where(z => !forwarded.Contains(z))
+                .OrderBy(z => z)
+                .ToList();
         }
 
-        public async Task<IActionResult> OnPostAddForwardZoneAsync([FromBody] ForwardZoneRequest request)
+        // ===== Handlers =====
+
+        // Добавить forward-зону (по умолчанию на 127.0.0.1:5300)
+        public async Task<IActionResult> OnPostAddForwardZoneAsync([FromBody] ForwardZoneRequest req)
         {
-            if (string.IsNullOrEmpty(request.Zone))
-            {
-                return new JsonResult(new { success = false, message = "INVALID ZONE" }) { StatusCode = 400 };
-            }
+            if (!IsRecursorOn)
+                return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"] });
+
+            if (req == null || string.IsNullOrWhiteSpace(req.Zone))
+                return BadRequest(new { success = false, message = _L["Err.ZoneRequired"] });
 
             try
             {
-                var recursorUrl = _configuration["recursor:url"];
-                var recursorApiKey = _configuration["recursor:api_key"];
-
-                var forwardZoneData = new
+                using var c = NewRecursorClient();
+                var name = EnsureTrailingDot(req.Zone);
+                var payload = new
                 {
-                    name = request.Zone.EndsWith(".") ? request.Zone : request.Zone + ".",
+                    name,
                     kind = "Forwarded",
                     servers = new[] { "127.0.0.1:5300" },
                     recursion_desired = false
                 };
+                var resp = await c.PostAsync($"{RecursorUrl}/api/v1/servers/localhost/zones",
+                    new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"));
+                var body = await resp.Content.ReadAsStringAsync();
 
-                var content = new StringContent(JsonSerializer.Serialize(forwardZoneData), Encoding.UTF8, "application/json");
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
+                if (!resp.IsSuccessStatusCode)
+                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", body] });
 
-                var response = await _httpClient.PostAsync($"{recursorUrl}/api/v1/servers/localhost/zones", content);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorMessage = await response.Content.ReadAsStringAsync();
-                    return new JsonResult(new { success = false, message = $"ERROR ADDING FORWARD ZONE: {errorMessage}" }) { StatusCode = (int)response.StatusCode };
-                }
-
-                return new JsonResult(new { success = true });
+                return new JsonResult(new { success = true, message = _L["Ans.Forward.Added"] });
             }
             catch (Exception ex)
             {
-                _logger.LogError($"EXCEPTION IN OnPostAddForwardZoneAsync: {ex.Message}");
-                return new JsonResult(new { success = false, message = $"INTERNAL SERVER ERROR: {ex.Message}" }) { StatusCode = 500 };
+                _logger.LogError(ex, "OnPostAddForwardZoneAsync failed");
+                return StatusCode(500, new { success = false, message = _L["Err.Internal"] });
             }
         }
 
-        public async Task<IActionResult> OnPostRemoveForwardZoneAsync([FromBody] ForwardZoneRequest request)
+        // Удалить forward-зону
+        public async Task<IActionResult> OnPostRemoveForwardZoneAsync([FromBody] ForwardZoneRequest req)
         {
-            if (string.IsNullOrEmpty(request.Zone))
-            {
-                return new JsonResult(new { success = false, message = "INVALID ZONE" }) { StatusCode = 400 };
-            }
+            if (!IsRecursorOn)
+                return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"] });
+
+            if (req == null || string.IsNullOrWhiteSpace(req.Zone))
+                return BadRequest(new { success = false, message = _L["Err.ZoneRequired"] });
+
+            var name = EnsureTrailingDot(req.Zone);
+            if (name == ".")
+                return BadRequest(new { success = false, message = _L["Err.CannotDeleteRoot"] });
 
             try
             {
-                var recursorUrl = _configuration["recursor:url"];
-                var recursorApiKey = _configuration["recursor:api_key"];
+                using var c = NewRecursorClient();
+                var pathName = Uri.EscapeDataString(name); // корректно закодирует точку и др. символы
+                var resp = await c.DeleteAsync($"{RecursorUrl}/api/v1/servers/localhost/zones/{pathName}");
+                var body = await resp.Content.ReadAsStringAsync();
 
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
-                var response = await _httpClient.DeleteAsync($"{recursorUrl}/api/v1/servers/localhost/zones/{request.Zone}");
+                if (!resp.IsSuccessStatusCode)
+                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", body] });
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorMessage = await response.Content.ReadAsStringAsync();
-                    return new JsonResult(new { success = false, message = $"ERROR REMOVING FORWARD ZONE: {errorMessage}" }) { StatusCode = (int)response.StatusCode };
-                }
-
-                return new JsonResult(new { success = true });
+                return new JsonResult(new { success = true, message = _L["Ans.Forward.Removed"] });
             }
             catch (Exception ex)
             {
-                _logger.LogError($"EXCEPTION IN OnPostRemoveForwardZoneAsync: {ex.Message}");
-                return new JsonResult(new { success = false, message = $"INTERNAL SERVER ERROR: {ex.Message}" }) { StatusCode = 500 };
+                _logger.LogError(ex, "OnPostRemoveForwardZoneAsync failed");
+                return StatusCode(500, new { success = false, message = _L["Err.Internal"] });
             }
         }
 
-        public async Task<IActionResult> OnPostEditZoneAsync([FromBody] UpdateForwardZones request)
+        // Сохранить список upstream DNS для зоны
+        public async Task<IActionResult> OnPostEditZoneAsync([FromBody] UpdateForwardZones req)
         {
+            if (!IsRecursorOn)
+                return BadRequest(new { success = false, message = _L["Err.RecursorDisabled"] });
+
+            if (req == null || string.IsNullOrWhiteSpace(req.Name))
+                return BadRequest(new { success = false, message = _L["Err.ZoneRequired"] });
+
+            var servers = (req.DnsServers ?? "")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (servers.Count == 0)
+                return BadRequest(new { success = false, message = _L["Err.NoServersProvided"] });
+
+            foreach (var s in servers)
+                if (!LooksLikeHostPort(s))
+                    return BadRequest(new { success = false, message = _L["Err.InvalidServerFormat", s] });
+
             try
             {
-                if (string.IsNullOrEmpty(request.DnsServers) || string.IsNullOrEmpty(request.Name))
+                using var c = NewRecursorClient();
+                var name = EnsureTrailingDot(req.Name);
+
+                // Для корня оставляем false: вы уже используете явные forwarders
+                var payload = new
                 {
-                    return new JsonResult(new { success = false, message = "EMPTY REQUEST" }) { StatusCode = 400 };
-                }
-
-                // PARSE DNS SERVERS LIST
-                var dnsServers = request.DnsServers
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .ToArray();
-
-                if (dnsServers.Length == 0)
-                {
-                    return new JsonResult(new { success = false, message = "NO VALID DNS SERVERS PROVIDED" }) { StatusCode = 400 };
-                }
-
-                // PREPARE API URL AND PAYLOAD
-                var recursorUrl = _configuration["recursor:url"];
-                var recursorApiKey = _configuration["recursor:api_key"];
-                var recursionDesired = false;
-
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Add("X-API-Key", recursorApiKey);
-
-                if (request.Name == ".")
-                {
-                    recursionDesired = true;
-                }
-
-                // CREATE JSON PAYLOAD FOR UPDATE REQUEST
-                var updateZone = new
-                {
-                    name = request.Name,
+                    name,
                     kind = "Forwarded",
-                    servers = dnsServers,
-                    recursion_desired = recursionDesired
+                    servers,
+                    recursion_desired = false
                 };
 
-                if (request.Name == ".")
-                {
-                    request.Name = "=2E";
-                }
+                var pathName = Uri.EscapeDataString(name);
+                var resp = await c.PutAsync($"{RecursorUrl}/api/v1/servers/localhost/zones/{pathName}",
+                    new StringContent(JsonSerializer.Serialize(payload, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    }), Encoding.UTF8, "application/json"));
+                var body = await resp.Content.ReadAsStringAsync();
 
-                var jsonPayload = JsonSerializer.Serialize(updateZone, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-                var requestContent = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                if (!resp.IsSuccessStatusCode)
+                    return StatusCode((int)resp.StatusCode, new { success = false, message = _L["Err.RecursorApi", body] });
 
-                // SEND UPDATE REQUEST
-                var updateResponse = await _httpClient.PutAsync($"{recursorUrl}/api/v1/servers/localhost/zones/{request.Name}", requestContent);
-                Console.WriteLine(updateResponse);
-
-                if (!updateResponse.IsSuccessStatusCode)
-                {
-                    var errorMessage = await updateResponse.Content.ReadAsStringAsync();
-                    _logger.LogError($"FAILED TO UPDATE ROOT ZONE '.': {errorMessage}");
-                    return new JsonResult(new { success = false, message = $"FAILED TO UPDATE ROOT ZONE '.': {errorMessage}" }) { StatusCode = (int)updateResponse.StatusCode };
-                }
-
-                _logger.LogInformation($"Root zone '.' updated successfully with new DNS: {string.Join(", ", dnsServers)}");
-                return new JsonResult(new { success = true });
+                return new JsonResult(new { success = true, message = _L["Ans.Forward.Updated"] });
             }
             catch (Exception ex)
             {
-                _logger.LogError($"EXCEPTION IN OnPosteditZoneAsync: {ex.Message}");
-                return new JsonResult(new { success = false, message = $"INTERNAL SERVER ERROR: {ex.Message}" }) { StatusCode = 500 };
+                _logger.LogError(ex, "OnPostEditZoneAsync failed");
+                return StatusCode(500, new { success = false, message = _L["Err.Internal"] });
             }
         }
 
-        public class UpdateForwardZones
+        // ===== helpers =====
+        private async Task<List<AuthZoneDto>> SafeGetAuthZonesAsync()
         {
-            public string Name { get; set; }
-            public string DnsServers { get; set; }
+            try
+            {
+                using var c = _httpClientFactory.CreateClient();
+                c.DefaultRequestHeaders.Remove("X-API-Key");
+                c.DefaultRequestHeaders.Add("X-API-Key", PdnsKey);
+
+                var resp = await c.GetAsync($"{PdnsUrl}/api/v1/servers/localhost/zones");
+                if (!resp.IsSuccessStatusCode) return new List<AuthZoneDto>();
+
+                var json = await resp.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<List<AuthZoneDto>>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new List<AuthZoneDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch authoritative zones");
+                return new List<AuthZoneDto>();
+            }
         }
 
-        public class RecursorZone
+        private async Task<List<RecursorZoneDto>> SafeGetRecursorZonesAsync()
         {
-            public string Id { get; set; }
-            public string Kind { get; set; }
-            public string Name { get; set; }
-            public List<string> Servers { get; set; } = new();
-            public bool Recursion_Desired { get; set; }
+            try
+            {
+                using var c = NewRecursorClient();
+                var resp = await c.GetAsync($"{RecursorUrl}/api/v1/servers/localhost/zones");
+                if (!resp.IsSuccessStatusCode) return new List<RecursorZoneDto>();
+
+                var json = await resp.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<List<RecursorZoneDto>>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new List<RecursorZoneDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch recursor zones");
+                return new List<RecursorZoneDto>();
+            }
         }
 
-        public class ForwardZoneRequest
+        private HttpClient NewRecursorClient()
         {
-            public string Zone { get; set; }
+            var c = _httpClientFactory.CreateClient();
+            c.DefaultRequestHeaders.Remove("X-API-Key");
+            c.DefaultRequestHeaders.Add("X-API-Key", RecursorKey);
+            return c;
         }
 
-        public class ForwardZone
-        {
-            public string Name { get; set; }
-            public List<string> ForwardTo { get; set; } = new();
-        }
+        private static string EnsureTrailingDot(string s)
+            => string.IsNullOrWhiteSpace(s) ? s : (s.EndsWith('.') ? s : s + ".");
 
-        public class DnsZone
+        private static bool LooksLikeHostPort(string s)
         {
-            public string Name { get; set; }
+            var idx = s.LastIndexOf(':');
+            if (idx <= 0 || idx >= s.Length - 1) return false;
+            if (!int.TryParse(s[(idx + 1)..], out var port) || port < 1 || port > 65535) return false;
+            return !string.IsNullOrWhiteSpace(s[..idx]);
         }
     }
 }

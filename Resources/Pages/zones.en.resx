@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <data name="Title"><value>Zones</value></data>
+  <data name="Header.Title"><value>Zones</value></data>
+  <data name="Header.Subtitle"><value>Authoritative zones management</value></data>
+
+  <data name="Btn.AddForward"><value>Add forward zone</value></data>
+  <data name="Btn.AddReverse"><value>Add reverse zone</value></data>
+  <data name="Btn.Edit"><value>Edit</value></data>
+  <data name="Btn.Delete"><value>Delete</value></data>
+  <data name="Btn.Close"><value>Close</value></data>
+  <data name="Btn.Add"><value>Add</value></data>
+  <data name="Btn.Save"><value>Save</value></data>
+  <data name="Btn.Cancel"><value>Cancel</value></data>
+  <data name="Btn.Keys"><value>Keys</value></data>
+
+  <data name="Search.Placeholder"><value>Search by domain</value></data>
+  <data name="Search.Clear"><value>Clear</value></data>
+
+  <data name="Th.Domain"><value>Domain</value></data>
+  <data name="Th.Master"><value>Master</value></data>
+  <data name="Th.Type"><value>Type</value></data>
+  <data name="Th.DNSSEC"><value>DNSSEC</value></data>
+  <data name="Th.Serial"><value>Serial</value></data>
+  <data name="Th.Actions"><value>Actions</value></data>
+
+  <data name="Type.Master"><value>Master</value></data>
+  <data name="Type.Slave"><value>Slave</value></data>
+  <data name="Type.Native"><value>Native</value></data>
+
+  <data name="Dnssec.Enabled"><value>Enabled</value></data>
+  <data name="Dnssec.Disabled"><value>Disabled</value></data>
+
+  <data name="Modal.AddGenericTitle"><value>Add zone</value></data>
+  <data name="Modal.AddForwardTitle"><value>Add forward zone</value></data>
+  <data name="Modal.AddReverseTitle"><value>Add reverse zone</value></data>
+  <data name="Modal.EditTitle"><value>Edit zone</value></data>
+
+  <data name="Field.ZoneName"><value>Zone name</value></data>
+  <data name="Field.ZoneName.Ph"><value>example.com</value></data>
+  <data name="Field.ZoneName.Invalid"><value>Please enter a valid zone name.</value></data>
+
+  <data name="Field.RevPrefix"><value>Reverse prefix</value></data>
+  <data name="Field.RevPrefix.HelpHtml"><value>Network prefix (no last octet), e.g. <code>192.168.0.</code></value></data>
+  <data name="Field.RevPrefix.Invalid"><value>Please enter reverse prefix like 192.168.0.</value></data>
+
+  <data name="Field.ZoneType"><value>Zone type</value></data>
+  <data name="Field.ZoneType.Invalid"><value>Please select zone type.</value></data>
+
+  <data name="Field.Dnssec.Invalid"><value>Please choose DNSSEC state.</value></data>
+
+  <data name="Field.MasterServer"><value>Master server</value></data>
+  <data name="Field.MasterServer.Invalid"><value>Master server IP is required for Slave zone.</value></data>
+
+  <data name="Confirm.Title"><value>Confirm deletion</value></data>
+  <data name="Confirm.TextPrefix"><value>Are you sure you want to delete zone:</value></data>
+
+  <data name="Keys.Title"><value>DNSSEC Keys</value></data>
+  <data name="Keys.Warning"><value>Provide the DS records below to your domain registrar.</value></data>
+
+  <data name="Common.Loading"><value>Loading…</value></data>
+
+  <data name="Msg.ZoneAdded"><value>Zone added.</value></data>
+  <data name="Msg.ZoneUpdated"><value>Zone updated.</value></data>
+  <data name="Msg.ZoneDeleted"><value>Zone deleted.</value></data>
+  <data name="Msg.ZoneAddedRecursorWarn"><value>Zone added. Error adding forward zone in recursor: {0}</value></data>
+  <data name="Msg.ZoneDeletedRecursorWarn"><value>Zone deleted. Error removing forward zone in recursor: {0}</value></data>
+  <data name="Msg.ZoneDeletedRecursorWarn2"><value>Zone deleted. Warning: error removing forward zone in recursor.</value></data>
+
+  <data name="Err.PdnsUrlMissing"><value>PowerDNS URL is not configured.</value></data>
+  <data name="Err.ZoneNameEmpty"><value>Zone name is empty.</value></data>
+  <data name="Err.InvalidReversePrefix"><value>Invalid reverse prefix.</value></data>
+  <data name="Err.InvalidParams"><value>Invalid request parameters.</value></data>
+  <data name="Err.PowerDnsApi"><value>PowerDNS API error: {0}</value></data>
+  <data name="Err.CreateDnssecKeys"><value>Failed to create DNSSEC keys: {0}</value></data>
+  <data name="Err.AddSoa"><value>Failed to add SOA record: {0}</value></data>
+  <data name="Err.FetchZone"><value>Failed to fetch zone '{0}': {1}</value></data>
+  <data name="Err.ParseZoneData"><value>Failed to parse current zone data.</value></data>
+  <data name="Err.CreateDnssecKeyGeneric"><value>Failed to create DNSSEC key: {0}</value></data>
+
+  <data name="Err.ConnPdns"><value>Connection error to PowerDNS API.</value></data>
+  <data name="Err.InternalAdd"><value>Internal server error while adding zone.</value></data>
+  <data name="Err.InternalEdit"><value>Internal server error while updating zone.</value></data>
+  <data name="Err.InternalDelete"><value>Internal server error while deleting zone.</value></data>
+  <data name="Err.InternalGeneric"><value>Internal server error: {0}</value></data>
+</root>

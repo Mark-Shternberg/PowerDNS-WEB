@@ -26,6 +26,9 @@ body {
 /* ===== FOOTER ===== */
 footer {
     line-height: inherit !important;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
 }
 
 /* ===== TABLE ROW ALIGNMENT ===== */

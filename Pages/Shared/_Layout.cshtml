@@ -53,7 +53,7 @@
             <div class="container">
                 <a class="navbar-brand fw-bold" asp-area="" asp-page="/Index">
                     <i class="fa fa-bolt me-1"></i>PowerDNS WEB
-                </a>
+                </a> <span class="me-2 badge text-bg-secondary align-middle">@version</span>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
                         aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,10 +63,10 @@
                 <div id="mainNav" class="collapse navbar-collapse">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-page="/zones"><i class="fa fa-shield-halved me-1"></i>Authoritative</a>
+                            <a class="nav-link" asp-area="" asp-page="/zones"><i class="fa fa-shield-halved me-1"></i>@S["Nav.Authoritative"].Value</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-page="/recursor"><i class="fa fa-rotate me-1"></i>Recursor</a>
+                            <a class="nav-link" asp-area="" asp-page="/recursor"><i class="fa fa-rotate me-1"></i>@S["Nav.Recursor"].Value</a>
                         </li>
                     </ul>
 
@@ -74,13 +74,13 @@
                         @if (User?.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-page="/users"><i class="fa fa-users me-1"></i>Users</a>
+                                <a class="nav-link" asp-area="" asp-page="/users"><i class="fa fa-users me-1"></i>@S["Nav.Users"].Value</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-page="/logs"><i class="fa fa-clipboard-list me-1"></i>Logs</a>
+                                <a class="nav-link" asp-area="" asp-page="/logs"><i class="fa fa-clipboard-list me-1"></i>@S["Nav.Logs"].Value</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-page="/settings"><i class="fa fa-gear me-1"></i>Settings</a>
+                                <a class="nav-link" asp-area="" asp-page="/settings"><i class="fa fa-gear me-1"></i>@S["Nav.Settings"].Value</a>
                             </li>
                         }
 
@@ -132,8 +132,7 @@
         <div class="container text-center py-2">
             &copy; @DateTime.Now.ToString("yyyy") —
             <a href="https://medvedev-it.ru/" target="_blank">Medvedev IT</a> ·
-            <a href="https://gitlab.medvedev-it.com/MedvedevN/powerdns-web" target="_blank">GitLab Repository</a>
-            <span class="ms-2 badge text-bg-secondary align-middle">@version</span>
+            <a href="https://gitlab.medvedev-it.com/MedvedevN/powerdns-web" target="_blank">GitLab</a>
         </div>
     </footer>
 

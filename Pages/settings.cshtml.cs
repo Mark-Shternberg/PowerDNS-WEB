@@ -1,25 +1,32 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Localization;
 using MySqlConnector;
 using System.Diagnostics;
 using System.Text.Json;
 
 namespace PowerDNS_Web.Pages
 {
+    [ValidateAntiForgeryToken]
     [Authorize(Roles = "Administrator")]
     public class SettingsModel : PageModel
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<SettingsModel> _logger;
+        private readonly IStringLocalizer<SettingsModel> _L;
 
         [BindProperty]
         public AppSettingsModel Settings { get; set; }
 
-        public SettingsModel(ILogger<SettingsModel> logger, IConfiguration configuration)
+        public SettingsModel(
+            ILogger<SettingsModel> logger,
+            IConfiguration configuration,
+            IStringLocalizer<SettingsModel> localizer)
         {
             _logger = logger;
             _configuration = configuration;
+            _L = localizer;
 
             // LOAD SETTINGS FROM CONFIGURATION
             Settings = new AppSettingsModel
@@ -30,76 +37,87 @@ namespace PowerDNS_Web.Pages
             };
         }
 
-        public void OnGet()
-        {
-        }
+        public void OnGet() { }
 
-        // SAVE SETTINGS
+        // ===== SAVE SETTINGS =====
         public async Task<IActionResult> OnPostSaveSettings([FromBody] AppSettingsModel model)
         {
             try
             {
-                // VALIDATE INPUT DATA
+                if (model is null)
+                    return new JsonResult(new { success = false, message = _L["Err_Save"] });
+
+                // --- BASIC VALIDATION ---
                 if (string.IsNullOrWhiteSpace(model.MySQL.Server) ||
                     string.IsNullOrWhiteSpace(model.MySQL.User) ||
-                    string.IsNullOrWhiteSpace(model.MySQL.Database) ||
-                    string.IsNullOrWhiteSpace(model.PowerDNS.Url) ||
-                    string.IsNullOrWhiteSpace(model.PowerDNS.Api_Key) ||
-                    string.IsNullOrWhiteSpace(model.Recursor.Url) ||
-                    string.IsNullOrWhiteSpace(model.Recursor.Api_Key) ||
-                    string.IsNullOrWhiteSpace(model.Recursor.Enabled))
+                    string.IsNullOrWhiteSpace(model.MySQL.Database))
                 {
-                    return new JsonResult(new { success = false, message = "All fields must be filled!" });
+                    return new JsonResult(new { success = false, message = _L["Err_MySQL_Required"] });
                 }
 
-                // CHECK CONNECTION TO MYSQL
-                string connectionString = $"Server={model.MySQL.Server};User ID={model.MySQL.User};Password={model.MySQL.Password};Database={model.MySQL.Database};";
-                using (var connection = new MySqlConnection(connectionString))
+                if (string.IsNullOrWhiteSpace(model.PowerDNS.Url) ||
+                    string.IsNullOrWhiteSpace(model.PowerDNS.Api_Key))
                 {
+                    return new JsonResult(new { success = false, message = _L["Err_PowerDNS_Required"] });
+                }
+
+                // Recursor URL/API-Key требуем ТОЛЬКО если включён
+                var recEnabled = string.Equals(model.Recursor.Enabled, "Enabled", StringComparison.OrdinalIgnoreCase);
+                if (recEnabled && (string.IsNullOrWhiteSpace(model.Recursor.Url) || string.IsNullOrWhiteSpace(model.Recursor.Api_Key)))
+                {
+                    return new JsonResult(new { success = false, message = _L["Err_Recursor_Required"] });
+                }
+
+                // --- CHECK MYSQL CONNECTION ---
+                string connectionString =
+                    $"Server={model.MySQL.Server};User ID={model.MySQL.User};Password={model.MySQL.Password};Database={model.MySQL.Database};";
+                try
+                {
+                    using var connection = new MySqlConnection(connectionString);
                     await connection.OpenAsync();
                 }
-
-                // PATH TO APPSETTINGS.JSON
-                string appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
-
-                if (!System.IO.File.Exists(appSettingsPath))
+                catch (MySqlException ex)
                 {
-                    return new JsonResult(new { success = false, message = "Configuration file not found." });
+                    _logger.LogError(ex, "MySQL connection error");
+                    return new JsonResult(new { success = false, message = string.Format(_L["Err_MySqlConnection"], ex.Message) });
                 }
 
-                // LOAD CURRENT SETTINGS
-                string json = await System.IO.File.ReadAllTextAsync(appSettingsPath);
-                var jsonDoc = JsonDocument.Parse(json);
-                var jsonObject = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonDoc.RootElement.ToString()) ?? new Dictionary<string, object>();
+                // --- WRITE appsettings.json ---
+                string appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+                if (!System.IO.File.Exists(appSettingsPath))
+                {
+                    return new JsonResult(new { success = false, message = _L["Err_ConfigNotFound"] });
+                }
 
-                // UPDATE SETTINGS
+                // Read current JSON
+                string json = await System.IO.File.ReadAllTextAsync(appSettingsPath);
+                using var jsonDoc = JsonDocument.Parse(json);
+                var jsonObject = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonDoc.RootElement.ToString())
+                                 ?? new Dictionary<string, object>();
+
+                // Update sections
                 jsonObject["MySQLConnection"] = model.MySQL;
                 jsonObject["pdns"] = model.PowerDNS;
                 jsonObject["recursor"] = model.Recursor;
 
                 string updatedJson = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
 
-                // WRITE CHANGES
+                // Write back
                 await System.IO.File.WriteAllTextAsync(appSettingsPath, updatedJson);
 
-                // UPDATE SYSTEM SERVICES AND CONFIGURATION
-                bool recursorEnabled = model.Recursor.Enabled.Equals("Enabled", StringComparison.OrdinalIgnoreCase);
-                await UpdateRecursorStatus(recursorEnabled);
+                // --- APPLY SYSTEM CHANGES (recursor/pdns) ---
+                await UpdateRecursorStatus(recEnabled);
 
-                return new JsonResult(new { success = true, message = "Settings saved successfully!" });
-            }
-            catch (MySqlException ex)
-            {
-                _logger.LogError(ex, "MySQL connection error");
-                return new JsonResult(new { success = false, message = "MySQL connection error: " + ex.Message });
+                return new JsonResult(new { success = true, message = _L["Msg_SettingsSaved"] });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Settings save error");
-                return new JsonResult(new { success = false, message = "Save settings error: " + ex.Message });
+                return new JsonResult(new { success = false, message = string.Format(_L["Err_SaveDetailed"], ex.Message) });
             }
         }
 
+        // ===== RECUSROR/PDNS SERVICE CHANGES =====
         private async Task UpdateRecursorStatus(bool enable)
         {
             try
@@ -108,41 +126,47 @@ namespace PowerDNS_Web.Pages
                 string recursorService = "pdns-recursor";
                 string pdnsService = "pdns";
 
-                // UPDATE pdns.conf
+                // Update pdns.conf local-port
                 if (System.IO.File.Exists(pdnsConfigPath))
                 {
                     string[] configLines = await System.IO.File.ReadAllLinesAsync(pdnsConfigPath);
+                    bool touched = false;
                     for (int i = 0; i < configLines.Length; i++)
                     {
-                        if (configLines[i].StartsWith("local-port="))
+                        if (configLines[i].StartsWith("local-port=", StringComparison.OrdinalIgnoreCase))
                         {
                             configLines[i] = enable ? "local-port=5300" : "local-port=53";
+                            touched = true;
+                            break;
                         }
+                    }
+                    // если строки не было — добавим
+                    if (!touched)
+                    {
+                        var list = configLines.ToList();
+                        list.Add(enable ? "local-port=5300" : "local-port=53");
+                        configLines = list.ToArray();
                     }
                     await System.IO.File.WriteAllLinesAsync(pdnsConfigPath, configLines);
                 }
 
                 if (enable)
                 {
-                    // ENABLE AND START RECURSOR
                     ExecuteBashCommand($"systemctl enable {recursorService}");
                     ExecuteBashCommand($"systemctl start {recursorService}");
                 }
                 else
                 {
-                    // STOP AND DISABLE RECURSOR
                     ExecuteBashCommand($"systemctl stop {recursorService}");
                     ExecuteBashCommand($"systemctl disable {recursorService}");
                 }
 
-                // RESTART POWERDNS
                 ExecuteBashCommand($"systemctl restart {pdnsService}");
-
-                _logger.LogInformation($"Recursor status updated: {(enable ? "Enabled" : "Disabled")}");
+                _logger.LogInformation("Recursor status updated: {Status}", enable ? "Enabled" : "Disabled");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to update recursor status: {ex.Message}");
+                _logger.LogError("Failed to update recursor status: {Message}", ex.Message);
             }
         }
 
@@ -150,7 +174,7 @@ namespace PowerDNS_Web.Pages
         {
             try
             {
-                ProcessStartInfo psi = new ProcessStartInfo
+                var psi = new ProcessStartInfo
                 {
                     FileName = "/bin/bash",
                     Arguments = $"-c \"{command}\"",
@@ -160,23 +184,24 @@ namespace PowerDNS_Web.Pages
                     CreateNoWindow = true
                 };
 
-                using (Process process = Process.Start(psi))
+                using var process = Process.Start(psi);
+                process!.WaitForExit();
+
+                string output = process.StandardOutput.ReadToEnd();
+                string error = process.StandardError.ReadToEnd();
+                if (!string.IsNullOrEmpty(error))
                 {
-                    process.WaitForExit();
-                    string output = process.StandardOutput.ReadToEnd();
-                    string error = process.StandardError.ReadToEnd();
-                    if (!string.IsNullOrEmpty(error))
-                    {
-                        _logger.LogError($"Command '{command}' error: {error}");
-                    }
+                    _logger.LogError("Command '{Command}' error: {Error}", command, error);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to execute command '{command}': {ex.Message}");
+                _logger.LogError("Failed to execute command '{Command}': {Message}", command, ex.Message);
             }
         }
     }
+
+    // ===== DTOs =====
 
     public class AppSettingsModel
     {
@@ -211,6 +236,6 @@ namespace PowerDNS_Web.Pages
     {
         public string Url { get; set; } = string.Empty;
         public string Api_Key { get; set; } = string.Empty;
-        public string Enabled { get; set; } = "Disabled"; 
+        public string Enabled { get; set; } = "Disabled";
     }
 }

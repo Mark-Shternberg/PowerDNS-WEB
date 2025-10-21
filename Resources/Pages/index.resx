@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <data name="Title"><value>PowerDNS Statistics</value></data>
+  <data name="OverviewTitle"><value>PowerDNS Overview</value></data>
+  <data name="OverviewSubtitle"><value>Live metrics &amp; recursor stats</value></data>
+
+  <data name="Metric.ActivePort"><value>Active Port</value></data>
+  <data name="Metric.Uptime"><value>Uptime</value></data>
+  <data name="Metric.TotalQueries"><value>Total Queries</value></data>
+  <data name="Metric.QpsApprox"><value>QPS (approx)</value></data>
+
+  <data name="Section.Statistics"><value>Statistics</value></data>
+  <data name="Card.MissingTypes"><value>Queries for Missing Types</value></data>
+  <data name="Card.Nonexistent"><value>Queries for Nonexistent Records</value></data>
+  <data name="Card.UdpReceived"><value>UDP Queries Received</value></data>
+
+  <data name="Recursor.Title"><value>Recursor</value></data>
+  <data name="Recursor.Port"><value>Recursor Port</value></data>
+  <data name="Recursor.Uptime"><value>Recursor Uptime</value></data>
+  <data name="Recursor.CacheHits"><value>Cache Hits</value></data>
+  <data name="Recursor.CacheMissesRatio"><value>Cache Misses · Hit Ratio</value></data>
+  <data name="Recursor.TopRequests"><value>Top Requests</value></data>
+  <data name="Recursor.TopRemotes"><value>Top Remotes</value></data>
+
+  <data name="Chart.QpsLast5m"><value>Query rate (QPS), last 5 minutes</value></data>
+  <data name="Chart.Dataset.Qps"><value>QPS</value></data>
+
+  <data name="Common.Loading"><value>Loading...</value></data>
+  <data name="Common.NoData"><value>No data available</value></data>
+
+  <data name="Time.H"><value>h</value></data>
+  <data name="Time.M"><value>m</value></data>
+
+</root>

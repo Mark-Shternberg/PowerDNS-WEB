@@ -1,7 +1,8 @@
 ﻿@page "/zone/{ZoneName}"
 @model PowerDNS_Web.Pages.zone.ZonePageModel
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer L
 @{
-    ViewData["Title"] = $"Manage Zone: {Model.ZoneName}";
+    ViewData["Title"] = L["Title.ManageZone", Model.ZoneName];
 }
 
 <div class="container mt-4">
@@ -46,26 +47,30 @@
     <!-- Header -->
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <div>
-            <h2 class="mb-0">Zone: <span class="text-primary">@Model.ZoneName</span></h2>
-            <div class="text-muted small">Manage DNS records for this zone</div>
+            <h2 class="mb-0">@L["Hdr.Zone"]: <span class="text-primary">@Model.ZoneName</span></h2>
+            <div class="text-muted small">@L["Hdr.Subtitle"]</div>
         </div>
         <div class="btn-group">
-            <button type="button" class="btn btn-outline-secondary" id="btnExpandAll"><i class="fa fa-chevron-down me-1"></i>Expand all</button>
-            <button type="button" class="btn btn-outline-secondary" id="btnCollapseAll"><i class="fa fa-chevron-right me-1"></i>Collapse all</button>
+            <button type="button" class="btn btn-outline-secondary" id="btnExpandAll">
+                <i class="fa fa-chevron-down me-1"></i>@L["Btn.ExpandAll"]
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="btnCollapseAll">
+                <i class="fa fa-chevron-right me-1"></i>@L["Btn.CollapseAll"]
+            </button>
         </div>
     </div>
 
     <!-- Quick Add -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <h5 class="card-title mb-3"><i class="fa fa-plus-circle me-2"></i>Add Record</h5>
+            <h5 class="card-title mb-3"><i class="fa fa-plus-circle me-2"></i>@L["AddRecord.Title"]</h5>
             <form method="post" asp-page-handler="AddRecord" class="row g-3 needs-validation" novalidate>
                 <div class="col-md-3">
-                    <label class="form-label">Subdomain</label>
+                    <label class="form-label">@L["Form.Subdomain"]</label>
                     <div class="input-group">
                         <select id="subdomainSelect" name="Subdomain"
                                 class="form-select rounded-end-0" required>
-                            <option value="@@" selected>(Root)</option>
+                            <option value="@@" selected>@L["Form.Root"]</option>
                             @foreach (var subdomain in Model.GroupedRecords.Keys.Where(k => k != "@"))
                             {
                                 <option value="@subdomain">@subdomain</option>
@@ -75,15 +80,15 @@
                                 class="btn btn-primary rounded-start-0 rounded-end border-start-0"
                                 data-bs-toggle="modal"
                                 data-bs-target="#addSubdomainModal"
-                                title="Add subdomain">
+                                title="@L["Form.SubdomainAdd"]">
                             <i class="fa fa-plus"></i>
                         </button>
-                        <div class="invalid-feedback">Select subdomain.</div>
+                        <div class="invalid-feedback">@L["Val.SelectSubdomain"]</div>
                     </div>
                 </div>
 
                 <div class="col-md-2">
-                    <label class="form-label">Type</label>
+                    <label class="form-label">@L["Form.Type"]</label>
                     <select id="recordType" name="RecordType" class="form-select" onchange="toggleAddRequired()" required>
                         <option value="A">A</option>
                         <option value="AAAA">AAAA</option>
@@ -94,7 +99,7 @@
                         <option value="NS">NS</option>
                         <option value="HTTPS">HTTPS</option>
                     </select>
-                    <div class="invalid-feedback">Select record type.</div>
+                    <div class="invalid-feedback">@L["Val.SelectType"]</div>
                 </div>
 
                 <div class="col-md-2">
@@ -105,57 +110,57 @@
 
                 <!-- Generic value -->
                 <div class="col-md-5" id="valueField">
-                    <label class="form-label">Value</label>
-                    <input type="text" id="recordValue" name="Value" class="form-control" placeholder="e.g. 203.0.113.10 or target.example.com.">
-                    <div class="form-text text-muted d-none" id="helpGeneric">For A/AAAA — IP; CNAME/NS/SRV target must end with a dot.</div>
-                    <div class="invalid-feedback">Value is required.</div>
+                    <label class="form-label">@L["Form.Value"]</label>
+                    <input type="text" id="recordValue" name="Value" class="form-control" placeholder="@L["Ph.Value.Generic"]">
+                    <div class="form-text text-muted d-none" id="helpGeneric">@L["Help.Generic"]</div>
+                    <div class="invalid-feedback">@L["Val.ValueRequired"]</div>
                 </div>
 
                 <!-- TXT -->
                 <div class="col-md-5 d-none" id="txtField">
-                    <label class="form-label">TXT Value</label>
+                    <label class="form-label">@L["Form.TxtValue"]</label>
                     <textarea id="txtValue" name="TxtValue" class="form-control textarea" oninput="autoResizeTextarea(this)" placeholder='v=spf1 include:_spf.example.com ~all'></textarea>
-                    <small class="form-text text-muted">Do not wrap with quotes — мы их добавим автоматически.</small>
-                    <div class="invalid-feedback">TXT value is required.</div>
+                    <small class="form-text text-muted">@L["Help.TxtNoQuotes"]</small>
+                    <div class="invalid-feedback">@L["Val.TxtRequired"]</div>
                 </div>
 
                 <!-- NS -->
                 <div class="col-md-5 d-none" id="nsField">
-                    <label class="form-label">NS Target</label>
+                    <label class="form-label">@L["Form.NsTarget"]</label>
                     <input type="text" id="nsTarget" name="NsTarget" class="form-control" placeholder="ns1.example.com.">
-                    <div class="invalid-feedback">NS target is required.</div>
+                    <div class="invalid-feedback">@L["Val.NsRequired"]</div>
                 </div>
 
                 <!-- HTTPS (SVCB) -->
                 <div class="col-md-5 d-none" id="httpsSvcbField">
-                    <label class="form-label">HTTPS Parameters</label>
+                    <label class="form-label">@L["Form.HttpsParams"]</label>
                     <input type="text" id="httpsValue" name="HttpsValue" class="form-control" placeholder='"1 . alpn=h3"'>
-                    <div class="invalid-feedback">HTTPS value is required.</div>
+                    <div class="invalid-feedback">@L["Val.HttpsRequired"]</div>
                 </div>
 
                 <!-- MX -->
                 <div class="col-md-2 d-none" id="mxPriorityField">
-                    <label class="form-label">Priority</label>
+                    <label class="form-label">@L["Form.Priority"]</label>
                     <input type="number" id="mxPriority" name="MxPriority" class="form-control" min="1" max="1000" step="1" value="10">
-                    <div class="invalid-feedback">1…1000.</div>
+                    <div class="invalid-feedback">@L["Val.MxPriority"]</div>
                 </div>
 
                 <!-- SRV -->
                 <div class="col-md-2 d-none" id="srvPriorityField">
-                    <label class="form-label">Priority</label>
+                    <label class="form-label">@L["Form.Priority"]</label>
                     <input type="number" id="srvPriority" name="SrvPriority" class="form-control" min="0" max="65535" step="1" value="0">
                 </div>
                 <div class="col-md-2 d-none" id="srvWeightField">
-                    <label class="form-label">Weight</label>
+                    <label class="form-label">@L["Form.Weight"]</label>
                     <input type="number" id="srvWeight" name="SrvWeight" class="form-control" min="0" max="65535" step="1" value="0">
                 </div>
                 <div class="col-md-2 d-none" id="srvPortField">
-                    <label class="form-label">Port</label>
+                    <label class="form-label">@L["Form.Port"]</label>
                     <input type="number" id="srvPort" name="SrvPort" class="form-control" min="1" max="65535" step="1" value="443">
                 </div>
 
                 <div class="col-md-2 d-flex" style="margin-top:32px;">
-                    <button type="submit" class="btn btn-success w-100"><i class="fa fa-plus me-1"></i>Add</button>
+                    <button type="submit" class="btn btn-success w-100"><i class="fa fa-plus me-1"></i>@L["Btn.Add"]</button>
                 </div>
 
                 @Html.AntiForgeryToken()
@@ -165,11 +170,11 @@
 
     <!-- Records -->
     <div class="d-flex align-items-center justify-content-between mb-2">
-        <h5 class="mb-0"><i class="fa fa-list me-2"></i>Existing Records</h5>
+        <h5 class="mb-0"><i class="fa fa-list me-2"></i>@L["Hdr.Existing"]</h5>
         <div class="input-group" style="max-width: 340px;">
             <span class="input-group-text"><i class="fa fa-search"></i></span>
-            <input class="form-control" id="searchRecords" type="text" placeholder="Filter by name/value/type">
-            <button type="button" id="clearSearch" class="btn btn-outline-secondary" style="display:none">Clear</button>
+            <input class="form-control" id="searchRecords" type="text" placeholder="@L["Ph.Filter"]">
+            <button type="button" id="clearSearch" class="btn btn-outline-secondary" style="display:none">@L["Btn.Clear"]</button>
         </div>
     </div>
 
@@ -177,11 +182,11 @@
         <table class="table table-sm table-hover align-middle">
             <thead class="table-dark">
                 <tr>
-                    <th style="width:24%">Subdomain</th>
-                    <th style="width:8%">Type</th>
-                    <th>Value</th>
+                    <th style="width:24%">@L["Th.Subdomain"]</th>
+                    <th style="width:8%">@L["Th.Type"]</th>
+                    <th>@L["Th.Value"]</th>
                     <th style="width:10%">TTL</th>
-                    <th style="width:12%">Actions</th>
+                    <th style="width:12%">@L["Th.Actions"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -190,7 +195,7 @@
                     <tr class="zone-header" data-group="@group.Key">
                         <td colspan="5" class="fw-semibold">
                             <i class="fa fa-chevron-right me-2 caret" aria-hidden="true"></i>
-                            @(group.Key == "@" ? "(Root)" : group.Key)
+                            @(group.Key == "@" ? L["Form.Root"].Value : group.Key)
                             <span class="badge rounded-pill text-muted ms-2">@group.Value.Sum(r => r.Content.Count)</span>
                         </td>
                     </tr>
@@ -205,19 +210,21 @@
                                 </td>
                                 <td class="line-break">
                                     <code class="text-break">@value</code>
-                                    <button class="btn btn-sm btn-outline-secondary ms-2 btn-copy" type="button" data-value="@value" title="Copy">
+                                    <button class="btn btn-sm btn-outline-secondary ms-2 btn-copy" type="button" data-value="@value" title="@L["Btn.Copy"]">
                                         <i class="fa fa-copy"></i>
                                     </button>
                                 </td>
                                 <td class="text-muted">@record.Ttl</td>
                                 <td class="text-nowrap">
                                     <button type="button" class="btn btn-warning btn-sm"
+                                            title="@L["Btn.Edit"]"
                                             onclick="openEdit('@record.Name','@record.Type','@value','@record.Ttl')">
                                         <i class="fa fa-edit"></i>
                                     </button>
                                     @if (record.Type != "SOA")
                                     {
                                         <button type="button" class="btn btn-danger btn-sm"
+                                                title="@L["Btn.Delete"]"
                                                 onclick="openDelete('@record.Name','@record.Type','@value')">
                                             <i class="fa fa-trash"></i>
                                         </button>
@@ -238,8 +245,8 @@
         <div class="modal-content">
             <form method="post" asp-page-handler="EditRecord" class="needs-validation" novalidate>
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editRecordModalLabel">Edit Record</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="editRecordModalLabel">@L["Edit.Title"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"]"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="editRecordName" name="Name">
@@ -247,64 +254,64 @@
                     <input type="hidden" id="editRecordOldValue" name="OldValue">
 
                     <div class="mb-3" id="editValueField">
-                        <label class="form-label">Value</label>
+                        <label class="form-label">@L["Form.Value"]</label>
                         <input type="text" id="editRecordValue" name="Value" class="form-control">
-                        <div class="invalid-feedback">Value is required.</div>
+                        <div class="invalid-feedback">@L["Val.ValueRequired"]</div>
                     </div>
 
                     <!-- TXT -->
                     <div class="mb-3 d-none" id="editTXTField">
-                        <label class="form-label">TXT Value</label>
+                        <label class="form-label">@L["Form.TxtValue"]</label>
                         <textarea id="editTXTValue" name="Value" class="form-control textarea" oninput="autoResizeTextarea(this)"></textarea>
-                        <small class="form-text text-muted">We’ll wrap it with quotes automatically.</small>
-                        <div class="invalid-feedback">TXT value is required.</div>
+                        <small class="form-text text-muted">@L["Help.TxtAutoQuotes"]</small>
+                        <div class="invalid-feedback">@L["Val.TxtRequired"]</div>
                     </div>
 
                     <!-- MX -->
                     <div class="mb-3 d-none" id="editMxPriorityField">
-                        <label class="form-label">Priority</label>
+                        <label class="form-label">@L["Form.Priority"]</label>
                         <input type="number" id="editMxPriority" name="MxPriority" class="form-control" min="1" max="1000" step="1" value="10">
                     </div>
 
                     <!-- SRV -->
                     <div class="mb-3 d-none" id="editSrvPriorityField">
-                        <label class="form-label">Priority</label>
+                        <label class="form-label">@L["Form.Priority"]</label>
                         <input type="number" id="editSrvPriority" name="SrvPriority" class="form-control" min="0" max="65535" step="1" value="0">
                     </div>
                     <div class="mb-3 d-none" id="editSrvWeightField">
-                        <label class="form-label">Weight</label>
+                        <label class="form-label">@L["Form.Weight"]</label>
                         <input type="number" id="editSrvWeight" name="SrvWeight" class="form-control" min="0" max="65535" step="1" value="0">
                     </div>
                     <div class="mb-3 d-none" id="editSrvPortField">
-                        <label class="form-label">Port</label>
+                        <label class="form-label">@L["Form.Port"]</label>
                         <input type="number" id="editSrvPort" name="SrvPort" class="form-control" min="1" max="65535" step="1" value="443">
                     </div>
 
                     <!-- SOA -->
                     <div id="editSoaFields" class="d-none">
-                        <h6 class="mt-3">SOA Record Details</h6>
+                        <h6 class="mt-3">@L["Soa.Title"]</h6>
                         <div class="mb-3">
-                            <label class="form-label">Primary NS</label>
+                            <label class="form-label">@L["Soa.PrimaryNs"]</label>
                             <input type="text" id="editSoaNs" name="SoaNs" class="form-control">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Admin Email</label>
+                            <label class="form-label">@L["Soa.AdminEmail"]</label>
                             <input type="text" id="editSoaEmail" name="SoaEmail" class="form-control">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Refresh</label>
+                            <label class="form-label">@L["Soa.Refresh"]</label>
                             <input type="number" id="editSoaRefresh" name="SoaRefresh" class="form-control" min="1200" max="86400" step="1" value="7200">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Retry</label>
+                            <label class="form-label">@L["Soa.Retry"]</label>
                             <input type="number" id="editSoaRetry" name="SoaRetry" class="form-control" min="180" max="7200" step="1" value="1800">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Expire</label>
+                            <label class="form-label">@L["Soa.Expire"]</label>
                             <input type="number" id="editSoaExpire" name="SoaExpire" class="form-control" min="86400" max="2419200" step="1" value="1209600">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Minimum TTL</label>
+                            <label class="form-label">@L["Soa.MinimumTtl"]</label>
                             <input type="number" id="editSoaMinimumTtl" name="SoaMinimumTtl" class="form-control" min="300" max="86400" step="1" value="3600">
                         </div>
                     </div>
@@ -318,7 +325,7 @@
                     @Html.AntiForgeryToken()
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-warning w-100">Save Changes</button>
+                    <button type="submit" class="btn btn-warning w-100">@L["Btn.SaveChanges"]</button>
                 </div>
             </form>
         </div>
@@ -331,17 +338,17 @@
         <div class="modal-content">
             <form method="post" asp-page-handler="AddSubdomain" class="needs-validation" novalidate>
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addSubdomainModalLabel">Add Subdomain</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="addSubdomainModalLabel">@L["Sub.Title"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"]"></button>
                 </div>
                 <div class="modal-body">
-                    <label class="form-label">Subdomain Name</label>
+                    <label class="form-label">@L["Sub.Name"]</label>
                     <input type="text" id="subdomainInput" name="Subdomain" class="form-control" required>
-                    <div class="invalid-feedback">Enter subdomain.</div>
+                    <div class="invalid-feedback">@L["Val.SubdomainRequired"]</div>
                     @Html.AntiForgeryToken()
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary w-100">Add</button>
+                    <button type="submit" class="btn btn-primary w-100">@L["Btn.Add"]</button>
                 </div>
             </form>
         </div>
@@ -354,8 +361,8 @@
         <div class="modal-content">
             <form method="post" asp-page-handler="DeleteRecord">
                 <div class="modal-header">
-                    <h5 class="modal-title">Confirm deletion</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">@L["Del.Title"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"]"></button>
                 </div>
                 <div class="modal-body">
                     <p id="deleteText"></p>
@@ -365,8 +372,8 @@
                     @Html.AntiForgeryToken()
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
-                    <button class="btn btn-danger" type="submit">Delete</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">@L["Btn.Cancel"]</button>
+                    <button class="btn btn-danger" type="submit">@L["Btn.Delete"]</button>
                 </div>
             </form>
         </div>
@@ -375,6 +382,14 @@
 
 @section Scripts {
     <script>
+        // локализованные строки в JS
+        window.i18n = {
+            CopySuccess: "@L["Copy.Success"]",
+            CopyFail: "@L["Copy.Fail"]",
+            DelConfirm: "@L["Del.ConfirmTpl"]"
+        };
+        const fmt = (s, ...args) => s.replace(/{(\d+)}/g, (m, i) => (args[i] ?? m));
+
         // Bootstrap HTML5 validation
         (() => {
           'use strict';
@@ -414,7 +429,7 @@
         }
         toggleAddRequired();
 
-        // Collapse groups with header click
+        // Collapse groups with header click (фикс направлений стрелок)
         document.addEventListener('click', (e) => {
           const header = e.target.closest('tr.zone-header');
           if (!header) return;
@@ -476,9 +491,9 @@
             if (!btn) return;
             try {
                 await navigator.clipboard.writeText(btn.getAttribute('data-value'));
-                showToast('success', 'Copied to clipboard');
+                showToast('success', window.i18n.CopySuccess);
             } catch {
-                showToast('danger', 'Copy failed');
+                showToast('danger', window.i18n.CopyFail);
             }
         });
 
@@ -536,7 +551,7 @@
 
         // Delete modal open
         function openDelete(name, type, value) {
-          document.getElementById('deleteText').textContent = `Delete ${type} ${value} for ${name}?`;
+          document.getElementById('deleteText').textContent = fmt(window.i18n.DelConfirm, type, value, name);
           document.getElementById('deleteName').value  = name;
           document.getElementById('deleteType').value  = type;
           document.getElementById('deleteValue').value = value;
