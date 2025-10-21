@@ -1,128 +1,92 @@
-﻿//validation.js
+﻿// ===== Patterns =====
+const PAT = {
+    ForwardZone: /^(?!-)(?!(.*\.in-addr\.arpa\.?)$)([a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,63}$/,
+    ReversePrefix: /^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}$/,
+    IPv4: /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$/,
+    IPv6: /^(([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:)|(([0-9A-Fa-f]{1,4}:){1,7}:)|(([0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,5}(:[0-9A-Fa-f]{1,4}){1,2})|(([0-9A-Fa-f]{1,4}:){1,4}(:[0-9A-Fa-f]{1,4}){1,3})|(([0-9A-Fa-f]{1,4}:){1,3}(:[0-9A-Fa-f]{1,4}){1,4})|(([0-9A-Fa-f]{1,4}:){1,2}(:[0-9A-Fa-f]{1,4}){1,5})|([0-9A-Fa-f]{1,4}:((:[0-9A-Fa-f]{1,4}){1,6}))|(:((:[0-9A-Fa-f]{1,4}){1,7}|:))|(::([Ff]{4}(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))|([0-9A-Fa-f]{1,4}:([0-9A-Fa-f]{1,4}:){0,5}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])))$/,
+    IPv4Port: /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}:(\d{1,5})$/,
+    Subdomain: /^(?!-)[a-z0-9-]{1,63}(?<!-)$/
+};
 
+const encoder = new TextEncoder();
+
+// ===== Helpers =====
+function _isEmpty(s) { return !s || !String(s).trim(); }
+function _t(path) { return (window.t ? window.t(path) : path); }
+
+// ===== Forward zone (FQDN) =====
 function validateForwardZoneName(zoneName) {
-    const zoneRegex = /^(?!-)(?!(.*\.in-addr\.arpa\.?)$)([a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,63}$/;
-
-    if (zoneName === "") {
-        return "Please enter a zone name.";
-    }
-
-    if (zoneName.length > 255) {
-        return "Domain name is too long (max 255 characters).";
-    }
-
-    if (zoneName.includes("..")) {
-        return "Domain name cannot contain consecutive dots.";
-    }
-
-    if (!zoneRegex.test(zoneName)) {
-        return "Invalid domain format. Use letters, numbers, and hyphens.";
-    }
-
-    return "";
+    if (_isEmpty(zoneName)) return _t('Validation.ForwardZone.Required');
+    if (zoneName.length > 255) return _t('Validation.ForwardZone.TooLong');
+    if (zoneName.includes('..')) return _t('Validation.ForwardZone.ConsecutiveDots');
+    if (!PAT.ForwardZone.test(zoneName)) return _t('Validation.ForwardZone.Invalid');
+    return '';
 }
 
-function validateReverseZoneName(zoneName) {
-    const zoneRegex = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.$/;
-
-    if (zoneName === "") {
-        return "Please enter a zone name.";
-    }
-
-    if (zoneName.length > 255) {
-        return "Domain name is too long (max 255 characters).";
-    }
-
-    if (zoneName.includes("..")) {
-        return "Domain name cannot contain consecutive dots.";
-    }
-
-    if (!zoneRegex.test(zoneName)) {
-        return "Invalid IP format. Use numbers, and dots.";
-    }
-
-    return "";
+// ===== Reverse prefix (e.g., 192.168.0.) =====
+function validateReverseZoneName(prefix) {
+    if (_isEmpty(prefix)) return _t('Validation.ReverseZone.Required');
+    if (prefix.length > 255) return _t('Validation.ReverseZone.TooLong');
+    if (prefix.includes('..')) return _t('Validation.ReverseZone.ConsecutiveDots');
+    if (!PAT.ReversePrefix.test(prefix)) return _t('Validation.ReverseZone.Invalid');
+    return '';
 }
 
+// ===== IPv4 / IPv6 =====
 function validateIPv4(ip) {
-    const ipv4Pattern = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$/;
-
-    if (ip === "") {
-        return "Please enter IP address.";
-    }
-
-    if (ipv4Pattern.test(ip)) {
-        return "";
-    }
-    else return "Invalid IP address format.";
+    if (_isEmpty(ip)) return _t('Validation.IPv4.Required');
+    if (!PAT.IPv4.test(ip)) return _t('Validation.IPv4.Invalid');
+    return '';
 }
 
 function validateIPv6(ip) {
-    const ipv6Pattern = /^(([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:)|(([0-9A-Fa-f]{1,4}:){1,7}:)|(([0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,5}(:[0-9A-Fa-f]{1,4}){1,2})|(([0-9A-Fa-f]{1,4}:){1,4}(:[0-9A-Fa-f]{1,4}){1,3})|(([0-9A-Fa-f]{1,4}:){1,3}(:[0-9A-Fa-f]{1,4}){1,4})|(([0-9A-Fa-f]{1,4}:){1,2}(:[0-9A-Fa-f]{1,4}){1,5})|([0-9A-Fa-f]{1,4}:((:[0-9A-Fa-f]{1,4}){1,6}))|(:((:[0-9A-Fa-f]{1,4}){1,7}|:))|(::([Ff]{4}(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))|([0-9A-Fa-f]{1,4}:([0-9A-Fa-f]{1,4}:){0,5}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])))$/;
-
-    if (ip === "") {
-        return "Please enter IP address.";
-    }
-
-    if (ipv6Pattern.test(ip)) {
-        return "";
-    }
-    else return "Invalid IP address format.";
+    if (_isEmpty(ip)) return _t('Validation.IPv6.Required');
+    if (!PAT.IPv6.test(ip)) return _t('Validation.IPv6.Invalid');
+    return '';
 }
 
+// ===== Subdomain =====
 function validateSubdomain(subdomain) {
-    // (a-z, 0-9, -, but "-" not at the start/end)
-    const subdomainPattern = /^(?!-)[a-z0-9-].{1,63}(?<!-)$/;
-
-    if (subdomain === "") {
-        return "Please enter subdomain.";
-    }
-
-    if (subdomainPattern.test(subdomain)) {
-        return "";
-    }
-    return "Invalid subdomain name.";
+    if (_isEmpty(subdomain)) return _t('Validation.Subdomain.Required');
+    if (!PAT.Subdomain.test(subdomain)) return _t('Validation.Subdomain.Invalid');
+    return '';
 }
 
+// ===== IPv4:Port =====
 function validateIPv4withPort(ip) {
-    const ipv4WithPortPattern = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}:(\d{1,5})$/;
-
-    if (ip.trim() === "") {
-        return "Please enter an IP address with port (e.g., 1.1.1.1:53).";
-    }
-
-    const match = ip.match(ipv4WithPortPattern);
-    if (!match) {
-        return "Invalid format. Use IP:Port (e.g., 8.8.8.8:53).";
-    }
-
-    const port = parseInt(match[4], 10);
-    if (port < 1 || port > 65535) {
-        return "Port must be between 1 and 65535.";
-    }
-
-    return "";
+    const v = (ip || '').trim();
+    if (!v) return _t('Validation.IPv4Port.Required');
+    const m = v.match(PAT.IPv4Port);
+    if (!m) return _t('Validation.IPv4Port.Invalid');
+    const port = parseInt(m[4], 10);
+    if (port < 1 || port > 65535) return _t('Validation.IPv4Port.PortRange');
+    return '';
 }
 
+// ===== TXT =====
 function validateTXT(value) {
-    const encoder = new TextEncoder();
-    const byteLength = encoder.encode(value).length;
+    const v = (value || '');
+    if (!v.trim()) return _t('Validation.TXT.Required');
+    if (encoder.encode(v).length > 65535) return _t('Validation.TXT.TooLong');
+    if (v.includes('\n') || v.includes('\r')) return _t('Validation.TXT.Newlines');
+    if (v.includes('"')) return _t('Validation.TXT.Quotes');
+    return '';
+}
 
-    if (!value.trim()) {
-        return "TXT record must not be empty.";
-    }
+function applyPatternValidation(input, pattern, msgKey, required = true) {
+    if (!input) return;
+    input.setAttribute('pattern', pattern.source);
+    if (!required) input.setAttribute('data-optional', '1');
 
-    if (byteLength > 65535) {
-        return "TXT record must be no more than 65535 bytes.";
-    }
-
-    if (value.includes('\n') || value.includes('\r')) {
-        return "TXT record must not contain line breaks.";
-    }
-
-    if (value.includes('"')) {
-        return "TXT record must not contain quotes (\").";
-    }
-
-    return "";
+    const handler = () => {
+        input.setCustomValidity('');
+        const val = input.value.trim();
+        if (!val && input.dataset.optional === '1') return;
+        if (!val || !new RegExp(pattern).test(val)) {
+            input.setCustomValidity(_t(msgKey));
+        }
+    };
+    input.addEventListener('input', handler);
+    input.addEventListener('invalid', handler);
+    handler();
 }

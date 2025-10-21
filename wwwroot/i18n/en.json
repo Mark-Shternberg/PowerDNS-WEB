@@ -1,0 +1,39 @@
+﻿{
+  "Validation": {
+    "ForwardZone": {
+      "Required": "Please enter a zone name.",
+      "TooLong": "Domain name is too long (max 255 characters).",
+      "ConsecutiveDots": "Domain name cannot contain consecutive dots.",
+      "Invalid": "Invalid domain format. Use letters, numbers, and hyphens."
+    },
+    "ReverseZone": {
+      "Required": "Please enter a zone name.",
+      "TooLong": "Domain name is too long (max 255 characters).",
+      "ConsecutiveDots": "Domain name cannot contain consecutive dots.",
+      "Invalid": "Invalid reverse prefix. Use a network prefix like 192.168.0."
+    },
+    "IPv4": {
+      "Required": "Please enter IP address.",
+      "Invalid": "Invalid IPv4 address format."
+    },
+    "IPv6": {
+      "Required": "Please enter IP address.",
+      "Invalid": "Invalid IPv6 address format."
+    },
+    "IPv4Port": {
+      "Required": "Please enter an IP address with port (e.g., 1.1.1.1:53).",
+      "Invalid": "Invalid format. Use IP:Port (e.g., 8.8.8.8:53).",
+      "PortRange": "Port must be between 1 and 65535."
+    },
+    "Subdomain": {
+      "Required": "Please enter subdomain.",
+      "Invalid": "Invalid subdomain name."
+    },
+    "TXT": {
+      "Required": "TXT record must not be empty.",
+      "TooLong": "TXT record must be no more than 65535 bytes.",
+      "Newlines": "TXT record must not contain line breaks.",
+      "Quotes": "TXT record must not contain quotes (\")."
+    }
+  }
+}

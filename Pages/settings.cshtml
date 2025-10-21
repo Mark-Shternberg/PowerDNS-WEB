@@ -7,7 +7,7 @@
 }
 
 <div class="container mt-4">
-    <h2 class="text-center mb-4"><i class="fa fa-gear me-2"></i>@L["Settings_Title"]</h2>
+    <h2 class="text-center mb-4"><i class="fa fa-gear me-2"></i>@L["Settings_Title"].Value</h2>
 
     <form id="settingsForm" novalidate>
         <div class="row g-4">
@@ -16,25 +16,25 @@
             <div class="col-md-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title mb-3">@L["Section_MySQL"]</h5>
+                        <h5 class="card-title mb-3">@L["Section_MySQL"].Value</h5>
 
                         <div class="mb-2">
-                            <label class="form-label">@L["Label_Server"]</label>
+                            <label class="form-label">@L["Label_Server"].Value</label>
                             <input type="text"
                                    id="mysqlServer"
                                    class="form-control"
                                    value="@Model.Settings.MySQL.Server"
-                                   placeholder="@L["Placeholder_MySQLServer"]" />
+                                   placeholder="@L["Placeholder_MySQLServer"].Value" />
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">@L["Label_User"]</label>
+                            <label class="form-label">@L["Label_User"].Value</label>
                             <input type="text"
                                    id="mysqlUser"
                                    class="form-control"
                                    value="@Model.Settings.MySQL.User" />
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">@L["Label_Password"]</label>
+                            <label class="form-label">@L["Label_Password"].Value</label>
                             <div class="input-group">
                                 <input type="password"
                                        id="mysqlPassword"
@@ -43,13 +43,13 @@
                                 <button class="btn btn-outline-secondary"
                                         type="button"
                                         data-toggle-vis="#mysqlPassword"
-                                        title="@L["Title_ShowHide"]">
+                                        title="@L["Title_ShowHide"].Value">
                                     <i class="fa fa-eye"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">@L["Label_Database"]</label>
+                            <label class="form-label">@L["Label_Database"].Value</label>
                             <input type="text"
                                    id="mysqlDatabase"
                                    class="form-control"
@@ -63,18 +63,18 @@
             <div class="col-md-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title mb-3">@L["Section_PowerDNS"]</h5>
+                        <h5 class="card-title mb-3">@L["Section_PowerDNS"].Value</h5>
 
                         <div class="mb-2">
-                            <label class="form-label">@L["Label_ApiUrl"]</label>
-                            <input type="text"
+                            <label class="form-label">@L["Label_ApiUrl"].Value</label>
+                            <input type="url"
                                    id="pdnsUrl"
                                    class="form-control"
                                    value="@Model.Settings.PowerDNS.Url"
-                                   placeholder="@L["Placeholder_PowerDNSUrl"]" />
+                                   placeholder="@L["Placeholder_PowerDNSUrl"].Value" />
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">@L["Label_ApiKey"]</label>
+                            <label class="form-label">@L["Label_ApiKey"].Value</label>
                             <div class="input-group">
                                 <input type="password"
                                        id="pdnsApiKey"
@@ -83,36 +83,36 @@
                                 <button class="btn btn-outline-secondary"
                                         type="button"
                                         data-toggle-vis="#pdnsApiKey"
-                                        title="@L["Title_ShowHide"]">
+                                        title="@L["Title_ShowHide"].Value">
                                     <i class="fa fa-eye"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">@L["Label_DefaultA"]</label>
+                            <label class="form-label">@L["Label_DefaultA"].Value</label>
                             <input type="text"
                                    id="pdnsDefaultA"
                                    class="form-control ip-input"
                                    value="@Model.Settings.PowerDNS.Default_A"
-                                   placeholder="@L["Placeholder_DefaultA"]" />
+                                   placeholder="@L["Placeholder_DefaultA"].Value" />
                         </div>
 
-                        <h6 class="mt-3">@L["Heading_SOA"]</h6>
+                        <h6 class="mt-3">@L["Heading_SOA"].Value</h6>
                         <div class="mb-2">
-                            <label class="form-label">@L["Label_SoaNs"]</label>
+                            <label class="form-label">@L["Label_SoaNs"].Value</label>
                             <input type="text"
                                    id="pdnsSoaNs"
                                    class="form-control"
                                    value="@Model.Settings.PowerDNS.SOA.Ns"
-                                   placeholder="@L["Placeholder_SoaNs"]" />
+                                   placeholder="@L["Placeholder_SoaNs"].Value" />
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">@L["Label_SoaMail"]</label>
-                            <input type="text"
+                            <label class="form-label">@L["Label_SoaMail"].Value</label>
+                            <input type="email"
                                    id="pdnsSoaMail"
                                    class="form-control"
                                    value="@Model.Settings.PowerDNS.SOA.Mail"
-                                   placeholder="@L["Placeholder_SoaMail"]" />
+                                   placeholder="@L["Placeholder_SoaMail"].Value" />
                         </div>
                     </div>
                 </div>
@@ -122,32 +122,32 @@
             <div class="col-md-4">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title mb-3">@L["Section_Recursor"]</h5>
+                        <h5 class="card-title mb-3">@L["Section_Recursor"].Value</h5>
 
                         <div class="mb-2">
-                            <label class="form-label">@L["Label_RecursorStatus"]</label>
+                            <label class="form-label">@L["Label_RecursorStatus"].Value</label>
                             <select id="recursorStatus" class="form-select" onchange="toggleRecursorFields()">
                                 <!-- значения оставляем как 'Enabled'/'Disabled' для бэка; текст локализуем -->
                                 <option value="Enabled" selected="@(Model.Settings.Recursor.Enabled == "Enabled" ? "selected" : null)">
-                                    @L["Option_Enabled"]
+                                    @L["Option_Enabled"].Value
                                 </option>
                                 <option value="Disabled" selected="@(Model.Settings.Recursor.Enabled == "Disabled" ? "selected" : null)">
-                                    @L["Option_Disabled"]
+                                    @L["Option_Disabled"].Value
                                 </option>
                             </select>
                         </div>
 
                         <div id="recursorFields">
                             <div class="mb-2">
-                                <label class="form-label">@L["Label_RecursorUrl"]</label>
-                                <input type="text"
+                                <label class="form-label">@L["Label_RecursorUrl"].Value</label>
+                                <input type="url"
                                        id="recursorUrl"
                                        class="form-control"
                                        value="@Model.Settings.Recursor.Url"
                                        placeholder="http://127.0.0.1:8082/api/v1" />
                             </div>
                             <div class="mb-2">
-                                <label class="form-label">@L["Label_ApiKey"]</label>
+                                <label class="form-label">@L["Label_ApiKey"].Value</label>
                                 <div class="input-group">
                                     <input type="password"
                                            id="recursorApiKey"
@@ -156,7 +156,7 @@
                                     <button class="btn btn-outline-secondary"
                                             type="button"
                                             data-toggle-vis="#recursorApiKey"
-                                            title="@L["Title_ShowHide"]">
+                                            title="@L["Title_ShowHide"].Value">
                                         <i class="fa fa-eye"></i>
                                     </button>
                                 </div>
@@ -164,7 +164,7 @@
                         </div>
 
                         <div class="text-muted small mt-2">
-                            @L["Tip_RecursorAuthoritativeHint"] <code>127.0.0.1:5300</code>
+                            @L["Tip_RecursorAuthoritativeHint"].Value <code>127.0.0.1:5300</code>
                         </div>
                     </div>
                 </div>
@@ -177,7 +177,7 @@
                     class="btn btn-primary mt-4"
                     style="min-width:260px;"
                     onclick="saveSettings()">
-                <i class="fa fa-save me-1"></i> @L["Btn_SaveSettings"]
+                <i class="fa fa-save me-1"></i> @L["Btn_SaveSettings"].Value
             </button>
         </div>
     </form>
@@ -186,147 +186,203 @@
 @Html.AntiForgeryToken()
 
 @section Scripts {
-<script src="~/js/validation.js"></script>
-<script>
-    // ===== LOCALIZED MESSAGES =====
-    // безопасно внедряем строки в JS
-    const M = {
-        mysqlRequired: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_MySQL_Required"].Value)),
-        pdnsUrlBad: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_PowerDNS_Url"].Value)),
-        defaultAInvalid: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_DefaultA_Invalid"].Value)),
-        soaNsInvalid: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_SoaNs_Invalid"].Value)),
-        soaEmailInvalid: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_SoaEmail_Invalid"].Value)),
-        recursorUrlBad: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Validation_Recursor_Url"].Value)),
-        saveOk: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Save_Success"].Value)),
-        saveFail: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Save_Failed"].Value))
-    };
+    <script src="~/js/validation.js"></script>
 
-    // ===== UTIL: CSRF =====
-    function getCsrf() {
-        const el = document.querySelector('input[name="__RequestVerificationToken"]');
-        return el ? el.value : '';
-    }
+    <!-- I18N как «текст», чтобы редактор не ругался на JSON -->
+    <script id="i18n-settings" type="text/plain">
+@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new {
+    mysqlRequired   = L["Validation_MySQL_Required"].Value,
+    pdnsUrlBad      = L["Validation_PowerDNS_Url"].Value,
+    defaultAInvalid = L["Validation_DefaultA_Invalid"].Value,
+    soaNsInvalid    = L["Validation_SoaNs_Invalid"].Value,
+    soaEmailInvalid = L["Validation_SoaEmail_Invalid"].Value,
+    recursorUrlBad  = L["Validation_Recursor_Url"].Value,
+    saveOk          = L["Save_Success"].Value,
+    saveFail        = L["Save_Failed"].Value
+}))
+    </script>
 
-    // ===== TOGGLE PASSWORD VISIBILITY BUTTONS =====
-    document.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-toggle-vis]');
-        if (!btn) return;
-        const sel = btn.getAttribute('data-toggle-vis');
-        const input = document.querySelector(sel);
-        if (!input) return;
-        input.type = input.type === 'password' ? 'text' : 'password';
-        btn.querySelector('i')?.classList.toggle('fa-eye');
-        btn.querySelector('i')?.classList.toggle('fa-eye-slash');
-    });
+    <script>
+    (function () {
+        // ===== i18n =====
+        let M = {};
+        try {
+            const el = document.getElementById('i18n-settings');
+            if (el && el.textContent) M = JSON.parse(el.textContent);
+        } catch { /* noop */ }
 
-    // ===== RECURSOR FIELDS VISIBILITY =====
-    function toggleRecursorFields() {
-        const status = document.getElementById("recursorStatus").value;
-        const fields = document.getElementById("recursorFields");
-        fields.style.display = (status === "Disabled") ? "none" : "block";
-    }
-    document.addEventListener("DOMContentLoaded", toggleRecursorFields);
-
-    // ===== LIGHT VALIDATORS =====
-    function isHttpUrl(u) {
-        try { const x = new URL(u); return x.protocol === 'http:' || x.protocol === 'https:'; } catch { return false; }
-    }
-
-    function mustIPv4OrEmpty(v) {
-        if (!v) return true;
-        const err = validateIPv4(v); // из validation.js; "" если ОК
-        return !err;
-    }
-    function mustFqdnOrEmpty(v) {
-        if (!v) return true;
-        const err = validateForwardZoneName(v); // без конечной точки
-        return !err;
-    }
-    function isEmail(s) {
-        return /\^[^\s@@]+@@[^\s@@]+\.[^\s@@]+\$/.test((s||'').trim());
-    }
-
-    // ===== COLLECT + SAVE SETTINGS =====
-    async function saveSettings() {
-        const btn = document.getElementById('btnSaveSettings');
-        btn.disabled = true;
-
-        const settingsData = {
-            MySQL: {
-                Server:   document.getElementById("mysqlServer").value.trim(),
-                User:     document.getElementById("mysqlUser").value.trim(),
-                Password: document.getElementById("mysqlPassword").value,
-                Database: document.getElementById("mysqlDatabase").value.trim()
-            },
-            PowerDNS: {
-                Url:       document.getElementById("pdnsUrl").value.trim(),
-                Api_Key:   document.getElementById("pdnsApiKey").value,
-                Default_A: document.getElementById("pdnsDefaultA").value.trim(),
-                SOA: {
-                    Ns:   document.getElementById("pdnsSoaNs").value.trim(),
-                    Mail: document.getElementById("pdnsSoaMail").value.trim()
-                }
-            },
-            Recursor: {
-                Enabled: document.getElementById("recursorStatus").value,
-                Url:     document.getElementById("recursorUrl")?.value.trim() || "",
-                Api_Key: document.getElementById("recursorApiKey")?.value || ""
-            }
+        // ===== CSRF =====
+        window.getCsrf = function () {
+            const el = document.querySelector('input[name="__RequestVerificationToken"]');
+            return el ? el.value : '';
         };
 
-        // === CLIENT-SIDE VALIDATION ===
-        if (!settingsData.MySQL.Server || !settingsData.MySQL.User || !settingsData.MySQL.Database) {
-            showToast('warning', M.mysqlRequired);
-            btn.disabled = false; return;
+        // ===== Toggle password visibility =====
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-toggle-vis]');
+            if (!btn) return;
+            const sel = btn.getAttribute('data-toggle-vis');
+            const input = document.querySelector(sel);
+            if (!input) return;
+            input.type = input.type === 'password' ? 'text' : 'password';
+            const icon = btn.querySelector('i');
+            if (icon) { icon.classList.toggle('fa-eye'); icon.classList.toggle('fa-eye-slash'); }
+        });
+
+        // ===== Recursor fields visibility =====
+        window.toggleRecursorFields = function () {
+            const status = document.getElementById('recursorStatus')?.value;
+            const fields = document.getElementById('recursorFields');
+            if (fields) fields.style.display = (status === 'Disabled') ? 'none' : 'block';
+        };
+        document.addEventListener('DOMContentLoaded', window.toggleRecursorFields);
+
+        // ===== Helpers =====
+        function isHttpUrl(u) {
+            try { const x = new URL(u); return x.protocol === 'http:' || x.protocol === 'https:'; }
+            catch { return false; }
+        }
+        function ensureTrailingDot(s) {
+            if (!s) return s;
+            return s.endsWith('.') ? s : (s + '.');
+        }
+        function stripTrailingDot(s) {
+            if (!s) return s;
+            return s.endsWith('.') ? s.slice(0, -1) : s;
+        }
+        // validation.js adapters
+        function mustIPv4OrEmpty(v) {
+            if (!v) return true;
+            return validateIPv4(v) === ""; // "" == OK
+        }
+        function validateHostFqdnOrErrorText(v) {
+            // Валидируем БЕЗ точки, но сохраняем С точкой
+            const noDot = stripTrailingDot((v || '').trim());
+            return validateForwardZoneName(noDot); // вернёт "" если ОК
         }
 
-        if (!isHttpUrl(settingsData.PowerDNS.Url)) {
-            showToast('warning', M.pdnsUrlBad);
-            btn.disabled = false; return;
+        // RNAME ⇄ email
+        function rnameToEmail(rname) {
+            if (!rname) return "";
+            let s = rname.endsWith('.') ? rname.slice(0, -1) : rname;
+            let out = "", i = 0, seenAt = false;
+            while (i < s.length) {
+                const ch = s[i];
+                if (ch === '\\' && i + 1 < s.length) { out += s[i + 1]; i += 2; }
+                else if (ch === '.' && !seenAt) { out += '@@'; seenAt = true; i++; }
+                else { out += ch; i++; }
+            }
+            return out;
         }
-        if (!mustIPv4OrEmpty(settingsData.PowerDNS.Default_A)) {
-            showToast('warning', M.defaultAInvalid);
-            btn.disabled = false; return;
-        }
-        if (!mustFqdnOrEmpty(settingsData.PowerDNS.SOA.Ns)) {
-            showToast('warning', M.soaNsInvalid);
-            btn.disabled = false; return;
-        }
-        if (settingsData.PowerDNS.SOA.Mail && !isEmail(settingsData.PowerDNS.SOA.Mail)) {
-            showToast('warning', M.soaEmailInvalid);
-            btn.disabled = false; return;
+        function emailToRname(email) {
+            if (!email) return "";
+            if (!email.includes('@@')) return ensureTrailingDot(email);
+            const [local, domain] = email.split('@@');
+            const escLocal = local.replace(/\./g, '\\.');
+            return ensureTrailingDot(`${escLocal}.${domain}`);
         }
 
-        if (settingsData.Recursor.Enabled === 'Enabled') {
-            if (!isHttpUrl(settingsData.Recursor.Url)) {
-                showToast('warning', M.recursorUrlBad);
+        // Показать пользователю e-mail, даже если в конфиге лежит RNAME
+        document.addEventListener('DOMContentLoaded', () => {
+            const mailEl = document.getElementById('pdnsSoaMail');
+            if (mailEl && mailEl.value && !mailEl.value.includes('@@')) {
+                mailEl.value = rnameToEmail(mailEl.value);
+            }
+        });
+
+        // ===== Save settings =====
+        window.saveSettings = async function () {
+            const btn = document.getElementById('btnSaveSettings');
+            btn.disabled = true;
+
+            // Нормализуем NS: валидируем без точки, сохраняем с точкой
+            const uiNsRaw = document.getElementById('pdnsSoaNs')?.value.trim() || "";
+            const nsErr = uiNsRaw ? validateHostFqdnOrErrorText(uiNsRaw) : "";
+            if (nsErr) {
+                showToast('warning', M.soaNsInvalid || 'SOA Primary NS: invalid host.');
                 btn.disabled = false; return;
             }
-        }
+            const nsWithDot = ensureTrailingDot(uiNsRaw);
 
-        try {
-            const response = await fetch(window.location.pathname + "?handler=SaveSettings", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "RequestVerificationToken": getCsrf()
+            // Email → RNAME
+            const uiEmail = document.getElementById('pdnsSoaMail')?.value.trim() || "";
+            // Если input type="email", используем встроенную валидацию, иначе — мягкая проверка
+            const emailInput = document.getElementById('pdnsSoaMail');
+            const emailValid = !uiEmail || (emailInput?.type === 'email'
+                ? emailInput.checkValidity()
+                : /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(uiEmail));
+            if (!emailValid) {
+                showToast('warning', M.soaEmailInvalid || 'SOA Admin Email: invalid email.');
+                btn.disabled = false; return;
+            }
+            const soaMailRname = emailToRname(uiEmail);
+
+            const settingsData = {
+                MySQL: {
+                    Server:   document.getElementById('mysqlServer').value.trim(),
+                    User:     document.getElementById('mysqlUser').value.trim(),
+                    Password: document.getElementById('mysqlPassword').value,
+                    Database: document.getElementById('mysqlDatabase').value.trim()
                 },
-                body: JSON.stringify(settingsData)
-            });
+                PowerDNS: {
+                    Url:       document.getElementById('pdnsUrl').value.trim(),
+                    Api_Key:   document.getElementById('pdnsApiKey').value,
+                    Default_A: document.getElementById('pdnsDefaultA').value.trim(),
+                    SOA: {
+                        Ns:   nsWithDot,      // <-- сохраняем с точкой
+                        Mail: soaMailRname    // <-- в формате RNAME
+                    }
+                },
+                Recursor: {
+                    Enabled: document.getElementById('recursorStatus').value,
+                    Url:     document.getElementById('recursorUrl')?.value.trim() || "",
+                    Api_Key: document.getElementById('recursorApiKey')?.value || ""
+                }
+            };
 
-            const payload = await response.json();
-            if (!response.ok || payload?.success === false) {
-                throw new Error(payload?.message || M.saveFail);
+            // === Валидация ===
+            if (!settingsData.MySQL.Server || !settingsData.MySQL.User || !settingsData.MySQL.Database) {
+                showToast('warning', M.mysqlRequired || 'MySQL: server, user and database are required.');
+                btn.disabled = false; return;
+            }
+            if (!isHttpUrl(settingsData.PowerDNS.Url)) {
+                showToast('warning', M.pdnsUrlBad || 'PowerDNS: API URL must be http(s)://…');
+                btn.disabled = false; return;
+            }
+            if (!mustIPv4OrEmpty(settingsData.PowerDNS.Default_A)) {
+                showToast('warning', M.defaultAInvalid || 'Default A record: invalid IPv4.');
+                btn.disabled = false; return;
+            }
+            if (settingsData.Recursor.Enabled === 'Enabled' && !isHttpUrl(settingsData.Recursor.Url)) {
+                showToast('warning', M.recursorUrlBad || 'Recursor: URL must be http(s)://…');
+                btn.disabled = false; return;
             }
 
-            showToast('success', payload?.message || M.saveOk);
-        } catch (err) {
-            console.error(err);
-            showToast('danger', err.message || M.saveFail);
-        } finally {
-            btn.disabled = false;
-        }
-    }
-</script>
+            try {
+                const response = await fetch(window.location.pathname + "?handler=SaveSettings", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "RequestVerificationToken": getCsrf()
+                    },
+                    body: JSON.stringify(settingsData)
+                });
+                const payload = await response.json();
+                if (!response.ok || payload?.success === false) {
+                    throw new Error(payload?.message || M.saveFail || 'Save failed.');
+                }
+                showToast('success', payload?.message || M.saveOk || 'Settings saved');
+            } catch (err) {
+                console.error(err);
+                showToast('danger', err.message || M.saveFail || 'Save failed.');
+            } finally {
+                btn.disabled = false;
+            }
+        };
+    })();
+    </script>
 }
+
+
+

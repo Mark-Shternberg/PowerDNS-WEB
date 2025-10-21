@@ -20,8 +20,8 @@
     <!-- ===== PAGE HEADER ===== -->
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <div>
-            <h2 class="mb-0"><i class="fa fa-chart-line me-2"></i>@L["OverviewTitle"]</h2>
-            <div class="text-muted small">@L["OverviewSubtitle"]</div>
+            <h2 class="mb-0"><i class="fa fa-chart-line me-2"></i>@L["OverviewTitle"].Value</h2>
+            <div class="text-muted small">@L["OverviewSubtitle"].Value</div>
         </div>
         <div class="d-flex align-items-center gap-2">
         </div>
@@ -32,7 +32,7 @@
         <div class="col">
             <div class="card stat-card h-100">
                 <div class="card-body">
-                    <div class="stat-label">@L["Metric.ActivePort"]</div>
+                    <div class="stat-label">@L["Metric.ActivePort"].Value</div>
                     <div class="stat-value" id="activePort">--</div>
                 </div>
             </div>
@@ -40,7 +40,7 @@
         <div class="col">
             <div class="card stat-card h-100">
                 <div class="card-body">
-                    <div class="stat-label">@L["Metric.Uptime"]</div>
+                    <div class="stat-label">@L["Metric.Uptime"].Value</div>
                     <div class="stat-value" id="uptime">--</div>
                 </div>
             </div>
@@ -48,7 +48,7 @@
         <div class="col">
             <div class="card stat-card h-100">
                 <div class="card-body">
-                    <div class="stat-label">@L["Metric.TotalQueries"]</div>
+                    <div class="stat-label">@L["Metric.TotalQueries"].Value</div>
                     <div class="stat-value" id="totalQueries">--</div>
                 </div>
             </div>
@@ -56,7 +56,7 @@
         <div class="col">
             <div class="card stat-card h-100">
                 <div class="card-body">
-                    <div class="stat-label">@L["Metric.QpsApprox"]</div>
+                    <div class="stat-label">@L["Metric.QpsApprox"].Value</div>
                     <div class="stat-value" id="qps">--</div>
                 </div>
             </div>
@@ -64,35 +64,35 @@
     </div>
 
     <!-- ===== DETAIL LISTS ===== -->
-    <h5 class="mt-4 mb-2 text-center">@L["Section.Statistics"]</h5>
+    <h5 class="mt-4 mb-2 text-center">@L["Section.Statistics"].Value</h5>
     <div class="row g-3">
         <div class="col-12 col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-header text-center bg-body-secondary">
-                    <h6 class="mb-0 text-warning-emphasis"><i class="fa fa-exclamation-triangle me-1"></i>@L["Card.MissingTypes"]</h6>
+                    <h6 class="mb-0 text-warning-emphasis"><i class="fa fa-exclamation-triangle me-1"></i>@L["Card.MissingTypes"].Value</h6>
                 </div>
                 <div class="card-body">
-                    <pre id="noerror-queries" class="log-container">@L["Common.Loading"]</pre>
+                    <pre id="noerror-queries" class="log-container">@L["Common.Loading"].Value</pre>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-header text-center bg-body-secondary">
-                    <h6 class="mb-0 text-danger-emphasis"><i class="fa fa-exclamation-circle me-1"></i>@L["Card.Nonexistent"]</h6>
+                    <h6 class="mb-0 text-danger-emphasis"><i class="fa fa-exclamation-circle me-1"></i>@L["Card.Nonexistent"].Value</h6>
                 </div>
                 <div class="card-body">
-                    <pre id="nxdomain-queries" class="log-container">@L["Common.Loading"]</pre>
+                    <pre id="nxdomain-queries" class="log-container">@L["Common.Loading"].Value</pre>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-header text-center bg-body-secondary">
-                    <h6 class="mb-0 text-success-emphasis"><i class="fa fa-check-circle me-1"></i>@L["Card.UdpReceived"]</h6>
+                    <h6 class="mb-0 text-success-emphasis"><i class="fa fa-check-circle me-1"></i>@L["Card.UdpReceived"].Value</h6>
                 </div>
                 <div class="card-body">
-                    <pre id="queries" class="log-container">@L["Common.Loading"]</pre>
+                    <pre id="queries" class="log-container">@L["Common.Loading"].Value</pre>
                 </div>
             </div>
         </div>
@@ -101,13 +101,13 @@
     @if (ViewData["RecursorEnabled"]?.ToString() == "Enabled")
     {
         <!-- ===== RECURSOR METRICS ===== -->
-        <h5 class="mt-5 mb-2 text-center"><i class="fa fa-database me-2"></i>@L["Recursor.Title"]</h5>
+        <h5 class="mt-5 mb-2 text-center"><i class="fa fa-database me-2"></i>@L["Recursor.Title"].Value</h5>
 
         <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-lg-4">
             <div class="col">
                 <div class="card stat-card h-100">
                     <div class="card-body">
-                        <div class="stat-label">@L["Recursor.Port"]</div>
+                        <div class="stat-label">@L["Recursor.Port"].Value</div>
                         <div class="stat-value">53</div>
                     </div>
                 </div>
@@ -115,7 +115,7 @@
             <div class="col">
                 <div class="card stat-card h-100">
                     <div class="card-body">
-                        <div class="stat-label">@L["Recursor.Uptime"]</div>
+                        <div class="stat-label">@L["Recursor.Uptime"].Value</div>
                         <div class="stat-value" id="recursorUptime">--</div>
                     </div>
                 </div>
@@ -123,7 +123,7 @@
             <div class="col">
                 <div class="card stat-card h-100">
                     <div class="card-body">
-                        <div class="stat-label">@L["Recursor.CacheHits"]</div>
+                        <div class="stat-label">@L["Recursor.CacheHits"].Value</div>
                         <div class="stat-value" id="recursorCacheHits">--</div>
                     </div>
                 </div>
@@ -131,7 +131,7 @@
             <div class="col">
                 <div class="card stat-card h-100">
                     <div class="card-body">
-                        <div class="stat-label">@L["Recursor.CacheMissesRatio"]</div>
+                        <div class="stat-label">@L["Recursor.CacheMissesRatio"].Value</div>
                         <div class="stat-value">
                             <span id="recursorCacheMisses">--</span>
                             <span class="mx-2 text-muted">·</span>
@@ -147,20 +147,20 @@
             <div class="col-12 col-md-6">
                 <div class="card shadow-sm h-100">
                     <div class="card-header text-center bg-body-secondary">
-                        <h6 class="mb-0">@L["Recursor.TopRequests"]</h6>
+                        <h6 class="mb-0">@L["Recursor.TopRequests"].Value</h6>
                     </div>
                     <div class="card-body">
-                        <pre id="top-queries" class="log-container">@L["Common.Loading"]</pre>
+                        <pre id="top-queries" class="log-container">@L["Common.Loading"].Value</pre>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-md-6">
                 <div class="card shadow-sm h-100">
                     <div class="card-header text-center bg-body-secondary">
-                        <h6 class="mb-0"><i class="fa fa-network-wired me-1"></i>@L["Recursor.TopRemotes"]</h6>
+                        <h6 class="mb-0"><i class="fa fa-network-wired me-1"></i>@L["Recursor.TopRemotes"].Value</h6>
                     </div>
                     <div class="card-body">
-                        <pre id="top-remotes" class="log-container">@L["Common.Loading"]</pre>
+                        <pre id="top-remotes" class="log-container">@L["Common.Loading"].Value</pre>
                     </div>
                 </div>
             </div>
@@ -169,7 +169,7 @@
 
     <!-- ===== CHART: QPS LAST 5 MIN ===== -->
     <div class="mt-5">
-        <h6 class="text-muted mb-2">@L["Chart.QpsLast5m"]</h6>
+        <h6 class="text-muted mb-2">@L["Chart.QpsLast5m"].Value</h6>
         <canvas id="queryChart"></canvas>
     </div>
 </div>

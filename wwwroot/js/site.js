@@ -1,6 +1,34 @@
-﻿// ==========================
-// ALL COMMENTS IN ENGLISH
-// ==========================
+﻿// ===== MASKS =====
+$(function () {
+    $(".resolution-input").inputmask("9999x9999", { placeholder: "____x____" });
+    $(".aspect-input").inputmask("99:99", { placeholder: "__:__" });
+
+    $(".ip-input").each(function () {
+        Inputmask({
+            alias: "ip",
+            placeholder: "_",
+            greedy: false,
+            showMaskOnHover: false,
+            showMaskOnFocus: false,
+            clearIncomplete: true,
+            removeMaskOnSubmit: true,
+            onincomplete: function () { this.classList.add('is-invalid'); },
+            oncomplete: function () { this.classList.remove('is-invalid'); }
+        }).mask(this);
+    });
+
+    $("form").on("submit", function (e) {
+        let bad = false;
+        $(this).find(".ip-input").each(function () {
+            const v = $(this).val().trim();
+            if (v && !$(this).inputmask("isComplete")) {
+                bad = true;
+                this.classList.add("is-invalid");
+            }
+        });
+        if (bad) { e.preventDefault(); e.stopImmediatePropagation(); }
+    });
+});
 
 // ===== THEME TOGGLE (BOOTSTRAP 5.3 DATA-BS-THEME) =====
 (function () {
@@ -34,29 +62,6 @@
         setTheme(next);
     });
 })();
-
-// ===== INPUT MASKS & BASIC IPv4 VALIDATION =====
-$(function () {
-    // APPLY IPv4 MASK
-    $(".ip-input").inputmask("999.999.999.999", { placeholder: "___.___.___.___" });
-
-    // QUICK VALIDATION ON BLUR (0-255)
-    $(document).on('blur', '.ip-input', function () {
-        const v = String($(this).val() || "").trim();
-        if (!isValidIPv4(v)) $(this).addClass('is-invalid');
-        else $(this).removeClass('is-invalid');
-    });
-});
-
-function isValidIPv4(s) {
-    const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(s);
-    if (!m) return false;
-    for (let i = 1; i <= 4; i++) {
-        const n = +m[i];
-        if (n < 0 || n > 255) return false;
-    }
-    return true;
-}
 
 // ===== TOASTS API (CLIENT-SIDE) =====
 (function () {

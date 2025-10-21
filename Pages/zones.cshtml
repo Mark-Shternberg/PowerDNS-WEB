@@ -10,8 +10,8 @@
     <!-- HEADER -->
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <div>
-            <h2 class="mb-0"><i class="fa fa-shield-halved me-2"></i>@L["Header.Title"]</h2>
-            <div class="text-muted small">@L["Header.Subtitle"]</div>
+            <h2 class="mb-0"><i class="fa fa-shield-halved me-2"></i>@L["Header.Title"].Value</h2>
+            <div class="text-muted small">@L["Header.Subtitle"].Value</div>
         </div>
         @if (User.IsInRole("Administrator"))
         {
@@ -21,14 +21,14 @@
                         data-bs-toggle="modal"
                         data-bs-target="#addEditZoneModal"
                         data-mode="add-forward">
-                    <i class="fa fa-plus me-1"></i> @L["Btn.AddForward"]
+                    <i class="fa fa-plus me-1"></i> @L["Btn.AddForward"].Value
                 </button>
                 <button type="button"
                         class="btn btn-outline-primary js-open-add"
                         data-bs-toggle="modal"
                         data-bs-target="#addEditZoneModal"
                         data-mode="add-reverse">
-                    <i class="fa fa-plus me-1"></i> @L["Btn.AddReverse"]
+                    <i class="fa fa-plus me-1"></i> @L["Btn.AddReverse"].Value
                 </button>
             </div>
         }
@@ -38,8 +38,8 @@
     <div class="d-flex justify-content-center mb-3">
         <div class="input-group" style="max-width: 560px;">
             <span class="input-group-text"><i class="fa fa-search"></i></span>
-            <input class="form-control" id="search" type="text" placeholder="@L["Search.Placeholder"]">
-            <button type="button" id="clear-btn" class="btn btn-default" style="display:none">@L["Search.Clear"]</button>
+            <input class="form-control" id="search" type="text" placeholder="@L["Search.Placeholder"].Value">
+            <button type="button" id="clear-btn" class="btn btn-default" style="display:none">@L["Search.Clear"].Value</button>
         </div>
     </div>
 
@@ -48,12 +48,12 @@
         <table class="table table-hover align-middle" id="main_table">
             <thead class="table-dark">
                 <tr>
-                    <th>@L["Th.Domain"]</th>
-                    <th style="width: 180px;">@L["Th.Master"]</th>
-                    <th style="width: 160px;">@L["Th.Type"]</th>
-                    <th style="width: 220px;">@L["Th.DNSSEC"]</th>
-                    <th style="width: 140px;">@L["Th.Serial"]</th>
-                    <th style="width: 240px;">@L["Th.Actions"]</th>
+                    <th>@L["Th.Domain"].Value</th>
+                    <th style="width: 180px;">@L["Th.Master"].Value</th>
+                    <th style="width: 160px;">@L["Th.Type"].Value</th>
+                    <th style="width: 220px;">@L["Th.DNSSEC"].Value</th>
+                    <th style="width: 140px;">@L["Th.Serial"].Value</th>
+                    <th style="width: 240px;">@L["Th.Actions"].Value</th>
                 </tr>
             </thead>
             <tbody>
@@ -69,15 +69,15 @@
                         <td>
                             @if (type == "Master")
                             {
-                                <span class="badge bg-primary"><i class="fa fa-server me-1"></i>@L["Type.Master"]</span>
+                                <span class="badge bg-primary"><i class="fa fa-server me-1"></i>@L["Type.Master"].Value</span>
                             }
                             else if (type == "Slave")
                             {
-                                <span class="badge bg-secondary"><i class="fa fa-cloud me-1"></i>@L["Type.Slave"]</span>
+                                <span class="badge bg-secondary"><i class="fa fa-cloud me-1"></i>@L["Type.Slave"].Value</span>
                             }
                             else if (type == "Native")
                             {
-                                <span class="badge bg-info text-dark"><i class="fa fa-database me-1"></i>@L["Type.Native"]</span>
+                                <span class="badge bg-info text-dark"><i class="fa fa-database me-1"></i>@L["Type.Native"].Value</span>
                             }
                             else
                             {
@@ -88,19 +88,19 @@
                             @if (isDnssec)
                             {
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                                    <span class="badge bg-success"><i class="fa fa-key me-1"></i>@L["Dnssec.Enabled"]</span>
+                                    <span class="badge bg-success"><i class="fa fa-key me-1"></i>@L["Dnssec.Enabled"].Value</span>
                                     <button type="button"
                                             class="btn btn-sm btn-outline-secondary js-keys"
                                             data-bs-toggle="modal"
                                             data-bs-target="#dnssecKeysModal"
                                             data-zone="@zone.name">
-                                        <i class="fa fa-key me-1"></i>@L["Btn.Keys"]
+                                        <i class="fa fa-key me-1"></i>@L["Btn.Keys"].Value
                                     </button>
                                 </div>
                             }
                             else
                             {
-                                <span class="badge bg-danger"><i class="fa fa-ban me-1"></i>@L["Dnssec.Disabled"]</span>
+                                <span class="badge bg-danger"><i class="fa fa-ban me-1"></i>@L["Dnssec.Disabled"].Value</span>
                             }
                         </td>
                         <td class="text-muted">@zone.serial</td>
@@ -116,7 +116,7 @@
                                         data-master="@zone.Master"
                                         data-dnssec="@(zone.dnssec ? "Enabled" : "Disabled")"
                                         data-serial="@zone.serial">
-                                    <i class="fa fa-edit"></i> @L["Btn.Edit"]
+                                    <i class="fa fa-edit"></i> @L["Btn.Edit"].Value
                                 </button>
 
                                 <button type="button"
@@ -124,7 +124,7 @@
                                         data-bs-toggle="modal"
                                         data-bs-target="#confirmDeleteModal"
                                         data-name="@zone.name">
-                                    <i class="fa fa-trash"></i> @L["Btn.Delete"]
+                                    <i class="fa fa-trash"></i> @L["Btn.Delete"].Value
                                 </button>
                             </div>
                         </td>
@@ -148,64 +148,64 @@
                 <div class="modal-header">
                     <h5 class="modal-title"
                         id="addEditZoneLabel"
-                        data-title-add-forward="@L["Modal.AddForwardTitle"]"
-                        data-title-add-reverse="@L["Modal.AddReverseTitle"]"
-                        data-title-edit="@L["Modal.EditTitle"]">
-                        @L["Modal.AddGenericTitle"]
+                        data-title-add-forward="@L["Modal.AddForwardTitle"].Value"
+                        data-title-add-reverse="@L["Modal.AddReverseTitle"].Value"
+                        data-title-edit="@L["Modal.EditTitle"].Value">
+                        @L["Modal.AddGenericTitle"].Value
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"]"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"].Value"></button>
                 </div>
 
                 <div class="modal-body">
 
                     <!-- FORWARD NAME -->
                     <div class="mb-3" id="forward-block">
-                        <label for="zone-name" class="form-label">@L["Field.ZoneName"] <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="zone-name" name="name" placeholder="@L["Field.ZoneName.Ph"]" />
-                        <div class="invalid-feedback">@L["Field.ZoneName.Invalid"]</div>
+                        <label for="zone-name" class="form-label">@L["Field.ZoneName"].Value <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="zone-name" name="name" placeholder="@L["Field.ZoneName.Ph"].Value" />
+                        <div class="invalid-feedback">@L["Field.ZoneName.Invalid"].Value</div>
                     </div>
 
                     <!-- REVERSE PREFIX -->
                     <div class="mb-3 d-none" id="reverse-block">
-                        <label for="reverse-prefix" class="form-label">@L["Field.RevPrefix"] <span class="text-danger">*</span></label>
+                        <label for="reverse-prefix" class="form-label">@L["Field.RevPrefix"].Value <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="reverse-prefix" name="revprefix" placeholder="192.168.0." />
-                        <div class="form-text">@L["Field.RevPrefix.HelpHtml"]</div>
-                        <div class="invalid-feedback">@L["Field.RevPrefix.Invalid"]</div>
+                        <div class="form-text">@L["Field.RevPrefix.HelpHtml"].Value</div>
+                        <div class="invalid-feedback">@L["Field.RevPrefix.Invalid"].Value</div>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-sm-6">
-                            <label for="zone-kind" class="form-label">@L["Field.ZoneType"] <span class="text-danger">*</span></label>
+                            <label for="zone-kind" class="form-label">@L["Field.ZoneType"].Value <span class="text-danger">*</span></label>
                             <select id="zone-kind" class="form-select" required>
-                                <option value="Native">@L["Type.Native"]</option>
-                                <option value="Master">@L["Type.Master"]</option>
-                                <option value="Slave">@L["Type.Slave"]</option>
+                                <option value="Native">@L["Type.Native"].Value</option>
+                                <option value="Master">@L["Type.Master"].Value</option>
+                                <option value="Slave">@L["Type.Slave"].Value</option>
                             </select>
-                            <div class="invalid-feedback">@L["Field.ZoneType.Invalid"]</div>
+                            <div class="invalid-feedback">@L["Field.ZoneType.Invalid"].Value</div>
                         </div>
                         <div class="col-sm-6">
                             <label for="zone-dnssec" class="form-label">DNSSEC <span class="text-danger">*</span></label>
                             <select id="zone-dnssec" name="dnssec" class="form-select" required>
-                                <option value="Enabled" selected>@L["Dnssec.Enabled"]</option>
-                                <option value="Disabled">@L["Dnssec.Disabled"]</option>
+                                <option value="Enabled" selected>@L["Dnssec.Enabled"].Value</option>
+                                <option value="Disabled">@L["Dnssec.Disabled"].Value</option>
                             </select>
-                            <div class="invalid-feedback">@L["Field.Dnssec.Invalid"]</div>
+                            <div class="invalid-feedback">@L["Field.Dnssec.Invalid"].Value</div>
                         </div>
                     </div>
 
                     <div id="slave-block" class="mt-3 d-none">
-                        <label for="zone-master" class="form-label">@L["Field.MasterServer"] <span class="text-danger">*</span></label>
+                        <label for="zone-master" class="form-label">@L["Field.MasterServer"].Value <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="zone-master" name="Master" placeholder="1.2.3.4" />
-                        <div class="invalid-feedback">@L["Field.MasterServer.Invalid"]</div>
+                        <div class="invalid-feedback">@L["Field.MasterServer.Invalid"].Value</div>
                     </div>
 
                     <input type="hidden" id="zone-serial" name="serial" value="0" />
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@L["Btn.Close"]</button>
-                    <button type="submit" id="btn-add" class="btn btn-primary" formaction="?handler=AddZone">@L["Btn.Add"]</button>
-                    <button type="submit" id="btn-save" class="btn btn-warning d-none" formaction="?handler=EditZone">@L["Btn.Save"]</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@L["Btn.Close"].Value</button>
+                    <button type="submit" id="btn-add" class="btn btn-primary" formaction="?handler=AddZone">@L["Btn.Add"].Value</button>
+                    <button type="submit" id="btn-save" class="btn btn-warning d-none" formaction="?handler=EditZone">@L["Btn.Save"].Value</button>
                 </div>
             </form>
         </div>
@@ -219,16 +219,16 @@
             <form method="post" action="?handler=DeleteZone" class="needs-validation" novalidate>
                 @Html.AntiForgeryToken()
                 <div class="modal-header">
-                    <h5 class="modal-title" id="confirmDeleteLabel">@L["Confirm.Title"]</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"]"></button>
+                    <h5 class="modal-title" id="confirmDeleteLabel">@L["Confirm.Title"].Value</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"].Value"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="name" id="delete-zone-name" />
-                    <p class="mb-0">@L["Confirm.TextPrefix"] <strong id="delete-zone-name-view"></strong>?</p>
+                    <p class="mb-0">@L["Confirm.TextPrefix"].Value <strong id="delete-zone-name-view"></strong>?</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">@L["Btn.Cancel"]</button>
-                    <button type="submit" class="btn btn-danger">@L["Btn.Delete"]</button>
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">@L["Btn.Cancel"].Value</button>
+                    <button type="submit" class="btn btn-danger">@L["Btn.Delete"].Value</button>
                 </div>
             </form>
         </div>
@@ -240,16 +240,16 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-warning">
-                <h5 class="modal-title" id="dnssecKeysLabel"><i class="fa fa-key me-2"></i>@L["Keys.Title"]</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"]"></button>
+                <h5 class="modal-title" id="dnssecKeysLabel"><i class="fa fa-key me-2"></i>@L["Keys.Title"].Value</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn.Close"].Value"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning d-flex align-items-center" role="alert">
                     <i class="fa fa-exclamation-triangle fa-lg me-2"></i>
-                    <div>@L["Keys.Warning"]</div>
+                    <div>@L["Keys.Warning"].Value</div>
                 </div>
                 <div id="dsRecordsContainer" class="vstack gap-2">
-                    <div class="text-muted">@L["Common.Loading"]</div>
+                    <div class="text-muted">@L["Common.Loading"].Value</div>
                 </div>
             </div>
         </div>

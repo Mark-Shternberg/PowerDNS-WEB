@@ -22,10 +22,10 @@ namespace PowerDNS_Web.Pages
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
-            _apiUrl = configuration["pdns:url"];
-            _apiKey = configuration["pdns:api_key"];
-            _recursorUrl = configuration["recursor:url"];
-            _recursorApiKey = configuration["recursor:api_key"];
+            _apiUrl = configuration["pdns:url"] ?? "";
+            _apiKey = configuration["pdns:api_key"] ?? "";
+            _recursorUrl = configuration["recursor:url"] ?? "";
+            _recursorApiKey = configuration["recursor:api_key"] ?? "";
         }
 
         public void OnGet()

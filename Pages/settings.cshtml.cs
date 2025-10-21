@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Localization;
 using MySqlConnector;
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 
 namespace PowerDNS_Web.Pages
@@ -14,19 +15,17 @@ namespace PowerDNS_Web.Pages
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<SettingsModel> _logger;
-        private readonly IStringLocalizer<SettingsModel> _L;
+        private readonly IStringLocalizer _L;
 
         [BindProperty]
         public AppSettingsModel Settings { get; set; }
 
-        public SettingsModel(
-            ILogger<SettingsModel> logger,
-            IConfiguration configuration,
-            IStringLocalizer<SettingsModel> localizer)
+        public SettingsModel(ILogger<SettingsModel> logger, IConfiguration configuration, IStringLocalizerFactory factory)
         {
             _logger = logger;
             _configuration = configuration;
-            _L = localizer;
+            var asmName = Assembly.GetExecutingAssembly().GetName().Name!;
+            _L = factory.Create("Pages.settings", asmName);
 
             // LOAD SETTINGS FROM CONFIGURATION
             Settings = new AppSettingsModel
@@ -45,27 +44,27 @@ namespace PowerDNS_Web.Pages
             try
             {
                 if (model is null)
-                    return new JsonResult(new { success = false, message = _L["Err_Save"] });
+                    return new JsonResult(new { success = false, message = _L["Err_Save"].Value });
 
                 // --- BASIC VALIDATION ---
                 if (string.IsNullOrWhiteSpace(model.MySQL.Server) ||
                     string.IsNullOrWhiteSpace(model.MySQL.User) ||
                     string.IsNullOrWhiteSpace(model.MySQL.Database))
                 {
-                    return new JsonResult(new { success = false, message = _L["Err_MySQL_Required"] });
+                    return new JsonResult(new { success = false, message = _L["Err_MySQL_Required"].Value });
                 }
 
                 if (string.IsNullOrWhiteSpace(model.PowerDNS.Url) ||
                     string.IsNullOrWhiteSpace(model.PowerDNS.Api_Key))
                 {
-                    return new JsonResult(new { success = false, message = _L["Err_PowerDNS_Required"] });
+                    return new JsonResult(new { success = false, message = _L["Err_PowerDNS_Required"].Value });
                 }
 
                 // Recursor URL/API-Key требуем ТОЛЬКО если включён
                 var recEnabled = string.Equals(model.Recursor.Enabled, "Enabled", StringComparison.OrdinalIgnoreCase);
                 if (recEnabled && (string.IsNullOrWhiteSpace(model.Recursor.Url) || string.IsNullOrWhiteSpace(model.Recursor.Api_Key)))
                 {
-                    return new JsonResult(new { success = false, message = _L["Err_Recursor_Required"] });
+                    return new JsonResult(new { success = false, message = _L["Err_Recursor_Required"].Value });
                 }
 
                 // --- CHECK MYSQL CONNECTION ---
@@ -79,14 +78,14 @@ namespace PowerDNS_Web.Pages
                 catch (MySqlException ex)
                 {
                     _logger.LogError(ex, "MySQL connection error");
-                    return new JsonResult(new { success = false, message = string.Format(_L["Err_MySqlConnection"], ex.Message) });
+                    return new JsonResult(new { success = false, message = string.Format(_L["Err_MySqlConnection"].Value, ex.Message) });
                 }
 
                 // --- WRITE appsettings.json ---
                 string appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
                 if (!System.IO.File.Exists(appSettingsPath))
                 {
-                    return new JsonResult(new { success = false, message = _L["Err_ConfigNotFound"] });
+                    return new JsonResult(new { success = false, message = _L["Err_ConfigNotFound"].Value });
                 }
 
                 // Read current JSON
@@ -108,12 +107,12 @@ namespace PowerDNS_Web.Pages
                 // --- APPLY SYSTEM CHANGES (recursor/pdns) ---
                 await UpdateRecursorStatus(recEnabled);
 
-                return new JsonResult(new { success = true, message = _L["Msg_SettingsSaved"] });
+                return new JsonResult(new { success = true, message = _L["Msg_SettingsSaved"].Value });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Settings save error");
-                return new JsonResult(new { success = false, message = string.Format(_L["Err_SaveDetailed"], ex.Message) });
+                return new JsonResult(new { success = false, message = string.Format(_L["Err_SaveDetailed"].Value, ex.Message) });
             }
         }
 
