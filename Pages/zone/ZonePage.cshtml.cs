@@ -146,6 +146,12 @@ namespace PowerDNS_Web.Pages.zone
 
         public class AddSubdomainRequest { public string? Subdomain { get; set; } }
 
+        private static string EnsureDot(string s) =>
+            string.IsNullOrWhiteSpace(s) ? s : (s.EndsWith(".", StringComparison.Ordinal) ? s : s + ".");
+
+        // CANONICAL ZONE ID WITH TRAILING DOT
+        private string ZoneId => EnsureDot((ZoneName ?? string.Empty).Trim());
+
         // === ADD RECORD (TempData + Redirect) ===
         public async Task<IActionResult> OnPostAddRecordAsync()
         {
@@ -508,52 +514,69 @@ namespace PowerDNS_Web.Pages.zone
 
             try
             {
-                var sub = Request.Form["Subdomain"].ToString();
-                if (string.IsNullOrWhiteSpace(sub))
+                // READ FORM
+                var raw = (Request.Form["Subdomain"].ToString() ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(raw))
                 {
                     TempData["NoteError"] = _L["Err.InvalidRequest"].Value;
                     return RedirectToPage(new { ZoneName });
                 }
 
+                // DEFAULT A IP MUST BE SET
                 if (string.IsNullOrWhiteSpace(_default_IP))
                 {
                     TempData["NoteError"] = _L["Err.DefaultARequired"].Value;
                     return RedirectToPage(new { ZoneName });
                 }
 
-                string fullSubdomain = $"{sub.TrimEnd('.')}.{ZoneName}";
+                // NORMALIZE: ONLY LABELS, NO ZONE APPENDED BY USER
+                var label = raw.Trim('.');
 
-                var newRecord = new
+                // FORBID ACCIDENTAL ROOT/WHOLE-ZONE INPUTS
+                if (label == "@" ||
+                    label.Equals(ZoneName, StringComparison.OrdinalIgnoreCase) ||
+                    label.EndsWith("." + (ZoneName ?? string.Empty).TrimEnd('.'), StringComparison.OrdinalIgnoreCase))
+                {
+                    TempData["NoteError"] = _L["Err.InvalidRequest"].Value;
+                    return RedirectToPage(new { ZoneName });
+                }
+
+                // BUILD FQDN (MUST END WITH DOT)
+                var fqdn = EnsureDot($"{label}.{(ZoneName ?? string.Empty).TrimEnd('.')}");
+
+                // PATCH TO CANONICAL ZONE-ID (WITH DOT)
+                var payload = new
                 {
                     rrsets = new[]
                     {
-                        new
-                        {
-                            name = fullSubdomain,
-                            type = "A",
-                            ttl = 3600,
-                            changetype = "REPLACE",
-                            records = new[] { new { content = _default_IP, disabled = false } }
-                        }
-                    }
+                new
+                {
+                    name = fqdn,
+                    type = "A",
+                    ttl = 3600,
+                    changetype = "REPLACE",
+                    records = new[] { new { content = _default_IP, disabled = false } }
+                }
+            }
                 };
 
-                var json = JsonSerializer.Serialize(newRecord, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-                var requestMessage = new HttpRequestMessage(HttpMethod.Patch, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}")
+                var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                var req = new HttpRequestMessage(HttpMethod.Patch, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneId}")
                 {
                     Content = new StringContent(json, Encoding.UTF8, "application/json")
                 };
-                requestMessage.Headers.Add("X-API-Key", _apiKey);
+                req.Headers.Add("X-API-Key", _apiKey);
 
-                var response = await _httpClient.SendAsync(requestMessage);
-                if (!response.IsSuccessStatusCode)
+                var resp = await _httpClient.SendAsync(req);
+                if (!resp.IsSuccessStatusCode)
                 {
-                    var err = await response.Content.ReadAsStringAsync();
+                    var err = await resp.Content.ReadAsStringAsync();
                     TempData["NoteError"] = _L["Err.AddSubdomainApi", err].Value;
                     return RedirectToPage(new { ZoneName });
                 }
 
-                if (_recursor_Enabled == "Enabled") ExecuteBashCommand("rec_control reload-zones");
+                if (_recursor_Enabled == "Enabled")
+                    ExecuteBashCommand("rec_control reload-zones");
 
                 TempData["NoteSuccess"] = _L["Ans.Subdomain.Added"].Value;
                 return RedirectToPage(new { ZoneName });
