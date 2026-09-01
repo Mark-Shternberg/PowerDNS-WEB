@@ -67,6 +67,9 @@
   <data name="Err.RecursorApi"><value>Ошибка Recursor API: {0}</value></data>
   <data name="Err.CannotDeleteRoot"><value>Корневую зону (.) удалять нельзя.</value></data>
   <data name="Err.RecursorDisabled"><value>Recursor отключён в настройках.</value></data>
+  <data name="Err.InvalidTransport"><value>Неизвестный режим транспорта корневой зоны.</value></data>
+  <data name="Err.RootDotRequires853"><value>Для DoT все серверы корневой зоны должны использовать порт 853.</value></data>
+  <data name="Err.RootDirectCannotUse853"><value>Порт 853 включает DoT. Для обычного DNS выберите другой порт.</value></data>
 
   <!-- Ответы -->
   <data name="Ans.Forward.Added"><value>Зона пересылки добавлена.</value></data>
@@ -100,6 +103,10 @@
   <data name="Modal_Edit_TitleSuffixZone" xml:space="preserve"><value>зону</value></data>
   <data name="Label_UpstreamDNS" xml:space="preserve"><value>Вышестоящие DNS-серверы</value></data>
   <data name="Placeholder_IpPort" xml:space="preserve"><value>IP:Порт (например, 8.8.8.8:53)</value></data>
+  <data name="Label_RootTransport" xml:space="preserve"><value>Транспорт корневой зоны</value></data>
+  <data name="RootTransport_DoT" xml:space="preserve"><value>DNS-over-TLS (DoT)</value></data>
+  <data name="RootTransport_Direct" xml:space="preserve"><value>Обычный DNS</value></data>
+  <data name="RootTransport_Help" xml:space="preserve"><value>DoT использует нативное TLS-соединение Recursor на порту 853; обычный DNS — указанный порт без TLS.</value></data>
 
   <data name="Toast_SelectZone" xml:space="preserve"><value>Выберите зону.</value></data>
   <data name="Toast_Added" xml:space="preserve"><value>Зона успешно добавлена.</value></data>

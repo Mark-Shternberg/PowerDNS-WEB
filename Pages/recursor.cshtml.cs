@@ -28,6 +28,7 @@ namespace PowerDNS_Web.Pages
         private string PdnsKey => _cfg["pdns:api_key"] ?? "";
         private string RecursorUrl => _cfg["recursor:url"] ?? "";
         private string RecursorKey => _cfg["recursor:api_key"] ?? "";
+        private string RootForwarder => _cfg["recursor:RootForwarder"] ?? "1.1.1.1:853";
         private string RecursorEnabled => _cfg["recursor:Enabled"] ?? _cfg["recursor:enabled"] ?? "Disabled";
         private bool IsRecursorOn => string.Equals(RecursorEnabled, "Enabled", StringComparison.OrdinalIgnoreCase);
 
@@ -73,6 +74,7 @@ namespace PowerDNS_Web.Pages
             public string Id { get; set; } = "";
             public string Name { get; set; } = "";
             public string DnsServers { get; set; } = "";
+            public string Transport { get; set; } = "";
         }
 
         // ===== Page GET =====
@@ -99,43 +101,6 @@ namespace PowerDNS_Web.Pages
                 .ThenBy(z => z.Name)
                 .ToList();
 
-            // если нет корневой зоны – создадим дефолтную (как у вас было: 1.1.1.1:53)
-            if (!ForwardZones.Any(z => z.Name == "."))
-            {
-                try
-                {
-                    using var c = NewRecursorClient();
-                    var payload = new
-                    {
-                        name = ".",
-                        kind = "Forwarded",
-                        servers = new[] { "1.1.1.1:53" },
-                        recursion_desired = false
-                    };
-                    var resp = await c.PostAsync($"{RecursorUrl}/api/v1/servers/localhost/zones",
-                        new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"));
-
-                    if (resp.IsSuccessStatusCode)
-                    {
-                        ForwardZones.Insert(0, new ForwardZone
-                        {
-                            Id = ToPowerDnsZoneId("."),
-                            Name = ".",
-                            ForwardTo = new List<string> { "1.1.1.1:53" }
-                        });
-                    }
-                    else
-                    {
-                        var body = await resp.Content.ReadAsStringAsync();
-                        _logger.LogError("Failed to create root forward zone '.': {Body}", body);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Exception while creating root forward zone '.'");
-                }
-            }
-
             // 3) доступные для добавления (в авторитативных, но ещё не во forward)
             var forwarded = new HashSet<string>(ForwardZones.Select(f => EnsureTrailingDot(f.Name)), StringComparer.OrdinalIgnoreCase);
             AvailableZones = authZones
@@ -143,11 +108,16 @@ namespace PowerDNS_Web.Pages
                 .Where(z => !forwarded.Contains(z))
                 .OrderBy(z => z)
                 .ToList();
+
+            // Root forwarding is optional. Offer it explicitly instead of
+            // changing Recursor configuration merely by opening this page.
+            if (!forwarded.Contains(".") && !AvailableZones.Contains(".", StringComparer.OrdinalIgnoreCase))
+                AvailableZones.Insert(0, ".");
         }
 
         // ===== Handlers =====
 
-        // Добавить forward-зону (по умолчанию на 127.0.0.1:5300)
+        // Add a local authoritative forward, or an explicit recursive root forward.
         public async Task<IActionResult> OnPostAddForwardZoneAsync([FromBody] ForwardZoneRequest req)
         {
             if (!IsRecursorOn)
@@ -160,12 +130,13 @@ namespace PowerDNS_Web.Pages
             {
                 using var c = NewRecursorClient();
                 var name = EnsureTrailingDot(req.Zone);
+                var isRoot = name == ".";
                 var payload = new
                 {
                     name,
                     kind = "Forwarded",
-                    servers = new[] { "127.0.0.1:5300" },
-                    recursion_desired = false
+                    servers = isRoot ? new[] { RootForwarder } : new[] { "127.0.0.1:5300" },
+                    recursion_desired = isRoot
                 };
                 var resp = await c.PostAsync($"{RecursorUrl}/api/v1/servers/localhost/zones",
                     new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"));
@@ -224,6 +195,7 @@ namespace PowerDNS_Web.Pages
             if (req == null || string.IsNullOrWhiteSpace(req.Name))
                 return BadRequest(new { success = false, message = _L["Err.ZoneRequired"].Value });
 
+            var name = EnsureTrailingDot(req.Name);
             var servers = (req.DnsServers ?? "")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -236,18 +208,32 @@ namespace PowerDNS_Web.Pages
                 if (!LooksLikeHostPort(s))
                     return BadRequest(new { success = false, message = _L["Err.InvalidServerFormat", s].Value });
 
+            var transport = (req.Transport ?? "").Trim().ToLowerInvariant();
+            if (name == "." && transport.Length > 0)
+            {
+                if (transport is not ("direct" or "dot"))
+                    return BadRequest(new { success = false, message = _L["Err.InvalidTransport"].Value });
+
+                if (transport == "dot" && servers.Any(s => !UsesPort(s, 853)))
+                    return BadRequest(new { success = false, message = _L["Err.RootDotRequires853"].Value });
+
+                if (transport == "direct" && servers.Any(s => UsesPort(s, 853)))
+                    return BadRequest(new { success = false, message = _L["Err.RootDirectCannotUse853"].Value });
+            }
+
             try
             {
                 using var c = NewRecursorClient();
-                var name = EnsureTrailingDot(req.Name);
 
-                // Для корня оставляем false: вы уже используете явные forwarders
+                // The root forwarder is a recursive resolver, so it must
+                // receive queries with the RD bit set.
+                // Per-zone forwards point to the local authoritative server.
                 var payload = new
                 {
                     name,
                     kind = "Forwarded",
                     servers,
-                    recursion_desired = false
+                    recursion_desired = name == "."
                 };
 
                 var zoneId = GetSafeZoneId(req.Id, name);
@@ -379,6 +365,12 @@ namespace PowerDNS_Web.Pages
             if (idx <= 0 || idx >= s.Length - 1) return false;
             if (!int.TryParse(s[(idx + 1)..], out var port) || port < 1 || port > 65535) return false;
             return !string.IsNullOrWhiteSpace(s[..idx]);
+        }
+
+        private static bool UsesPort(string server, int expectedPort)
+        {
+            var idx = server.LastIndexOf(':');
+            return idx > 0 && int.TryParse(server[(idx + 1)..], out var port) && port == expectedPort;
         }
     }
 }

@@ -67,6 +67,9 @@
   <data name="Err.RecursorApi"><value>Recursor API error: {0}</value></data>
   <data name="Err.CannotDeleteRoot"><value>The root zone (.) cannot be removed.</value></data>
   <data name="Err.RecursorDisabled"><value>Recursor is disabled in settings.</value></data>
+  <data name="Err.InvalidTransport"><value>Unknown root-zone transport mode.</value></data>
+  <data name="Err.RootDotRequires853"><value>All root-zone servers must use port 853 when DoT is selected.</value></data>
+  <data name="Err.RootDirectCannotUse853"><value>Port 853 enables DoT. Select another port for plain DNS.</value></data>
 
   <!-- Answers -->
   <data name="Ans.Forward.Added"><value>Forward zone added.</value></data>
@@ -100,6 +103,10 @@
   <data name="Modal_Edit_TitleSuffixZone" xml:space="preserve"><value>zone</value></data>
   <data name="Label_UpstreamDNS" xml:space="preserve"><value>Upstream DNS servers</value></data>
   <data name="Placeholder_IpPort" xml:space="preserve"><value>IP:Port (e.g., 8.8.8.8:53)</value></data>
+  <data name="Label_RootTransport" xml:space="preserve"><value>Root-zone transport</value></data>
+  <data name="RootTransport_DoT" xml:space="preserve"><value>DNS-over-TLS (DoT)</value></data>
+  <data name="RootTransport_Direct" xml:space="preserve"><value>Plain DNS</value></data>
+  <data name="RootTransport_Help" xml:space="preserve"><value>DoT uses the Recursor native TLS connection on port 853; plain DNS uses the selected port without TLS.</value></data>
 
   <data name="Toast_SelectZone" xml:space="preserve"><value>Please select a zone.</value></data>
   <data name="Toast_Added" xml:space="preserve"><value>Zone added successfully</value></data>

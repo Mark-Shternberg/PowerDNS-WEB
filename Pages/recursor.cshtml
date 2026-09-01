@@ -77,6 +77,13 @@
                                 var displayList = zone.ForwardTo.Select(f => f.Trim() == "127.0.0.1:5300" ? authLabel : f);
                                 @string.Join(", ", displayList)
                             }
+                            @if (zone.Name == ".")
+                            {
+                                var usesDot = zone.ForwardTo.Count > 0 && zone.ForwardTo.All(f => f.Trim().EndsWith(":853", StringComparison.Ordinal));
+                                <span class="badge ms-2 @(usesDot ? "bg-success" : "bg-secondary")">
+                                    @(usesDot ? L["RootTransport_DoT"].Value : L["RootTransport_Direct"].Value)
+                                </span>
+                            }
                         </td>
                         <td>
                             <div class="d-flex gap-2">
@@ -125,6 +132,14 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Btn_Close"].Value"></button>
             </div>
             <div class="modal-body">
+                <div id="rootTransportContainer" class="mb-3" hidden>
+                    <label for="rootTransport" class="form-label">@L["Label_RootTransport"].Value</label>
+                    <select id="rootTransport" class="form-select">
+                        <option value="dot">@L["RootTransport_DoT"].Value</option>
+                        <option value="direct">@L["RootTransport_Direct"].Value</option>
+                    </select>
+                    <div class="form-text">@L["RootTransport_Help"].Value</div>
+                </div>
                 <div class="mb-3">
                     <label class="form-label">@L["Label_UpstreamDNS"].Value</label>
                     <div id="editZoneDNSContainer"></div>
@@ -262,7 +277,29 @@
         document.getElementById("zone_name-modal").textContent = name;
         modal.dataset.zoneId = id || "";
 
+        const transportContainer = document.getElementById("rootTransportContainer");
+        const transportSelect = document.getElementById("rootTransport");
+        const isRoot = name === ".";
+        transportContainer.hidden = !isRoot;
+        transportSelect.value = isRoot && dnsList.length > 0 && dnsList.every(x => /:853$/.test(x))
+            ? "dot"
+            : "direct";
+
         new bootstrap.Modal(modal, { backdrop: false }).show();
+    }
+
+    function replaceServerPort(value, port) {
+        const v = String(value || "").trim();
+        if (!v) return v;
+        return /:\d+$/.test(v) ? v.replace(/:\d+$/, `:${port}`) : `${v}:${port}`;
+    }
+
+    function applyRootTransportPort() {
+        if (document.getElementById("zone_name-modal").textContent !== ".") return;
+        const port = document.getElementById("rootTransport").value === "dot" ? 853 : 53;
+        document.querySelectorAll("#editZoneDNSContainer input").forEach(input => {
+            input.value = replaceServerPort(input.value, port);
+        });
     }
 
     // ===== ADD DNS FIELD ROW =====
@@ -314,6 +351,7 @@
         const modalElement = document.getElementById("editZoneModal");
         const name = document.getElementById("zone_name-modal").textContent;
         const id = modalElement.dataset.zoneId || "";
+        const transport = name === "." ? document.getElementById("rootTransport").value : "";
 
         if (dnsServers.length === 0) {
             showToast('warning', M.Toast_NoDns || 'At least one DNS server must be specified.');
@@ -337,7 +375,7 @@
                     "Accept": "application/json",
                     "RequestVerificationToken": getCsrf()
                 },
-                body: JSON.stringify({ Id: id, Name: name, DnsServers: dnsServers.join(",") })
+                body: JSON.stringify({ Id: id, Name: name, DnsServers: dnsServers.join(","), Transport: transport })
             });
 
             const result = await response.json();
@@ -360,6 +398,8 @@
             editZone(button.dataset.zoneName || "", forwardTo, button.dataset.zoneId || "");
         });
     });
+
+    document.getElementById("rootTransport").addEventListener("change", applyRootTransportPort);
 
     document.querySelectorAll(".js-remove-zone").forEach(button => {
         button.addEventListener("click", () => {

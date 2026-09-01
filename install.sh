@@ -164,6 +164,10 @@ set -o pipefail
 # === INSTALL OS PACKAGES ===
 execute_by_distro
 
+# PowerDNS Recursor treats forwarders on port 853 as native DNS-over-TLS.
+# The web UI can switch the root zone between :853 (DoT) and ordinary ports.
+ROOT_FORWARDER="1.1.1.1:853"
+
 # === MYSQL SETUP ===
 systemctl enable --now mysql >/dev/null 2>&1 || systemctl start mysql
 systemctl is-active --quiet mysql || die "MYSQL FAILED TO START."
@@ -224,6 +228,7 @@ jq --arg server "localhost" \
    --arg apikey "${API_KEY}" \
    --arg pdnsUrl "${PDNS_URL}" \
    --arg recUrl "${RECURSOR_URL}" \
+   --arg rootForwarder "${ROOT_FORWARDER}" \
    --arg recursor_enabled "${recursor_enabled}" \
    '
    .MySQLConnection.Server   = $server   |
@@ -232,7 +237,12 @@ jq --arg server "localhost" \
    .MySQLConnection.Database = $database |
 
    .pdns = { "Api_Key": $apikey, "Url": $pdnsUrl } |
-   .recursor = { "Api_Key": $apikey, "Url": $recUrl, "Enabled": $recursor_enabled }
+   .recursor = {
+     "Api_Key": $apikey,
+     "Url": $recUrl,
+     "Enabled": $recursor_enabled,
+     "RootForwarder": $rootForwarder
+   }
    ' "${JSON_FILE}" > "${JSON_FILE}.tmp"
 mv "${JSON_FILE}.tmp" "${JSON_FILE}"
 
@@ -299,6 +309,10 @@ if [[ "${install_recursor_flag}" == "true" ]]; then
   cat > "${RECURSOR_CONFIG}" <<EOF
 forward-zones=
 forward-zones-recurse=
+dot-to-port-853=yes
+# Keep the Recursor's protection against querying private/documentation
+# networks, but allow the local authoritative server at 127.0.0.1:5300.
+dont-query=10.0.0.0/8,100.64.0.0/10,169.254.0.0/16,192.168.0.0/16,172.16.0.0/12,::1/128,fc00::/7,fe80::/10,0.0.0.0/8,192.0.0.0/24,192.0.2.0/24,198.51.100.0/24,203.0.113.0/24,240.0.0.0/4,::/96,::ffff:0:0/96,100::/64,2001:db8::/32
 api-config-dir=/var/opt/pdns-rec-api
 include-dir=/var/opt/pdns-rec-api
 allow-from=127.0.0.0/8,10.0.0.0/8,100.64.0.0/10,169.254.0.0/16,192.168.0.0/16,172.16.0.0/12,::1/128,fc00::/7,fe80::/10
