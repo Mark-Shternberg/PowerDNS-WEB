@@ -111,8 +111,8 @@ namespace PowerDNS_Web.Pages
 
         // -------------------- Helpers --------------------
 
-        private static string EnsureTrailingDot(string s)
-            => string.IsNullOrWhiteSpace(s) ? s : (s.EndsWith(".") ? s : s + ".");
+        private static string EnsureTrailingDot(string? s)
+            => string.IsNullOrWhiteSpace(s) ? "" : (s.EndsWith(".") ? s : s + ".");
 
         private static bool ParseBoolFlexible(string? value)
         {
@@ -154,7 +154,7 @@ namespace PowerDNS_Web.Pages
             return client;
         }
 
-        private async Task<(bool ok, string message)> CreateZoneAsync(string nameRaw, string kind, bool dnssec, string? masterSingle)
+        private async Task<(bool ok, string message)> CreateZoneAsync(string? nameRaw, string kind, bool dnssec, string? masterSingle)
         {
             var name = EnsureTrailingDot(nameRaw?.Trim());
             if (string.IsNullOrWhiteSpace(name))

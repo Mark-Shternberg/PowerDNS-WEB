@@ -80,12 +80,19 @@
                         </td>
                         <td>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-warning btn-sm" onclick="editZone('@zone.Name','@string.Join(", ", zone.ForwardTo)')">
+                                <button type="button"
+                                        class="btn btn-warning btn-sm js-edit-zone"
+                                        data-zone-id="@zone.Id"
+                                        data-zone-name="@zone.Name"
+                                        data-forward-to="@System.Text.Json.JsonSerializer.Serialize(zone.ForwardTo)">
                                     <i class="fa fa-edit"></i> @L["Btn_Edit"].Value
                                 </button>
                                 @if (zone.Name != ".")
                                 {
-                                    <button class="btn btn-danger btn-sm" onclick="removeForwardZone('@zone.Name')">
+                                    <button type="button"
+                                            class="btn btn-danger btn-sm js-remove-zone"
+                                            data-zone-id="@zone.Id"
+                                            data-zone-name="@zone.Name">
                                         <i class="fa fa-trash"></i> @L["Btn_Remove"].Value
                                     </button>
                                 }
@@ -200,8 +207,8 @@
     // ===== DELETE FLOW =====
     let deleteTarget = null;
 
-    function removeForwardZone(name) {
-        deleteTarget = name;
+    function removeForwardZone(name, id) {
+        deleteTarget = { name, id };
         const msgTmpl = M.Confirm_DeleteMsg || "Are you sure you want to remove the forward zone: {name}?";
         document.getElementById("confirmMessage").textContent = msgTmpl.replace('{name}', name);
         document.getElementById("confirmModal").style.display = "block";
@@ -215,7 +222,7 @@
     document.getElementById("confirmYes").addEventListener("click", async () => {
         if (!deleteTarget) return;
         document.getElementById("confirmModal").style.display = "none";
-        const name = deleteTarget;
+        const { name, id } = deleteTarget;
         deleteTarget = null;
 
         try {
@@ -226,7 +233,7 @@
                     "Accept": "application/json",
                     "RequestVerificationToken": getCsrf()
                 },
-                body: JSON.stringify({ Zone: name })
+                body: JSON.stringify({ Id: id, Zone: name })
             });
 
             const result = await response.json();
@@ -240,21 +247,22 @@
     });
 
     // ===== EDIT ZONE =====
-    function editZone(name, forwardTo) {
+    function editZone(name, forwardTo, id) {
         const dnsContainer = document.getElementById("editZoneDNSContainer");
         dnsContainer.innerHTML = "";
 
-        const dnsList = (forwardTo || "")
-            .split(",")
-            .map(x => x.trim())
-            .filter(Boolean);
+        const dnsList = Array.isArray(forwardTo)
+            ? forwardTo.map(x => String(x).trim()).filter(Boolean)
+            : [];
 
         if (dnsList.length === 0) dnsList.push("");
 
         dnsList.forEach((dns, idx) => addDnsField(dns, idx > 0));
+        const modal = document.getElementById("editZoneModal");
         document.getElementById("zone_name-modal").textContent = name;
+        modal.dataset.zoneId = id || "";
 
-        new bootstrap.Modal(document.getElementById("editZoneModal"), { backdrop: false }).show();
+        new bootstrap.Modal(modal, { backdrop: false }).show();
     }
 
     // ===== ADD DNS FIELD ROW =====
@@ -303,7 +311,9 @@
             .map(i => i.value.trim())
             .filter(Boolean);
 
+        const modalElement = document.getElementById("editZoneModal");
         const name = document.getElementById("zone_name-modal").textContent;
+        const id = modalElement.dataset.zoneId || "";
 
         if (dnsServers.length === 0) {
             showToast('warning', M.Toast_NoDns || 'At least one DNS server must be specified.');
@@ -327,14 +337,14 @@
                     "Accept": "application/json",
                     "RequestVerificationToken": getCsrf()
                 },
-                body: JSON.stringify({ Name: name, DnsServers: dnsServers.join(",") })
+                body: JSON.stringify({ Id: id, Name: name, DnsServers: dnsServers.join(",") })
             });
 
             const result = await response.json();
             if (!response.ok || !result.success) throw new Error(result.message || (M.Toast_SaveFail || "Failed to save DNS servers"));
 
             showToast('success', result.message || (M.Toast_SaveOk || 'DNS servers updated successfully'));
-            const modal = bootstrap.Modal.getInstance(document.getElementById("editZoneModal"));
+            const modal = bootstrap.Modal.getInstance(modalElement);
             modal?.hide();
             setTimeout(() => location.reload(), 600);
 
@@ -342,4 +352,18 @@
             showToast('danger', error.message || (M.Toast_SaveFail || 'Unexpected error while saving DNS servers'));
         }
     }
+
+    document.querySelectorAll(".js-edit-zone").forEach(button => {
+        button.addEventListener("click", () => {
+            let forwardTo = [];
+            try { forwardTo = JSON.parse(button.dataset.forwardTo || "[]"); } catch { }
+            editZone(button.dataset.zoneName || "", forwardTo, button.dataset.zoneId || "");
+        });
+    });
+
+    document.querySelectorAll(".js-remove-zone").forEach(button => {
+        button.addEventListener("click", () => {
+            removeForwardZone(button.dataset.zoneName || "", button.dataset.zoneId || "");
+        });
+    });
 </script>

@@ -43,6 +43,7 @@ namespace PowerDNS_Web.Pages
         // ===== View models / DTOs =====
         public class ForwardZone
         {
+            public string Id { get; set; } = "";
             public string Name { get; set; } = "";
             public List<string> ForwardTo { get; set; } = new();
         }
@@ -55,15 +56,21 @@ namespace PowerDNS_Web.Pages
 
         private class RecursorZoneDto
         {
+            public string Id { get; set; } = "";
             public string Name { get; set; } = "";
             public string Kind { get; set; } = "";
             public List<string> Servers { get; set; } = new();
             public bool? Recursion_Desired { get; set; }
         }
 
-        public class ForwardZoneRequest { public string Zone { get; set; } = ""; }
+        public class ForwardZoneRequest
+        {
+            public string Id { get; set; } = "";
+            public string Zone { get; set; } = "";
+        }
         public class UpdateForwardZones
         {
+            public string Id { get; set; } = "";
             public string Name { get; set; } = "";
             public string DnsServers { get; set; } = "";
         }
@@ -82,7 +89,12 @@ namespace PowerDNS_Web.Pages
 
             ForwardZones = recZones
                 .Where(z => string.Equals(z.Kind, "Forwarded", StringComparison.OrdinalIgnoreCase))
-                .Select(z => new ForwardZone { Name = z.Name, ForwardTo = z.Servers ?? new List<string>() })
+                .Select(z => new ForwardZone
+                {
+                    Id = string.IsNullOrWhiteSpace(z.Id) ? ToPowerDnsZoneId(z.Name) : z.Id,
+                    Name = z.Name,
+                    ForwardTo = z.Servers ?? new List<string>()
+                })
                 .OrderBy(z => z.Name != "." ? 1 : 0)
                 .ThenBy(z => z.Name)
                 .ToList();
@@ -105,7 +117,12 @@ namespace PowerDNS_Web.Pages
 
                     if (resp.IsSuccessStatusCode)
                     {
-                        ForwardZones.Insert(0, new ForwardZone { Name = ".", ForwardTo = new List<string> { "1.1.1.1:53" } });
+                        ForwardZones.Insert(0, new ForwardZone
+                        {
+                            Id = ToPowerDnsZoneId("."),
+                            Name = ".",
+                            ForwardTo = new List<string> { "1.1.1.1:53" }
+                        });
                     }
                     else
                     {
@@ -182,8 +199,8 @@ namespace PowerDNS_Web.Pages
             try
             {
                 using var c = NewRecursorClient();
-                var pathName = Uri.EscapeDataString(name); // корректно закодирует точку и др. символы
-                var resp = await c.DeleteAsync($"{RecursorUrl}/api/v1/servers/localhost/zones/{pathName}");
+                var zoneId = GetSafeZoneId(req.Id, name);
+                var resp = await c.DeleteAsync(BuildRecursorZoneUrl(zoneId));
                 var body = await resp.Content.ReadAsStringAsync();
 
                 if (!resp.IsSuccessStatusCode)
@@ -233,8 +250,8 @@ namespace PowerDNS_Web.Pages
                     recursion_desired = false
                 };
 
-                var pathName = Uri.EscapeDataString(name);
-                var resp = await c.PutAsync($"{RecursorUrl}/api/v1/servers/localhost/zones/{pathName}",
+                var zoneId = GetSafeZoneId(req.Id, name);
+                var resp = await c.PutAsync(BuildRecursorZoneUrl(zoneId),
                     new StringContent(JsonSerializer.Serialize(payload, new JsonSerializerOptions
                     {
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -305,6 +322,52 @@ namespace PowerDNS_Web.Pages
             c.DefaultRequestHeaders.Remove("X-API-Key");
             c.DefaultRequestHeaders.Add("X-API-Key", RecursorKey);
             return c;
+        }
+
+        private string BuildRecursorZoneUrl(string zoneId)
+            => $"{RecursorUrl.TrimEnd('/')}/api/v1/servers/localhost/zones/{zoneId}";
+
+        private static string GetSafeZoneId(string? requestedId, string zoneName)
+        {
+            var zoneId = string.IsNullOrWhiteSpace(requestedId)
+                ? ToPowerDnsZoneId(zoneName)
+                : requestedId.Trim();
+
+            // PowerDNS documents zone ids as opaque but URL-safe. Never allow a
+            // client-supplied id to add or navigate path segments.
+            if (zoneId.Length == 0 || zoneId is "." or ".." ||
+                zoneId.Contains('/') || zoneId.Contains('\\') ||
+                zoneId.Contains('?') || zoneId.Contains('#'))
+            {
+                return ToPowerDnsZoneId(zoneName);
+            }
+
+            return zoneId;
+        }
+
+        private static string ToPowerDnsZoneId(string zoneName)
+        {
+            var name = EnsureTrailingDot(zoneName.Trim());
+            if (name == ".") return "=2E";
+
+            var bytes = Encoding.UTF8.GetBytes(name);
+            var result = new StringBuilder(bytes.Length);
+            foreach (var b in bytes)
+            {
+                var c = (char)b;
+                if ((c >= 'A' && c <= 'Z') ||
+                    (c >= 'a' && c <= 'z') ||
+                    (c >= '0' && c <= '9') || c is '.' or '-')
+                {
+                    result.Append(c);
+                }
+                else
+                {
+                    result.Append('=').Append(b.ToString("X2"));
+                }
+            }
+
+            return result.ToString();
         }
 
         private static string EnsureTrailingDot(string s)

@@ -104,5 +104,7 @@
   <data name="UM_Back_SqlError"><value>SQL error: {0}</value></data>
   <data name="UM_Back_Error"><value>Error: {0}</value></data>
   <data name="UM_Back_OnlyAdminDeleteForbidden"><value>You cannot delete the only administrator!</value></data>
+  <data name="UM_Back_OnlyAdminDemoteForbidden"><value>You cannot change the role of the only administrator.</value></data>
+  <data name="UM_Back_UserNotFound"><value>User not found.</value></data>
 
 </root>

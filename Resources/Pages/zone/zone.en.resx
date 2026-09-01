@@ -157,22 +157,4 @@
   <data name="Ans.Record.Updated"><value>Record updated successfully!</value></data>
   <data name="Ans.Subdomain.Added"><value>Subdomain added successfully!</value></data>
 
-  <!-- Ошибки -->
-  <data name="Err.InvalidRequest"><value>Некорректный запрос.</value></data>
-  <data name="Err.FetchRecords"><value>Ошибка получения записей: {0}</value></data>
-  <data name="Err.ZoneEmpty"><value>Данные зоны пусты.</value></data>
-  <data name="Err.RecordExists"><value>Такая запись уже существует.</value></data>
-  <data name="Err.AddRecordApi"><value>Ошибка добавления записи: {0}</value></data>
-  <data name="Err.DeleteRecordApi"><value>Ошибка удаления записи: {0}</value></data>
-  <data name="Err.UpdateRecordApi"><value>Ошибка обновления записи: {0}</value></data>
-  <data name="Err.RecordNotFound"><value>Запись не найдена.</value></data>
-  <data name="Err.Internal"><value>Внутренняя ошибка сервера.</value></data>
-  <data name="Err.DefaultARequired"><value>В конфигурации не задан IP по умолчанию для A-записи.</value></data>
-  <data name="Err.AddSubdomainApi"><value>Ошибка добавления поддомена: {0}</value></data>
-
-  <!-- Ответы -->
-  <data name="Ans.Record.Added"><value>Запись успешно добавлена!</value></data>
-  <data name="Ans.Record.Deleted"><value>Запись успешно удалена!</value></data>
-  <data name="Ans.Record.Updated"><value>Запись успешно обновлена!</value></data>
-  <data name="Ans.Subdomain.Added"><value>Поддомен успешно добавлен!</value></data>
 </root>

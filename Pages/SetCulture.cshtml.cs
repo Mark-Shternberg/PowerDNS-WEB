@@ -9,6 +9,9 @@ namespace PowerDNS_Web.Pages
     {
         public IActionResult OnGet(string culture = "ru", string? returnUrl = "/")
         {
+            if (culture is not ("ru" or "en"))
+                culture = "ru";
+
             Response.Cookies.Append(
                 CookieRequestCultureProvider.DefaultCookieName,
                 CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),

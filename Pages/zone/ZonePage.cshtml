@@ -5,7 +5,7 @@
     var asmName = typeof(Program).Assembly.GetName().Name!;
     var L = LocFactory.Create("Pages.zone.zone", asmName);
 
-    ViewData["Title"] = L["Title.ManageZone", Model.ZoneName];
+    ViewData["Title"] = L["Title.ManageZone", Model.ZoneName ?? ""];
 }
 
 <div class="container mt-4">

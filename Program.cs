@@ -40,7 +40,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.LoginPath = "/login";
-        options.AccessDeniedPath = "/error/403";
+        options.AccessDeniedPath = "/access-denied";
     });
 
 // ===== Razor Pages =====
@@ -88,13 +88,26 @@ app.UseAuthorization();
 
 app.MapPost("/set-culture/{culture}", (string culture, HttpContext ctx) =>
 {
+    if (!supportedCultures.Any(item =>
+            string.Equals(item.Name, culture, StringComparison.OrdinalIgnoreCase)))
+    {
+        return Results.BadRequest();
+    }
+
     ctx.Response.Cookies.Append(
         CookieRequestCultureProvider.DefaultCookieName,
         CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
         new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
     var referer = ctx.Request.Headers.Referer.ToString();
-    return Results.Redirect(string.IsNullOrWhiteSpace(referer) ? "/" : referer);
+    if (!Uri.TryCreate(referer, UriKind.Absolute, out var refererUri) ||
+        !string.Equals(refererUri.Scheme, ctx.Request.Scheme, StringComparison.OrdinalIgnoreCase) ||
+        !string.Equals(refererUri.Authority, ctx.Request.Host.Value, StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.Redirect("/");
+    }
+
+    return Results.Redirect(refererUri.PathAndQuery);
 }).AllowAnonymous();
 
 app.MapRazorPages();

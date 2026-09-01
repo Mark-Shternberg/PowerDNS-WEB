@@ -55,24 +55,24 @@
                         {
                             @foreach (var item in Model.main_table)
                             {
-                                <tr id="row_@item.username">
+                                <tr>
                                     <td><strong>@item.username</strong></td>
                                     <td>
-                                        <span id="role_old_@item.username">@item.role</span>
-                                        <select hidden name="role" id="role_new_@item.username" class="form-control">
+                                        <span class="js-role-display">@item.role</span>
+                                        <select hidden name="role" class="form-control js-role-editor">
                                             <option value="Administrator" selected="@(item.role == "Administrator" ? "selected" : null)">@L["UM_Role_Administrator"].Value</option>
                                             <!-- <option value="ReadOnly" selected="@(item.role == "ReadOnly" ? "selected" : null)">@L["UM_Role_ReadOnly"].Value</option> -->
                                         </select>
                                     </td>
                                     <td>
-                                        <input hidden name="password" id="password_new_@item.username" class="form-control" placeholder="@L["UM_Placeholder_NewPassword"].Value">
+                                        <input hidden name="password" class="form-control js-password-editor" placeholder="@L["UM_Placeholder_NewPassword"].Value">
                                     </td>
                                     <td>
                                         <div class="d-flex justify-content-center gap-2">
                                             <button type="button" class="btn btn-warning btn-sm btn-edit" data-id="@item.username" title="@L["UM_Btn_Edit"].Value">
                                                 <i class="fa fa-edit"></i>
                                             </button>
-                                            <button hidden type="button" id="cancel_@item.username" class="btn btn-sm btn-default" data-id="@item.username">@L["UM_Btn_Cancel"].Value</button>
+                                            <button hidden type="button" class="btn btn-sm btn-default btn-cancel" data-id="@item.username">@L["UM_Btn_Cancel"].Value</button>
                                             <button hidden type="button" class="btn btn-success btn-sm btn-save-edit" data-id="@item.username" title="@L["UM_Btn_Save"].Value">
                                                 <i class="fa fa-save"></i> @L["UM_Btn_Save"].Value
                                             </button>
@@ -190,46 +190,44 @@
 
         // ===== EDIT MODE =====
         function onEdit(btn) {
-            const id = btn.dataset.id;
-            const row = document.getElementById('row_' + id);
+            const row = btn.closest('tr');
             if (!row) return;
 
-            row.querySelector('#password_new_' + id).hidden = false;
-            row.querySelector('#role_old_' + id).hidden = true;
-            row.querySelector('#role_new_' + id).hidden = false;
+            row.querySelector('.js-password-editor').hidden = false;
+            row.querySelector('.js-role-display').hidden = true;
+            row.querySelector('.js-role-editor').hidden = false;
 
-            row.querySelector('.btn-edit[data-id="' + id + '"]').hidden = true;
-            row.querySelector('.btn-save-edit[data-id="' + id + '"]').hidden = false;
-            row.querySelector('#cancel_' + id).hidden = false;
-            row.querySelector('.btn-delete[data-id="' + id + '"]').hidden = true;
+            row.querySelector('.btn-edit').hidden = true;
+            row.querySelector('.btn-save-edit').hidden = false;
+            row.querySelector('.btn-cancel').hidden = false;
+            row.querySelector('.btn-delete').hidden = true;
         }
 
         // ===== CANCEL EDIT =====
         function onCancel(btn) {
-            const id = btn.dataset.id;
-            const row = document.getElementById('row_' + id);
+            const row = btn.closest('tr');
             if (!row) return;
 
-            row.querySelector('#password_new_' + id).value = '';
-            row.querySelector('#password_new_' + id).hidden = true;
-            row.querySelector('#role_old_' + id).hidden = false;
-            row.querySelector('#role_new_' + id).hidden = true;
+            row.querySelector('.js-password-editor').value = '';
+            row.querySelector('.js-password-editor').hidden = true;
+            row.querySelector('.js-role-display').hidden = false;
+            row.querySelector('.js-role-editor').hidden = true;
 
-            row.querySelector('.btn-edit[data-id="' + id + '"]').hidden = false;
-            row.querySelector('.btn-save-edit[data-id="' + id + '"]').hidden = true;
-            row.querySelector('#cancel_' + id).hidden = true;
-            row.querySelector('.btn-delete[data-id="' + id + '"]').hidden = false;
+            row.querySelector('.btn-edit').hidden = false;
+            row.querySelector('.btn-save-edit').hidden = true;
+            row.querySelector('.btn-cancel').hidden = true;
+            row.querySelector('.btn-delete').hidden = false;
         }
 
         // ===== SAVE USER =====
         async function onSave(btn) {
             const id = btn.dataset.id;
-            const row = document.getElementById('row_' + id);
+            const row = btn.closest('tr');
             if (!row) return;
 
             const username = id;
-            const role = row.querySelector('#role_new_' + id).value;
-            const password = row.querySelector('#password_new_' + id).value;
+            const role = row.querySelector('.js-role-editor').value;
+            const password = row.querySelector('.js-password-editor').value;
 
             try {
                 btn.disabled = true;
@@ -248,16 +246,16 @@
 
                 showToast('success', T.saveOk);
                 // UPDATE ROW UI
-                row.querySelector('#password_new_' + id).value = '';
-                row.querySelector('#password_new_' + id).hidden = true;
-                row.querySelector('#role_old_' + id).textContent = role;
-                row.querySelector('#role_old_' + id).hidden = false;
-                row.querySelector('#role_new_' + id).hidden = true;
+                row.querySelector('.js-password-editor').value = '';
+                row.querySelector('.js-password-editor').hidden = true;
+                row.querySelector('.js-role-display').textContent = role;
+                row.querySelector('.js-role-display').hidden = false;
+                row.querySelector('.js-role-editor').hidden = true;
 
-                row.querySelector('.btn-edit[data-id="' + id + '"]').hidden = false;
-                row.querySelector('.btn-save-edit[data-id="' + id + '"]').hidden = true;
-                row.querySelector('#cancel_' + id).hidden = true;
-                row.querySelector('.btn-delete[data-id="' + id + '"]').hidden = false;
+                row.querySelector('.btn-edit').hidden = false;
+                row.querySelector('.btn-save-edit').hidden = true;
+                row.querySelector('.btn-cancel').hidden = true;
+                row.querySelector('.btn-delete').hidden = false;
 
             } catch (err) {
                 showToast('danger', err.message || T.saveError);
@@ -271,7 +269,7 @@
 
         function onDelete(btn) {
             const username = btn.dataset.id;
-            pendingDelete = { username, rowId: 'row_' + username };
+            pendingDelete = { username, row: btn.closest('tr') };
 
             document.getElementById('confirmMessage').textContent = `${T.confirmDeletePrefix} "${username}"?`;
 
@@ -288,7 +286,7 @@
         async function confirmDelete() {
             if (!pendingDelete) return;
 
-            const { username, rowId } = pendingDelete;
+            const { username, row } = pendingDelete;
             pendingDelete = null;
 
             try {
@@ -306,7 +304,7 @@
 
                 // CLOSE MODAL + REMOVE ROW + TOAST
                 bootstrap.Modal.getInstance(document.getElementById('confirmModal'))?.hide();
-                document.getElementById(rowId)?.remove();
+                row?.remove();
                 showToast('success', `${T.deletedPrefix} "${username}".`);
 
             } catch (err) {

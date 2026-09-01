@@ -104,4 +104,6 @@
   <data name="UM_Back_SqlError"><value>Ошибка SQL: {0}</value></data>
   <data name="UM_Back_Error"><value>Ошибка: {0}</value></data>
   <data name="UM_Back_OnlyAdminDeleteForbidden"><value>Нельзя удалить единственного администратора!</value></data>
+  <data name="UM_Back_OnlyAdminDemoteForbidden"><value>Нельзя изменить роль единственного администратора.</value></data>
+  <data name="UM_Back_UserNotFound"><value>Пользователь не найден.</value></data>
 </root>

@@ -41,8 +41,8 @@ namespace PowerDNS_Web.Pages
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Exception in OnGetLogsAsync: {ex.Message}");
-                return new JsonResult(new { success = false, message = $"Internal server error: {ex.Message}" });
+                _logger.LogError(ex, "Exception in OnGetLogsAsync");
+                return StatusCode(500, new { success = false, message = "Internal server error." });
             }
         }
 
@@ -68,8 +68,8 @@ namespace PowerDNS_Web.Pages
 
     public class LogEntry
     {
-        public string Name { get; set; }
-        public string Type { get; set; }
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "";
         public JsonElement Value { get; set; }
 
         public string GetRawJson() => Value.GetRawText();

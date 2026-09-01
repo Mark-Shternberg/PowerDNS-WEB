@@ -50,6 +50,10 @@ namespace PowerDNS_Web.Pages
 
         public List<Row>? main_table { get; set; }
 
+        private static bool IsSupportedRole(string? role)
+            => string.Equals(role, "Administrator", StringComparison.Ordinal) ||
+               string.Equals(role, "ReadOnly", StringComparison.Ordinal);
+
         public void OnGet()
         {
             try
@@ -100,7 +104,8 @@ namespace PowerDNS_Web.Pages
                 if (model == null ||
                     string.IsNullOrWhiteSpace(model.username) ||
                     string.IsNullOrWhiteSpace(model.role) ||
-                    string.IsNullOrWhiteSpace(model.password))
+                    string.IsNullOrWhiteSpace(model.password) ||
+                    !IsSupportedRole(model.role))
                 {
                     return new JsonResult(new { success = false, message = _L["UM_Back_InvalidRequest"].Value });
                 }
@@ -150,7 +155,8 @@ namespace PowerDNS_Web.Pages
         {
             try
             {
-                if (model == null || string.IsNullOrWhiteSpace(model.username) || string.IsNullOrWhiteSpace(model.role))
+                if (model == null || string.IsNullOrWhiteSpace(model.username) ||
+                    string.IsNullOrWhiteSpace(model.role) || !IsSupportedRole(model.role))
                 {
                     return new JsonResult(new { success = false, message = _L["UM_Back_InvalidRequest"].Value });
                 }
@@ -164,6 +170,26 @@ namespace PowerDNS_Web.Pages
                 await using var connection = new MySqlConnection(SqlConnection());
                 await connection.OpenAsync();
 
+                if (!string.Equals(model.role, "Administrator", StringComparison.Ordinal))
+                {
+                    const string adminStateSql =
+                        "SELECT role, (SELECT COUNT(*) FROM users WHERE role = 'Administrator') AS admin_count " +
+                        "FROM users WHERE username = @username LIMIT 1";
+                    await using var stateCmd = new MySqlCommand(adminStateSql, connection);
+                    stateCmd.Parameters.AddWithValue("@username", model.username.Trim());
+                    await using var stateReader = await stateCmd.ExecuteReaderAsync();
+                    if (await stateReader.ReadAsync() &&
+                        string.Equals(stateReader.GetString("role"), "Administrator", StringComparison.Ordinal) &&
+                        stateReader.GetInt32("admin_count") <= 1)
+                    {
+                        return new JsonResult(new
+                        {
+                            success = false,
+                            message = _L["UM_Back_OnlyAdminDemoteForbidden"].Value
+                        });
+                    }
+                }
+
                 await using var cmd = new MySqlCommand(sql, connection);
                 cmd.Parameters.AddWithValue("@username", model.username.Trim());
                 cmd.Parameters.AddWithValue("@role", model.role.Trim());
@@ -174,7 +200,10 @@ namespace PowerDNS_Web.Pages
                     cmd.Parameters.AddWithValue("@password", hashed);
                 }
 
-                await cmd.ExecuteNonQueryAsync();
+                var affected = await cmd.ExecuteNonQueryAsync();
+                if (affected == 0)
+                    return new JsonResult(new { success = false, message = _L["UM_Back_UserNotFound"].Value });
+
                 return new JsonResult(new { success = true });
             }
             catch (MySqlException ex)

@@ -47,7 +47,7 @@ namespace PowerDNS_Web.Pages
                 var authStats = await DeserializeAuthStatsAsync(authResponse);
 
                 // === FETCH RECURSOR STATS IF ENABLED ===
-                Dictionary<string, int> recursorStats = new();
+                Dictionary<string, long> recursorStats = new();
                 List<string> topQueries = new();
                 List<string> topRemotes = new();
 
@@ -83,8 +83,8 @@ namespace PowerDNS_Web.Pages
             }
             catch (Exception ex)
             {
-                _logger.LogError($"EXCEPTION IN OnGetStatsAsync: {ex.Message}");
-                return new JsonResult(new { success = false, message = $"INTERNAL SERVER ERROR: {ex.Message}" });
+                _logger.LogError(ex, "Exception in OnGetStatsAsync");
+                return StatusCode(500, new { success = false, message = "Internal server error." });
             }
         }
 
@@ -129,12 +129,12 @@ namespace PowerDNS_Web.Pages
         }
 
         // === FUNCTION TO DESERIALIZE AUTHORITATIVE SERVER STATS ===
-        private async Task<Dictionary<string, int>> DeserializeAuthStatsAsync(HttpResponseMessage response)
+        private async Task<Dictionary<string, long>> DeserializeAuthStatsAsync(HttpResponseMessage response)
         {
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError($"AUTH SERVER API ERROR: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
-                return new Dictionary<string, int>();
+                return new Dictionary<string, long>();
             }
 
             var json = await response.Content.ReadAsStringAsync();
@@ -145,22 +145,22 @@ namespace PowerDNS_Web.Pages
                     PropertyNameCaseInsensitive = true
                 });
 
-                return statsList?.ToDictionary(stat => stat.Name, stat => stat.GetValueAsInt()) ?? new Dictionary<string, int>();
+                return ToStatisticsDictionary(statsList);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"AUTH SERVER JSON DESERIALIZATION ERROR: {ex.Message}");
-                return new Dictionary<string, int>();
+                return new Dictionary<string, long>();
             }
         }
 
         // === FUNCTION TO DESERIALIZE RECURSOR STATS ===
-        private async Task<Dictionary<string, int>> DeserializeRecursorStatsAsync(HttpResponseMessage response)
+        private async Task<Dictionary<string, long>> DeserializeRecursorStatsAsync(HttpResponseMessage response)
         {
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError($"RECURSOR API ERROR: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
-                return new Dictionary<string, int>();
+                return new Dictionary<string, long>();
             }
 
             var json = await response.Content.ReadAsStringAsync();
@@ -171,14 +171,21 @@ namespace PowerDNS_Web.Pages
                     PropertyNameCaseInsensitive = true
                 });
 
-                return statsList?.ToDictionary(stat => stat.Name, stat => stat.GetValueAsInt()) ?? new Dictionary<string, int>();
+                return ToStatisticsDictionary(statsList);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"RECURSOR JSON DESERIALIZATION ERROR: {ex.Message}");
-                return new Dictionary<string, int>();
+                return new Dictionary<string, long>();
             }
         }
+
+        private static Dictionary<string, long> ToStatisticsDictionary(IEnumerable<StatEntry>? entries)
+            => entries?
+                .Where(entry => !string.IsNullOrWhiteSpace(entry.Name))
+                .GroupBy(entry => entry.Name!, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.Last().GetValueAsLong(), StringComparer.Ordinal)
+               ?? new Dictionary<string, long>(StringComparer.Ordinal);
 
         // === FUNCTION TO FETCH TOP QUERIES AND REMOTES FROM RECURSOR ===
         private List<string> GetRecursorTopStats(string command)
@@ -196,13 +203,13 @@ namespace PowerDNS_Web.Pages
                     CreateNoWindow = true
                 };
 
-                using (Process process = Process.Start(psi))
+                using (Process? process = Process.Start(psi))
                 {
                     if (process != null)
                     {
                         while (!process.StandardOutput.EndOfStream)
                         {
-                            string line = process.StandardOutput.ReadLine();
+                            string? line = process.StandardOutput.ReadLine();
                             if (!string.IsNullOrEmpty(line))
                             {
                                 result.Add(line.Trim());
@@ -301,18 +308,18 @@ namespace PowerDNS_Web.Pages
         public string? Type { get; set; }
         public JsonElement Value { get; set; }
 
-        public int GetValueAsInt()
+        public long GetValueAsLong()
         {
             try
             {
                 if (Value.ValueKind == JsonValueKind.Number)
-                    return Value.GetInt32();
-                if (Value.ValueKind == JsonValueKind.String && int.TryParse(Value.GetString(), out int result))
+                    return Value.GetInt64();
+                if (Value.ValueKind == JsonValueKind.String && long.TryParse(Value.GetString(), out long result))
                     return result;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR PARSING VALUE FOR {Name}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error parsing statistic value for {Name}: {ex.Message}");
             }
             return 0;
         }
