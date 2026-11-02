@@ -1,0 +1,269 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ========================= ADDRECORD ========================= -->
+  <data name="AddRecord.Title" xml:space="preserve">
+    <value>Добавить запись</value>
+  </data>
+
+  <!-- ========================= ANS ========================= -->
+  <data name="Ans.Record.Added" xml:space="preserve">
+    <value>Запись успешно добавлена!</value>
+  </data>
+  <data name="Ans.Record.Deleted" xml:space="preserve">
+    <value>Запись успешно удалена!</value>
+  </data>
+  <data name="Ans.Record.Updated" xml:space="preserve">
+    <value>Запись успешно обновлена!</value>
+  </data>
+  <data name="Ans.Subdomain.Added" xml:space="preserve">
+    <value>Поддомен успешно добавлен!</value>
+  </data>
+
+  <!-- ========================= BTN ========================= -->
+  <data name="Btn.Add" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="Btn.Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="Btn.Clear" xml:space="preserve">
+    <value>Очистить</value>
+  </data>
+  <data name="Btn.Close" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="Btn.CollapseAll" xml:space="preserve">
+    <value>Свернуть всё</value>
+  </data>
+  <data name="Btn.Copy" xml:space="preserve">
+    <value>Копировать</value>
+  </data>
+  <data name="Btn.Delete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Btn.Edit" xml:space="preserve">
+    <value>Редактировать</value>
+  </data>
+  <data name="Btn.ExpandAll" xml:space="preserve">
+    <value>Раскрыть всё</value>
+  </data>
+  <data name="Btn.SaveChanges" xml:space="preserve">
+    <value>Сохранить изменения</value>
+  </data>
+
+  <!-- ========================= COPY ========================= -->
+  <data name="Copy.Fail" xml:space="preserve">
+    <value>Не удалось скопировать</value>
+  </data>
+  <data name="Copy.Success" xml:space="preserve">
+    <value>Скопировано в буфер обмена</value>
+  </data>
+
+  <!-- ========================= DEL ========================= -->
+  <data name="Del.ConfirmTpl" xml:space="preserve">
+    <value>Удалить {0} {1} для {2}?</value>
+  </data>
+  <data name="Del.Title" xml:space="preserve">
+    <value>Подтверждение удаления</value>
+  </data>
+
+  <!-- ========================= EDIT ========================= -->
+  <data name="Edit.Title" xml:space="preserve">
+    <value>Редактировать запись</value>
+  </data>
+
+  <!-- ========================= ERR ========================= -->
+  <data name="Err.AddRecordApi" xml:space="preserve">
+    <value>Ошибка добавления записи: {0}</value>
+  </data>
+  <data name="Err.AddSubdomainApi" xml:space="preserve">
+    <value>Ошибка добавления поддомена: {0}</value>
+  </data>
+  <data name="Err.DefaultARequired" xml:space="preserve">
+    <value>В настройках не указан IP-адрес A-записи по умолчанию.</value>
+  </data>
+  <data name="Err.DeleteRecordApi" xml:space="preserve">
+    <value>Ошибка удаления записи: {0}</value>
+  </data>
+  <data name="Err.FetchRecords" xml:space="preserve">
+    <value>Ошибка получения записей: {0}</value>
+  </data>
+  <data name="Err.Internal" xml:space="preserve">
+    <value>Внутренняя ошибка сервера.</value>
+  </data>
+  <data name="Err.InvalidRequest" xml:space="preserve">
+    <value>Некорректный запрос.</value>
+  </data>
+  <data name="Err.RecordExists" xml:space="preserve">
+    <value>Запись уже существует.</value>
+  </data>
+  <data name="Err.RecordNotFound" xml:space="preserve">
+    <value>Запись не найдена.</value>
+  </data>
+  <data name="Err.SecondaryReadOnly" xml:space="preserve">
+    <value>Slave-зона доступна только для чтения. Изменяйте записи на primary-сервере.</value>
+  </data>
+  <data name="Err.UpdateRecordApi" xml:space="preserve">
+    <value>Ошибка обновления записи: {0}</value>
+  </data>
+  <data name="Err.ZoneEmpty" xml:space="preserve">
+    <value>Данные зоны отсутствуют.</value>
+  </data>
+  <data name="Err.ZoneNotSpecified" xml:space="preserve">
+    <value>Зона не указана.</value>
+  </data>
+
+  <!-- ========================= FORM ========================= -->
+  <data name="Form.HttpsParams" xml:space="preserve">
+    <value>Параметры HTTPS</value>
+  </data>
+  <data name="Form.NsTarget" xml:space="preserve">
+    <value>Целевой NS</value>
+  </data>
+  <data name="Form.Port" xml:space="preserve">
+    <value>Порт</value>
+  </data>
+  <data name="Form.Priority" xml:space="preserve">
+    <value>Приоритет</value>
+  </data>
+  <data name="Form.Root" xml:space="preserve">
+    <value>(Корень)</value>
+  </data>
+  <data name="Form.Subdomain" xml:space="preserve">
+    <value>Поддомен</value>
+  </data>
+  <data name="Form.SubdomainAdd" xml:space="preserve">
+    <value>Добавить поддомен</value>
+  </data>
+  <data name="Form.TxtValue" xml:space="preserve">
+    <value>Значение TXT</value>
+  </data>
+  <data name="Form.Type" xml:space="preserve">
+    <value>Тип</value>
+  </data>
+  <data name="Form.Value" xml:space="preserve">
+    <value>Значение</value>
+  </data>
+  <data name="Form.Weight" xml:space="preserve">
+    <value>Вес</value>
+  </data>
+
+  <!-- ========================= HDR ========================= -->
+  <data name="Hdr.Existing" xml:space="preserve">
+    <value>Существующие записи</value>
+  </data>
+  <data name="Hdr.Subtitle" xml:space="preserve">
+    <value>Управление DNS-записями для этой зоны</value>
+  </data>
+  <data name="Hdr.Zone" xml:space="preserve">
+    <value>Зона</value>
+  </data>
+
+  <!-- ========================= HELP ========================= -->
+  <data name="Help.Generic" xml:space="preserve">
+    <value>Для A/AAAA — IP; для CNAME/NS/SRV целевой хост должен оканчиваться точкой.</value>
+  </data>
+  <data name="Help.TxtAutoQuotes" xml:space="preserve">
+    <value>Кавычки будут добавлены автоматически.</value>
+  </data>
+  <data name="Help.TxtNoQuotes" xml:space="preserve">
+    <value>Не заключайте в кавычки — мы добавим их автоматически.</value>
+  </data>
+
+  <!-- ========================= PH ========================= -->
+  <data name="Ph.Filter" xml:space="preserve">
+    <value>Фильтр по имени/значению/типу</value>
+  </data>
+  <data name="Ph.Value.Generic" xml:space="preserve">
+    <value>например, 203.0.113.10 или target.example.com.</value>
+  </data>
+
+  <!-- ========================= SOA ========================= -->
+  <data name="Soa.AdminEmail" xml:space="preserve">
+    <value>Адрес администратора</value>
+  </data>
+  <data name="Soa.Expire" xml:space="preserve">
+    <value>Истечение (Expire)</value>
+  </data>
+  <data name="Soa.MinimumTtl" xml:space="preserve">
+    <value>Минимальный TTL</value>
+  </data>
+  <data name="Soa.PrimaryNs" xml:space="preserve">
+    <value>Основной NS</value>
+  </data>
+  <data name="Soa.Refresh" xml:space="preserve">
+    <value>Обновление (Refresh)</value>
+  </data>
+  <data name="Soa.Retry" xml:space="preserve">
+    <value>Повтор (Retry)</value>
+  </data>
+  <data name="Soa.Title" xml:space="preserve">
+    <value>Параметры записи SOA</value>
+  </data>
+
+  <!-- ========================= SUB ========================= -->
+  <data name="Sub.Name" xml:space="preserve">
+    <value>Имя поддомена</value>
+  </data>
+  <data name="Sub.Title" xml:space="preserve">
+    <value>Добавить поддомен</value>
+  </data>
+
+  <!-- ========================= TH ========================= -->
+  <data name="Th.Actions" xml:space="preserve">
+    <value>Действия</value>
+  </data>
+  <data name="Th.Subdomain" xml:space="preserve">
+    <value>Поддомен</value>
+  </data>
+  <data name="Th.Type" xml:space="preserve">
+    <value>Тип</value>
+  </data>
+  <data name="Th.Value" xml:space="preserve">
+    <value>Значение</value>
+  </data>
+
+  <!-- ========================= TITLE ========================= -->
+  <data name="Title.ManageZone" xml:space="preserve">
+    <value>Управление зоной: {0}</value>
+  </data>
+
+  <!-- ========================= VAL ========================= -->
+  <data name="Val.HttpsRequired" xml:space="preserve">
+    <value>Укажите значение HTTPS.</value>
+  </data>
+  <data name="Val.MxPriority" xml:space="preserve">
+    <value>1…1000.</value>
+  </data>
+  <data name="Val.NsRequired" xml:space="preserve">
+    <value>Укажите целевой NS.</value>
+  </data>
+  <data name="Val.SelectSubdomain" xml:space="preserve">
+    <value>Выберите поддомен.</value>
+  </data>
+  <data name="Val.SelectType" xml:space="preserve">
+    <value>Выберите тип записи.</value>
+  </data>
+  <data name="Val.SubdomainRequired" xml:space="preserve">
+    <value>Введите поддомен.</value>
+  </data>
+  <data name="Val.TxtRequired" xml:space="preserve">
+    <value>Укажите значение TXT.</value>
+  </data>
+  <data name="Val.ValueRequired" xml:space="preserve">
+    <value>Укажите значение.</value>
+  </data>
+</root>

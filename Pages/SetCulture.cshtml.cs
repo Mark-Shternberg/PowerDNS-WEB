@@ -7,6 +7,7 @@ namespace PowerDNS_Web.Pages
     [IgnoreAntiforgeryToken]
     public class SetCultureModel : PageModel
     {
+        // ========================= PAGE LOAD =========================
         public IActionResult OnGet(string culture = "ru", string? returnUrl = "/")
         {
             if (culture is not ("ru" or "en"))

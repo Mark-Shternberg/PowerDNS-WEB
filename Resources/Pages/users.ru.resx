@@ -1,51 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-    <xsd:element name="root" msdata:IsDataSet="true">
-      <xsd:complexType>
-        <xsd:choice maxOccurs="unbounded">
-          <xsd:element name="metadata">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" />
-              </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="assembly">
-            <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="data">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="resheader">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-            </xsd:complexType>
-          </xsd:element>
-        </xsd:choice>
-      </xsd:complexType>
-    </xsd:element>
-  </xsd:schema>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
@@ -58,52 +12,131 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  
-  <!-- Titles -->
-  <data name="UM_Title"><value>Управление пользователями</value></data>
-  <data name="UM_Header"><value>Управление пользователями</value></data>
 
-  <!-- Add block -->
-  <data name="UM_AddNewUser"><value>Добавить пользователя</value></data>
-  <data name="UM_Placeholder_Username"><value>Имя пользователя</value></data>
-  <data name="UM_Label_SelectRole"><value>Роль</value></data>
-  <data name="UM_Role_Administrator"><value>Администратор</value></data>
-  <data name="UM_Role_ReadOnly"><value>Только просмотр</value></data>
-  <data name="UM_Placeholder_Password"><value>Пароль</value></data>
-  <data name="UM_Btn_AddUser"><value>Добавить</value></data>
+  <!-- ========================= ADDNEWUSER ========================= -->
+  <data name="UM_AddNewUser" xml:space="preserve">
+    <value>Добавить пользователя</value>
+  </data>
 
-  <!-- Table -->
-  <data name="UM_Th_Username"><value>Имя пользователя</value></data>
-  <data name="UM_Th_Role"><value>Роль</value></data>
-  <data name="UM_Th_Password"><value>Пароль</value></data>
-  <data name="UM_Th_Actions"><value>Действия</value></data>
-  <data name="UM_Placeholder_NewPassword"><value>Новый пароль</value></data>
+  <!-- ========================= BACK ========================= -->
+  <data name="UM_Back_Error" xml:space="preserve">
+    <value>Ошибка: {0}</value>
+  </data>
+  <data name="UM_Back_InvalidRequest" xml:space="preserve">
+    <value>Некорректный запрос.</value>
+  </data>
+  <data name="UM_Back_OnlyAdminDeleteForbidden" xml:space="preserve">
+    <value>Нельзя удалить единственного администратора!</value>
+  </data>
+  <data name="UM_Back_OnlyAdminDemoteForbidden" xml:space="preserve">
+    <value>Нельзя изменить роль единственного администратора.</value>
+  </data>
+  <data name="UM_Back_SqlError" xml:space="preserve">
+    <value>Ошибка SQL: {0}</value>
+  </data>
+  <data name="UM_Back_UserExists" xml:space="preserve">
+    <value>Пользователь с таким логином уже существует.</value>
+  </data>
+  <data name="UM_Back_UserNotFound" xml:space="preserve">
+    <value>Пользователь не найден.</value>
+  </data>
 
-  <!-- Buttons / tooltips -->
-  <data name="UM_Btn_Edit"><value>Редактировать</value></data>
-  <data name="UM_Btn_Delete"><value>Удалить</value></data>
-  <data name="UM_Btn_Cancel"><value>Отмена</value></data>
-  <data name="UM_Btn_Save"><value>Сохранить</value></data>
+  <!-- ========================= BTN ========================= -->
+  <data name="UM_Btn_AddUser" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="UM_Btn_Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="UM_Btn_Delete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="UM_Btn_Edit" xml:space="preserve">
+    <value>Редактировать</value>
+  </data>
+  <data name="UM_Btn_Save" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
 
-  <!-- Modal -->
-  <data name="UM_Modal_ConfirmDeletion"><value>Подтверждение удаления</value></data>
-  <data name="UM_Modal_ConfirmDelete_Prefix"><value>Вы действительно хотите удалить пользователя:</value></data>
+  <!-- ========================= HEADER ========================= -->
+  <data name="UM_Header" xml:space="preserve">
+    <value>Управление пользователями</value>
+  </data>
 
-  <!-- JS messages -->
-  <data name="UM_Msg_FillAll"><value>Заполните все поля.</value></data>
-  <data name="UM_Msg_UsernameTooShort"><value>Имя пользователя должно быть не короче 3 символов.</value></data>
-  <data name="UM_Msg_RegistrationError"><value>Ошибка регистрации.</value></data>
-  <data name="UM_Msg_UserAdded"><value>Пользователь добавлен!</value></data>
-  <data name="UM_Msg_SaveError"><value>Ошибка сохранения.</value></data>
-  <data name="UM_Msg_SaveOk"><value>Изменения сохранены!</value></data>
-  <data name="UM_Msg_UserDeletionError"><value>Ошибка удаления пользователя.</value></data>
-  <data name="UM_Msg_UserDeletedPrefix"><value>Пользователь удалён:</value></data>
+  <!-- ========================= LABEL ========================= -->
+  <data name="UM_Label_SelectRole" xml:space="preserve">
+    <value>Роль</value>
+  </data>
 
-  <data name="UM_Back_InvalidRequest"><value>Некорректный запрос.</value></data>
-  <data name="UM_Back_UserExists"><value>Пользователь с таким логином уже существует.</value></data>
-  <data name="UM_Back_SqlError"><value>Ошибка SQL: {0}</value></data>
-  <data name="UM_Back_Error"><value>Ошибка: {0}</value></data>
-  <data name="UM_Back_OnlyAdminDeleteForbidden"><value>Нельзя удалить единственного администратора!</value></data>
-  <data name="UM_Back_OnlyAdminDemoteForbidden"><value>Нельзя изменить роль единственного администратора.</value></data>
-  <data name="UM_Back_UserNotFound"><value>Пользователь не найден.</value></data>
+  <!-- ========================= MODAL ========================= -->
+  <data name="UM_Modal_ConfirmDelete_Prefix" xml:space="preserve">
+    <value>Вы действительно хотите удалить пользователя:</value>
+  </data>
+  <data name="UM_Modal_ConfirmDeletion" xml:space="preserve">
+    <value>Подтверждение удаления</value>
+  </data>
+
+  <!-- ========================= MSG ========================= -->
+  <data name="UM_Msg_FillAll" xml:space="preserve">
+    <value>Заполните все поля.</value>
+  </data>
+  <data name="UM_Msg_RegistrationError" xml:space="preserve">
+    <value>Ошибка регистрации.</value>
+  </data>
+  <data name="UM_Msg_SaveError" xml:space="preserve">
+    <value>Ошибка сохранения.</value>
+  </data>
+  <data name="UM_Msg_SaveOk" xml:space="preserve">
+    <value>Изменения сохранены!</value>
+  </data>
+  <data name="UM_Msg_UserAdded" xml:space="preserve">
+    <value>Пользователь добавлен!</value>
+  </data>
+  <data name="UM_Msg_UserDeletedPrefix" xml:space="preserve">
+    <value>Пользователь удалён:</value>
+  </data>
+  <data name="UM_Msg_UserDeletionError" xml:space="preserve">
+    <value>Ошибка удаления пользователя.</value>
+  </data>
+  <data name="UM_Msg_UsernameTooShort" xml:space="preserve">
+    <value>Имя пользователя должно быть не короче 3 символов.</value>
+  </data>
+
+  <!-- ========================= PLACEHOLDER ========================= -->
+  <data name="UM_Placeholder_NewPassword" xml:space="preserve">
+    <value>Новый пароль</value>
+  </data>
+  <data name="UM_Placeholder_Password" xml:space="preserve">
+    <value>Пароль</value>
+  </data>
+  <data name="UM_Placeholder_Username" xml:space="preserve">
+    <value>Имя пользователя</value>
+  </data>
+
+  <!-- ========================= ROLE ========================= -->
+  <data name="UM_Role_Administrator" xml:space="preserve">
+    <value>Администратор</value>
+  </data>
+  <data name="UM_Role_ReadOnly" xml:space="preserve">
+    <value>Только просмотр</value>
+  </data>
+
+  <!-- ========================= TH ========================= -->
+  <data name="UM_Th_Actions" xml:space="preserve">
+    <value>Действия</value>
+  </data>
+  <data name="UM_Th_Password" xml:space="preserve">
+    <value>Пароль</value>
+  </data>
+  <data name="UM_Th_Role" xml:space="preserve">
+    <value>Роль</value>
+  </data>
+  <data name="UM_Th_Username" xml:space="preserve">
+    <value>Имя пользователя</value>
+  </data>
+
+  <!-- ========================= TITLE ========================= -->
+  <data name="UM_Title" xml:space="preserve">
+    <value>Управление пользователями</value>
+  </data>
 </root>

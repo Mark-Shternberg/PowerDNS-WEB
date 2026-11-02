@@ -8,11 +8,13 @@ namespace PowerDNS_Web.Pages
 {
     public class logsModel : PageModel
     {
+        // ========================= DEPENDENCIES =========================
         private readonly ILogger<logsModel> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _pdnsUrl;
         private readonly string _pdnsApiKey;
 
+        // ========================= CONSTRUCTION =========================
         public logsModel(ILogger<logsModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _logger = logger;
@@ -21,6 +23,7 @@ namespace PowerDNS_Web.Pages
             _pdnsApiKey = configuration["pdns:api_key"] ?? "";
         }
 
+        // ========================= LOG RETRIEVAL =========================
         public async Task<IActionResult> OnGetLogsAsync()
         {
             try
@@ -46,6 +49,7 @@ namespace PowerDNS_Web.Pages
             }
         }
 
+        // ========================= RESPONSE PARSING =========================
         private async Task<string> DeserializeLogsAsync(HttpResponseMessage response)
         {
             if (!response.IsSuccessStatusCode)

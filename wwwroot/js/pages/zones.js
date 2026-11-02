@@ -1,11 +1,11 @@
 ﻿// ZONES PAGE JS
-// - bootstrap form validation
+// Bootstrap form validation and zone management.
 // - modal wiring via data-* (with click prefilling fallback)
 // - dnssec keys rendering
 // - simple client-side search
 
 (function () {
-    // --------- HELPERS ---------
+    // ========================= HELPERS =========================
     const $ = (sel, root = document) => root.querySelector(sel);
     const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
     const ensureDot = (s) => !s ? s : (s.endsWith('.') ? s : s + '.');
@@ -136,7 +136,7 @@
         });
     };
 
-    // --------- PREFILLERS ---------
+    // ========================= PREFILLERS =========================
     const prefillAdd = (mode) => {
         const form = $('#zoneForm');
         if (!form) return;
@@ -194,8 +194,7 @@
         applyConditionalRequireds();
     };
 
-    // --------- EVENT WIRING ---------
-
+    // ========================= EVENT WIRING =========================
     // поддерживаем hidden kind при ручном переключении (в add-режиме)
     $('#zone-kind')?.addEventListener('change', () => {
         syncKindHidden();
@@ -280,7 +279,7 @@
         });
     }
 
-    // --------- SEARCH ---------
+    // ========================= SEARCH =========================
     document.addEventListener('DOMContentLoaded', () => {
         const searchInput = $('#search');
         const clearButton = $('#clear-btn');

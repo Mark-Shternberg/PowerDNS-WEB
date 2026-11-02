@@ -1,0 +1,269 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ========================= ADDRECORD ========================= -->
+  <data name="AddRecord.Title" xml:space="preserve">
+    <value>Add Record</value>
+  </data>
+
+  <!-- ========================= ANS ========================= -->
+  <data name="Ans.Record.Added" xml:space="preserve">
+    <value>Record added successfully!</value>
+  </data>
+  <data name="Ans.Record.Deleted" xml:space="preserve">
+    <value>Record deleted successfully!</value>
+  </data>
+  <data name="Ans.Record.Updated" xml:space="preserve">
+    <value>Record updated successfully!</value>
+  </data>
+  <data name="Ans.Subdomain.Added" xml:space="preserve">
+    <value>Subdomain added successfully!</value>
+  </data>
+
+  <!-- ========================= BTN ========================= -->
+  <data name="Btn.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Btn.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Btn.Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Btn.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Btn.CollapseAll" xml:space="preserve">
+    <value>Collapse all</value>
+  </data>
+  <data name="Btn.Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Btn.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Btn.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Btn.ExpandAll" xml:space="preserve">
+    <value>Expand all</value>
+  </data>
+  <data name="Btn.SaveChanges" xml:space="preserve">
+    <value>Save Changes</value>
+  </data>
+
+  <!-- ========================= COPY ========================= -->
+  <data name="Copy.Fail" xml:space="preserve">
+    <value>Copy failed</value>
+  </data>
+  <data name="Copy.Success" xml:space="preserve">
+    <value>Copied to clipboard</value>
+  </data>
+
+  <!-- ========================= DEL ========================= -->
+  <data name="Del.ConfirmTpl" xml:space="preserve">
+    <value>Delete {0} {1} for {2}?</value>
+  </data>
+  <data name="Del.Title" xml:space="preserve">
+    <value>Confirm deletion</value>
+  </data>
+
+  <!-- ========================= EDIT ========================= -->
+  <data name="Edit.Title" xml:space="preserve">
+    <value>Edit Record</value>
+  </data>
+
+  <!-- ========================= ERR ========================= -->
+  <data name="Err.AddRecordApi" xml:space="preserve">
+    <value>Error adding record: {0}</value>
+  </data>
+  <data name="Err.AddSubdomainApi" xml:space="preserve">
+    <value>Error adding subdomain: {0}</value>
+  </data>
+  <data name="Err.DefaultARequired" xml:space="preserve">
+    <value>Default A record IP is not set in configuration.</value>
+  </data>
+  <data name="Err.DeleteRecordApi" xml:space="preserve">
+    <value>Error deleting record: {0}</value>
+  </data>
+  <data name="Err.FetchRecords" xml:space="preserve">
+    <value>Error fetching records: {0}</value>
+  </data>
+  <data name="Err.Internal" xml:space="preserve">
+    <value>Internal server error.</value>
+  </data>
+  <data name="Err.InvalidRequest" xml:space="preserve">
+    <value>Invalid request.</value>
+  </data>
+  <data name="Err.RecordExists" xml:space="preserve">
+    <value>Record already exists.</value>
+  </data>
+  <data name="Err.RecordNotFound" xml:space="preserve">
+    <value>Record not found.</value>
+  </data>
+  <data name="Err.SecondaryReadOnly" xml:space="preserve">
+    <value>Secondary zones are read-only. Edit records on the primary server.</value>
+  </data>
+  <data name="Err.UpdateRecordApi" xml:space="preserve">
+    <value>Error updating record: {0}</value>
+  </data>
+  <data name="Err.ZoneEmpty" xml:space="preserve">
+    <value>Zone data is empty.</value>
+  </data>
+  <data name="Err.ZoneNotSpecified" xml:space="preserve">
+    <value>Zone is not specified.</value>
+  </data>
+
+  <!-- ========================= FORM ========================= -->
+  <data name="Form.HttpsParams" xml:space="preserve">
+    <value>HTTPS Parameters</value>
+  </data>
+  <data name="Form.NsTarget" xml:space="preserve">
+    <value>NS Target</value>
+  </data>
+  <data name="Form.Port" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="Form.Priority" xml:space="preserve">
+    <value>Priority</value>
+  </data>
+  <data name="Form.Root" xml:space="preserve">
+    <value>(Root)</value>
+  </data>
+  <data name="Form.Subdomain" xml:space="preserve">
+    <value>Subdomain</value>
+  </data>
+  <data name="Form.SubdomainAdd" xml:space="preserve">
+    <value>Add subdomain</value>
+  </data>
+  <data name="Form.TxtValue" xml:space="preserve">
+    <value>TXT Value</value>
+  </data>
+  <data name="Form.Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Form.Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Form.Weight" xml:space="preserve">
+    <value>Weight</value>
+  </data>
+
+  <!-- ========================= HDR ========================= -->
+  <data name="Hdr.Existing" xml:space="preserve">
+    <value>Existing Records</value>
+  </data>
+  <data name="Hdr.Subtitle" xml:space="preserve">
+    <value>Manage DNS records for this zone</value>
+  </data>
+  <data name="Hdr.Zone" xml:space="preserve">
+    <value>Zone</value>
+  </data>
+
+  <!-- ========================= HELP ========================= -->
+  <data name="Help.Generic" xml:space="preserve">
+    <value>For A/AAAA — IP; CNAME/NS/SRV target must end with a dot.</value>
+  </data>
+  <data name="Help.TxtAutoQuotes" xml:space="preserve">
+    <value>We’ll wrap it with quotes automatically.</value>
+  </data>
+  <data name="Help.TxtNoQuotes" xml:space="preserve">
+    <value>Do not wrap with quotes — we will add them automatically.</value>
+  </data>
+
+  <!-- ========================= PH ========================= -->
+  <data name="Ph.Filter" xml:space="preserve">
+    <value>Filter by name/value/type</value>
+  </data>
+  <data name="Ph.Value.Generic" xml:space="preserve">
+    <value>e.g. 203.0.113.10 or target.example.com.</value>
+  </data>
+
+  <!-- ========================= SOA ========================= -->
+  <data name="Soa.AdminEmail" xml:space="preserve">
+    <value>Admin Email</value>
+  </data>
+  <data name="Soa.Expire" xml:space="preserve">
+    <value>Expire</value>
+  </data>
+  <data name="Soa.MinimumTtl" xml:space="preserve">
+    <value>Minimum TTL</value>
+  </data>
+  <data name="Soa.PrimaryNs" xml:space="preserve">
+    <value>Primary NS</value>
+  </data>
+  <data name="Soa.Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Soa.Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="Soa.Title" xml:space="preserve">
+    <value>SOA Record Details</value>
+  </data>
+
+  <!-- ========================= SUB ========================= -->
+  <data name="Sub.Name" xml:space="preserve">
+    <value>Subdomain Name</value>
+  </data>
+  <data name="Sub.Title" xml:space="preserve">
+    <value>Add Subdomain</value>
+  </data>
+
+  <!-- ========================= TH ========================= -->
+  <data name="Th.Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Th.Subdomain" xml:space="preserve">
+    <value>Subdomain</value>
+  </data>
+  <data name="Th.Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Th.Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+
+  <!-- ========================= TITLE ========================= -->
+  <data name="Title.ManageZone" xml:space="preserve">
+    <value>Manage Zone: {0}</value>
+  </data>
+
+  <!-- ========================= VAL ========================= -->
+  <data name="Val.HttpsRequired" xml:space="preserve">
+    <value>HTTPS value is required.</value>
+  </data>
+  <data name="Val.MxPriority" xml:space="preserve">
+    <value>1…1000.</value>
+  </data>
+  <data name="Val.NsRequired" xml:space="preserve">
+    <value>NS target is required.</value>
+  </data>
+  <data name="Val.SelectSubdomain" xml:space="preserve">
+    <value>Select subdomain.</value>
+  </data>
+  <data name="Val.SelectType" xml:space="preserve">
+    <value>Select record type.</value>
+  </data>
+  <data name="Val.SubdomainRequired" xml:space="preserve">
+    <value>Enter subdomain.</value>
+  </data>
+  <data name="Val.TxtRequired" xml:space="preserve">
+    <value>TXT value is required.</value>
+  </data>
+  <data name="Val.ValueRequired" xml:space="preserve">
+    <value>Value is required.</value>
+  </data>
+</root>

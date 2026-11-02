@@ -13,10 +13,12 @@ namespace PowerDNS_Web.Pages
     [Authorize(Roles = "Administrator")]
     public class userModel : PageModel
     {
+        // ========================= DEPENDENCIES =========================
         private readonly ILogger<userModel> _logger;
         private readonly IConfiguration _configuration;
         private readonly IStringLocalizer _L;
 
+        // ========================= CONSTRUCTION =========================
         public userModel(ILogger<userModel> logger, IConfiguration configuration, IStringLocalizerFactory factory)
         {
             _logger = logger;
@@ -54,6 +56,7 @@ namespace PowerDNS_Web.Pages
             => string.Equals(role, "Administrator", StringComparison.Ordinal) ||
                string.Equals(role, "ReadOnly", StringComparison.Ordinal);
 
+        // ========================= PAGE LOAD =========================
         public void OnGet()
         {
             try
@@ -96,7 +99,7 @@ namespace PowerDNS_Web.Pages
             }
         }
 
-        // ============= ADD NEW USER =============
+        // ========================= ADD NEW USER =========================
         public async Task<IActionResult> OnPostAdd_new_user([FromBody] NewUser model)
         {
             try
@@ -150,7 +153,7 @@ namespace PowerDNS_Web.Pages
             }
         }
 
-        // ============= UPDATE USER =============
+        // ========================= UPDATE USER =========================
         public async Task<IActionResult> OnPostUpdate_user([FromBody] NewUser model)
         {
             try
@@ -218,7 +221,7 @@ namespace PowerDNS_Web.Pages
             }
         }
 
-        // ============= DELETE USER =============
+        // ========================= DELETE USER =========================
         public async Task<IActionResult> OnPostDelete_user([FromBody] Row model)
         {
             if (model == null || string.IsNullOrWhiteSpace(model.username))

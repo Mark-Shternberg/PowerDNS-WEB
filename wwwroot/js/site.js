@@ -30,7 +30,7 @@ $(function () {
     });
 });
 
-// ===== THEME TOGGLE (BOOTSTRAP 5.3 DATA-BS-THEME) =====
+// ========================= THEME TOGGLE (BOOTSTRAP 5.3 DATA-BS-THEME) =========================
 (function () {
     const html = document.documentElement;
     const btn = document.getElementById('themeToggle');
@@ -63,7 +63,7 @@ $(function () {
     });
 })();
 
-// ===== TOASTS API (CLIENT-SIDE) =====
+// ========================= TOASTS API (CLIENT-SIDE) =========================
 (function () {
     // CREATE OR GET CONTAINER
     function ensureContainer() {
@@ -134,7 +134,7 @@ $(function () {
     });
 })();
 
-// ===== DATE/TIME HELPERS =====
+// ========================= DATE/TIME HELPERS =========================
 function parseDate(dateString) {
     // FORMAT: DD.MM.YYYY HH:mm
     const re = /^(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})$/;
@@ -155,7 +155,7 @@ function getCurrentDateTime() {
     return `${dd}.${mm}.${yyyy} ${hh}:${mi}`;
 }
 
-// ===== MODAL CLOSE WITHOUT BACKDROP =====
+// ========================= MODAL CLOSE WITHOUT BACKDROP =========================
 function closeModal(modalId) {
     const modal = document.querySelector(modalId);
     const back = document.querySelector('.modal-backdrop');
@@ -168,7 +168,7 @@ function closeModal(modalId) {
     document.body.style.paddingRight = '';
 }
 
-// ===== OPTIONAL ESC KEY HANDLER FOR SIDE PANELS (SAFE-NOOP) =====
+// ========================= OPTIONAL ESC KEY HANDLER FOR SIDE PANELS (SAFE-NOOP) =========================
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         document.body.classList.remove('sidebar-open', 'no-scroll');

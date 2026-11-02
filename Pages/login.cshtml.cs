@@ -4,22 +4,26 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using MySqlConnector;
+using PowerDNS_Web.Services.DB;
 
 namespace PowerDNS_Web.Pages
 {
     public class loginModel : PageModel
     {
+        // ========================= DEPENDENCIES =========================
         private readonly ILogger<loginModel> _logger;
         private readonly IConfiguration _configuration;
-        private readonly Functions _functions;
+        private readonly ApplicationDatabase _database;
 
-        public loginModel(ILogger<loginModel> logger, Functions functions, IConfiguration configuration)
+        // ========================= CONSTRUCTION =========================
+        public loginModel(ILogger<loginModel> logger, ApplicationDatabase database, IConfiguration configuration)
         {
             _logger = logger;
             _configuration = configuration;
-            _functions = functions;
+            _database = database;
         }
 
+        // ========================= LOGIN REQUEST =========================
         public class UserLogin
         {
             public string? username { get; set; }
@@ -27,16 +31,18 @@ namespace PowerDNS_Web.Pages
             public string? returnUrl { get; set; }
         }
 
+        // ========================= PAGE LOAD =========================
         public async Task OnGet()
         {
             ViewData["SettingsCheck"] = (await CheckSettingsExist()).ToString();
         }
 
+        // ========================= DATABASE AVAILABILITY =========================
         private async Task<bool> CheckSettingsExist()
         {
             try
             {
-                using var connection = new MySqlConnection(_functions.sql_connection());
+                using var connection = new MySqlConnection(_database.BuildConnectionString());
                 await connection.OpenAsync();
                 return true;
             }
@@ -47,6 +53,7 @@ namespace PowerDNS_Web.Pages
             }
         }
 
+        // ========================= AUTHENTICATION =========================
         public async Task<IActionResult> OnPostLogin([FromBody] UserLogin loginRequest)
         {
             if (loginRequest == null ||
@@ -63,7 +70,7 @@ namespace PowerDNS_Web.Pages
 
             try
             {
-                using var connection = new MySqlConnection(_functions.sql_connection());
+                using var connection = new MySqlConnection(_database.BuildConnectionString());
                 await connection.OpenAsync();
 
                 // 1) Если пользователей нет — создаём первого админа

@@ -14,16 +14,19 @@ using Microsoft.Extensions.Logging;
 
 namespace PowerDNS_Web.Pages
 {
-    public class RecursorModel : PageModel
+    public partial class RecursorModel : PageModel
     {
+        // ========================= DEPENDENCIES =========================
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _cfg;
         private readonly ILogger<RecursorModel> _logger;
         private readonly IStringLocalizer _L;
 
+        // ========================= PAGE STATE =========================
         public List<string> AvailableZones { get; private set; } = new();
         public List<ForwardZone> ForwardZones { get; private set; } = new();
 
+        // ========================= CONFIGURATION =========================
         private string PdnsUrl => _cfg["pdns:url"] ?? "";
         private string PdnsKey => _cfg["pdns:api_key"] ?? "";
         private string RecursorUrl => _cfg["recursor:url"] ?? "";
@@ -32,6 +35,7 @@ namespace PowerDNS_Web.Pages
         private string RecursorEnabled => _cfg["recursor:Enabled"] ?? _cfg["recursor:enabled"] ?? "Disabled";
         private bool IsRecursorOn => string.Equals(RecursorEnabled, "Enabled", StringComparison.OrdinalIgnoreCase);
 
+        // ========================= CONSTRUCTION =========================
         public RecursorModel(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<RecursorModel> logger, IStringLocalizerFactory factory)
         {
             _httpClientFactory = httpClientFactory;
@@ -41,43 +45,7 @@ namespace PowerDNS_Web.Pages
             _L = factory.Create("Pages.recursor", asmName);
         }
 
-        // ===== View models / DTOs =====
-        public class ForwardZone
-        {
-            public string Id { get; set; } = "";
-            public string Name { get; set; } = "";
-            public List<string> ForwardTo { get; set; } = new();
-        }
-
-        private class AuthZoneDto
-        {
-            public string Name { get; set; } = "";
-            public string Kind { get; set; } = "";
-        }
-
-        private class RecursorZoneDto
-        {
-            public string Id { get; set; } = "";
-            public string Name { get; set; } = "";
-            public string Kind { get; set; } = "";
-            public List<string> Servers { get; set; } = new();
-            public bool? Recursion_Desired { get; set; }
-        }
-
-        public class ForwardZoneRequest
-        {
-            public string Id { get; set; } = "";
-            public string Zone { get; set; } = "";
-        }
-        public class UpdateForwardZones
-        {
-            public string Id { get; set; } = "";
-            public string Name { get; set; } = "";
-            public string DnsServers { get; set; } = "";
-            public string Transport { get; set; } = "";
-        }
-
-        // ===== Page GET =====
+        // ========================= PAGE LOAD =========================
         public async Task OnGetAsync()
         {
             ViewData["RecursorEnabled"] = IsRecursorOn ? "Enabled" : "Disabled";
@@ -115,8 +83,7 @@ namespace PowerDNS_Web.Pages
                 AvailableZones.Insert(0, ".");
         }
 
-        // ===== Handlers =====
-
+        // ========================= HANDLERS =========================
         // Add a local authoritative forward, or an explicit recursive root forward.
         public async Task<IActionResult> OnPostAddForwardZoneAsync([FromBody] ForwardZoneRequest req)
         {
@@ -256,121 +223,6 @@ namespace PowerDNS_Web.Pages
             }
         }
 
-        // ===== helpers =====
-        private async Task<List<AuthZoneDto>> SafeGetAuthZonesAsync()
-        {
-            try
-            {
-                using var c = _httpClientFactory.CreateClient();
-                c.DefaultRequestHeaders.Remove("X-API-Key");
-                c.DefaultRequestHeaders.Add("X-API-Key", PdnsKey);
 
-                var resp = await c.GetAsync($"{PdnsUrl}/api/v1/servers/localhost/zones");
-                if (!resp.IsSuccessStatusCode) return new List<AuthZoneDto>();
-
-                var json = await resp.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<List<AuthZoneDto>>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                }) ?? new List<AuthZoneDto>();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to fetch authoritative zones");
-                return new List<AuthZoneDto>();
-            }
-        }
-
-        private async Task<List<RecursorZoneDto>> SafeGetRecursorZonesAsync()
-        {
-            try
-            {
-                using var c = NewRecursorClient();
-                var resp = await c.GetAsync($"{RecursorUrl}/api/v1/servers/localhost/zones");
-                if (!resp.IsSuccessStatusCode) return new List<RecursorZoneDto>();
-
-                var json = await resp.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<List<RecursorZoneDto>>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                }) ?? new List<RecursorZoneDto>();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to fetch recursor zones");
-                return new List<RecursorZoneDto>();
-            }
-        }
-
-        private HttpClient NewRecursorClient()
-        {
-            var c = _httpClientFactory.CreateClient();
-            c.DefaultRequestHeaders.Remove("X-API-Key");
-            c.DefaultRequestHeaders.Add("X-API-Key", RecursorKey);
-            return c;
-        }
-
-        private string BuildRecursorZoneUrl(string zoneId)
-            => $"{RecursorUrl.TrimEnd('/')}/api/v1/servers/localhost/zones/{zoneId}";
-
-        private static string GetSafeZoneId(string? requestedId, string zoneName)
-        {
-            var zoneId = string.IsNullOrWhiteSpace(requestedId)
-                ? ToPowerDnsZoneId(zoneName)
-                : requestedId.Trim();
-
-            // PowerDNS documents zone ids as opaque but URL-safe. Never allow a
-            // client-supplied id to add or navigate path segments.
-            if (zoneId.Length == 0 || zoneId is "." or ".." ||
-                zoneId.Contains('/') || zoneId.Contains('\\') ||
-                zoneId.Contains('?') || zoneId.Contains('#'))
-            {
-                return ToPowerDnsZoneId(zoneName);
-            }
-
-            return zoneId;
-        }
-
-        private static string ToPowerDnsZoneId(string zoneName)
-        {
-            var name = EnsureTrailingDot(zoneName.Trim());
-            if (name == ".") return "=2E";
-
-            var bytes = Encoding.UTF8.GetBytes(name);
-            var result = new StringBuilder(bytes.Length);
-            foreach (var b in bytes)
-            {
-                var c = (char)b;
-                if ((c >= 'A' && c <= 'Z') ||
-                    (c >= 'a' && c <= 'z') ||
-                    (c >= '0' && c <= '9') || c is '.' or '-')
-                {
-                    result.Append(c);
-                }
-                else
-                {
-                    result.Append('=').Append(b.ToString("X2"));
-                }
-            }
-
-            return result.ToString();
-        }
-
-        private static string EnsureTrailingDot(string s)
-            => string.IsNullOrWhiteSpace(s) ? s : (s.EndsWith('.') ? s : s + ".");
-
-        private static bool LooksLikeHostPort(string s)
-        {
-            var idx = s.LastIndexOf(':');
-            if (idx <= 0 || idx >= s.Length - 1) return false;
-            if (!int.TryParse(s[(idx + 1)..], out var port) || port < 1 || port > 65535) return false;
-            return !string.IsNullOrWhiteSpace(s[..idx]);
-        }
-
-        private static bool UsesPort(string server, int expectedPort)
-        {
-            var idx = server.LastIndexOf(':');
-            return idx > 0 && int.TryParse(server[(idx + 1)..], out var port) && port == expectedPort;
-        }
     }
 }

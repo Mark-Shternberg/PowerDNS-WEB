@@ -6,6 +6,7 @@ namespace PowerDNS_Web.Services;
 
 public static class DnsValidation
 {
+    // ========================= DNS NAMES =========================
     public static bool IsName(string? name, bool owner = false)
     {
         if (string.IsNullOrWhiteSpace(name) || name.Length > 254) return false;
@@ -17,6 +18,7 @@ public static class DnsValidation
                 : @"^[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$")));
     }
 
+    // ========================= FORWARDING ENDPOINTS =========================
     public static string[] Masters(string? value) => (value ?? "")
         .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
@@ -27,6 +29,7 @@ public static class DnsValidation
         return IPEndPoint.TryParse(value, out var ep) && ep.Port is > 0 and <= 65535;
     }
 
+    // ========================= ZONE OWNERSHIP =========================
     public static bool IsSecondary(string? kind) =>
         string.Equals(kind, "Slave", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(kind, "Secondary", StringComparison.OrdinalIgnoreCase);
@@ -35,6 +38,7 @@ public static class DnsValidation
         owner.Equals(zone, StringComparison.OrdinalIgnoreCase) ||
         owner.EndsWith("." + zone, StringComparison.OrdinalIgnoreCase);
 
+    // ========================= RECORD CONTENT =========================
     public static string? RecordError(string name, string zone, string type, string content, int ttl)
     {
         if (!IsName(name, true) || !IsWithin(name, zone)) return "Record name must belong to this zone.";

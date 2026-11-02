@@ -14,11 +14,13 @@ namespace PowerDNS_Web.Pages
 
         private readonly ILogger<ErrorModel> _logger;
 
+        // ========================= CONSTRUCTION =========================
         public ErrorModel(ILogger<ErrorModel> logger)
         {
             _logger = logger;
         }
 
+        // ========================= PAGE LOAD =========================
         public void OnGet()
         {
             RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;

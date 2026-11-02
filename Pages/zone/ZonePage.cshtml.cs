@@ -16,8 +16,9 @@ using Microsoft.Extensions.Logging;
 
 namespace PowerDNS_Web.Pages.zone
 {
-    public class ZonePageModel : PageModel
+    public partial class ZonePageModel : PageModel
     {
+        // ========================= DEPENDENCIES =========================
         private readonly HttpClient _httpClient;
         private readonly string _apiUrl;
         private readonly string _apiKey;
@@ -27,11 +28,12 @@ namespace PowerDNS_Web.Pages.zone
         private readonly IConfiguration _configuration;
         private readonly IStringLocalizer _L;
 
+        // ========================= CONSTRUCTION =========================
         public ZonePageModel(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<ZonePageModel> logger, IStringLocalizerFactory factory)
         {
             _logger = logger;
             var asmName = Assembly.GetExecutingAssembly().GetName().Name!;
-            _L = factory.Create("Pages.zone.zone", asmName);
+            _L = factory.Create("Pages.zone.ZonePage", asmName);
             _configuration = configuration;
 
             _httpClient = httpClientFactory.CreateClient();
@@ -41,6 +43,7 @@ namespace PowerDNS_Web.Pages.zone
             _recursor_Enabled = configuration["recursor:Enabled"] ?? "Disabled";
         }
 
+        // ========================= PAGE STATE =========================
         [BindProperty(SupportsGet = true)]
         public string? ZoneName { get; set; }
 
@@ -48,6 +51,7 @@ namespace PowerDNS_Web.Pages.zone
 
         public Dictionary<string, List<DnsRecord>> GroupedRecords { get; set; } = new();
 
+        // ========================= PAGE LOAD =========================
         public async Task<IActionResult> OnGetAsync()
         {
             if (string.IsNullOrWhiteSpace(ZoneName))
@@ -108,54 +112,13 @@ namespace PowerDNS_Web.Pages.zone
             return fullRecordName;
         }
 
-        // ---------- DTOs ----------
-        public class ZoneData { public string Kind { get; set; } = ""; public List<Rrset> Rrsets { get; set; } = new(); }
-        public class Rrset { public string? Name { get; set; } public string? Type { get; set; } public int Ttl { get; set; } public List<Record> Records { get; set; } = new(); }
-        public class Record { public string? Content { get; set; } public bool Disabled { get; set; } }
-        public class DnsRecord { public string Name { get; set; } = string.Empty; public string Type { get; set; } = string.Empty; public List<string> Content { get; set; } = new(); public int Ttl { get; set; } }
-
-        public class AddRecordRequest
-        {
-            public string? Subdomain { get; set; }
-            public string? RecordType { get; set; }
-            public string? Value { get; set; }
-            public int? Ttl { get; set; }
-            public int? MxPriority { get; set; }
-            public int? SrvPriority { get; set; }
-            public int? SrvWeight { get; set; }
-            public int? SrvPort { get; set; }
-        }
-
-        public class DeleteRecordRequest { public string? Name { get; set; } public string? Type { get; set; } public string? Value { get; set; } }
-
-        public class EditRecordRequest
-        {
-            public string? Name { get; set; }
-            public string? Type { get; set; }
-            public string? OldValue { get; set; }
-            public string? Value { get; set; }
-            public int? Ttl { get; set; }
-            public int? MxPriority { get; set; }
-            public int? SrvPriority { get; set; }
-            public int? SrvWeight { get; set; }
-            public int? SrvPort { get; set; }
-            public string? SoaNs { get; set; }
-            public string? SoaEmail { get; set; }
-            public int? SoaRefresh { get; set; }
-            public int? SoaRetry { get; set; }
-            public int? SoaExpire { get; set; }
-            public int? SoaMinimumTtl { get; set; }
-        }
-
-        public class AddSubdomainRequest { public string? Subdomain { get; set; } }
-
         private static string EnsureDot(string s) =>
             string.IsNullOrWhiteSpace(s) ? s : (s.EndsWith(".", StringComparison.Ordinal) ? s : s + ".");
 
         // CANONICAL ZONE ID WITH TRAILING DOT
         private string ZoneId => Uri.EscapeDataString(EnsureDot((ZoneName ?? string.Empty).Trim()));
 
-        // === ADD RECORD (TempData + Redirect) ===
+        // ========================= ADD RECORD (TEMPDATA + REDIRECT) =========================
         public async Task<IActionResult> OnPostAddRecordAsync()
         {
             if (string.IsNullOrWhiteSpace(ZoneName))
@@ -288,7 +251,7 @@ namespace PowerDNS_Web.Pages.zone
             }
         }
 
-        // === DELETE RECORD (TempData + Redirect) ===
+        // ========================= DELETE RECORD (TEMPDATA + REDIRECT) =========================
         public async Task<IActionResult> OnPostDeleteRecordAsync()
         {
             if (string.IsNullOrWhiteSpace(ZoneName))
@@ -392,7 +355,7 @@ namespace PowerDNS_Web.Pages.zone
             }
         }
 
-        // === EDIT RECORD (TempData + Redirect) ===
+        // ========================= EDIT RECORD (TEMPDATA + REDIRECT) =========================
         public async Task<IActionResult> OnPostEditRecordAsync()
         {
             if (string.IsNullOrWhiteSpace(ZoneName))
@@ -533,7 +496,7 @@ namespace PowerDNS_Web.Pages.zone
             }
         }
 
-        // === ADD SUBDOMAIN (TempData + Redirect) ===
+        // ========================= ADD SUBDOMAIN (TEMPDATA + REDIRECT) =========================
         public async Task<IActionResult> OnPostAddSubdomainAsync()
         {
             if (string.IsNullOrWhiteSpace(ZoneName))
@@ -634,82 +597,6 @@ namespace PowerDNS_Web.Pages.zone
             }
         }
 
-        // ---------- helpers ----------
-        private static string FormatTxtForPowerDNS(string raw)
-        {
-            if (string.IsNullOrWhiteSpace(raw)) return "\"\"";
-            var chunks = new List<string>();
-            var chunk = new StringBuilder();
-            int bytes = 0;
-            foreach (var rune in raw.EnumerateRunes())
-            {
-                if (bytes + rune.Utf8SequenceLength > 255)
-                {
-                    chunks.Add(chunk.ToString());
-                    chunk.Clear();
-                    bytes = 0;
-                }
-                chunk.Append(rune.ToString());
-                bytes += rune.Utf8SequenceLength;
-            }
-            chunks.Add(chunk.ToString());
-            return string.Join(" ", chunks.Select(c => "\"" + c.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\""));
-        }
 
-        private void ValidateNumericForm()
-        {
-            foreach (var field in new[] { "Ttl", "MxPriority", "SrvPriority", "SrvWeight", "SrvPort", "SoaRefresh", "SoaRetry", "SoaExpire", "SoaMinimumTtl" })
-            {
-                var value = Request.Form[field].ToString();
-                if (value.Length > 0 && (!int.TryParse(value, out var number) || number < 0 ||
-                    (field is "MxPriority" or "SrvPriority" or "SrvWeight" or "SrvPort" && number > 65535)))
-                    throw new FormatException("Invalid numeric field: " + field);
-            }
-        }
-
-        private AddRecordRequest ParseAddRecordFromForm()
-        {
-            ValidateNumericForm();
-            var type = Request.Form["RecordType"].ToString();
-            string value = Request.Form["Value"].ToString();
-            if (type == "TXT") value = Request.Form["TxtValue"].ToString();
-            else if (type == "NS") value = Request.Form["NsTarget"].ToString();
-            else if (type == "HTTPS") value = Request.Form["HttpsValue"].ToString();
-
-            return new AddRecordRequest
-            {
-                Subdomain = Request.Form["Subdomain"].ToString(),
-                RecordType = type,
-                Value = value,
-                Ttl = int.TryParse(Request.Form["Ttl"], out var ttl) ? ttl : null,
-                MxPriority = int.TryParse(Request.Form["MxPriority"], out var mx) ? mx : null,
-                SrvPriority = int.TryParse(Request.Form["SrvPriority"], out var sp) ? sp : null,
-                SrvWeight = int.TryParse(Request.Form["SrvWeight"], out var sw) ? sw : null,
-                SrvPort = int.TryParse(Request.Form["SrvPort"], out var sport) ? sport : null
-            };
-        }
-
-        private EditRecordRequest ParseEditRecordFromForm()
-        {
-            ValidateNumericForm();
-            return new EditRecordRequest
-            {
-                Name = Request.Form["Name"].ToString(),
-                Type = Request.Form["Type"].ToString(),
-                OldValue = Request.Form["OldValue"].ToString(),
-                Value = Request.Form["Value"].ToString(),
-                Ttl = int.TryParse(Request.Form["Ttl"], out var ttl) ? ttl : null,
-                MxPriority = int.TryParse(Request.Form["MxPriority"], out var mx) ? mx : null,
-                SrvPriority = int.TryParse(Request.Form["SrvPriority"], out var sp) ? sp : null,
-                SrvWeight = int.TryParse(Request.Form["SrvWeight"], out var sw) ? sw : null,
-                SrvPort = int.TryParse(Request.Form["SrvPort"], out var sport) ? sport : null,
-                SoaNs = Request.Form["SoaNs"].ToString(),
-                SoaEmail = Request.Form["SoaEmail"].ToString(),
-                SoaRefresh = int.TryParse(Request.Form["SoaRefresh"], out var sr) ? sr : null,
-                SoaRetry = int.TryParse(Request.Form["SoaRetry"], out var sry) ? sry : null,
-                SoaExpire = int.TryParse(Request.Form["SoaExpire"], out var se) ? se : null,
-                SoaMinimumTtl = int.TryParse(Request.Form["SoaMinimumTtl"], out var sm) ? sm : null
-            };
-        }
     }
 }

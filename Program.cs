@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using PowerDNS_Web;
+using PowerDNS_Web.Services.DB;
 using Serilog;
 using System.Globalization;
 
@@ -14,7 +15,7 @@ if (!Directory.Exists(logDirectory))
     Directory.CreateDirectory(logDirectory);
 }
 
-// LOGGING
+// ========================= LOGGING =========================
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Warning()
     .WriteTo.File(Path.Combine(logDirectory, "error_log_.log"), rollingInterval: RollingInterval.Minute)
@@ -22,7 +23,7 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// ===== Localization =====
+// ========================= LOCALIZATION =========================
 builder.Services.AddLocalization(opts => opts.ResourcesPath = "Resources");
 
 var supportedCultures = new[] { new CultureInfo("ru"), new CultureInfo("en") };
@@ -35,7 +36,7 @@ builder.Services.Configure<RequestLocalizationOptions>(opts =>
     opts.RequestCultureProviders.Insert(0, new CookieRequestCultureProvider());
 });
 
-// ===== Auth through Cookies =====
+// ========================= AUTH THROUGH COOKIES =========================
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -43,7 +44,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/access-denied";
     });
 
-// ===== Razor Pages =====
+// ========================= RAZOR PAGES =========================
 builder.Services
     .AddRazorPages(options =>
     {
@@ -55,11 +56,11 @@ builder.Services
     .AddViewLocalization()
     .AddDataAnnotationsLocalization();
 
-// ===== App services =====
-builder.Services.AddSingleton<Functions>();
+// ========================= APP SERVICES =========================
+builder.Services.AddSingleton<ApplicationDatabase>();
 builder.Services.AddHttpClient();
 
-// ===== Authorization =====
+// ========================= AUTHORIZATION =========================
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
@@ -69,13 +70,14 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-// ===== Init DB =====
+// ========================= INIT DB =========================
 using (var scope = app.Services.CreateScope())
 {
-    var fn = scope.ServiceProvider.GetRequiredService<Functions>();
-    fn.CheckDTExist();
+    var database = scope.ServiceProvider.GetRequiredService<ApplicationDatabase>();
+    database.InitializeSchema();
 }
 
+// ========================= REQUEST PIPELINE =========================
 var locOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value;
 app.UseRequestLocalization(locOptions);
 
@@ -86,6 +88,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// ========================= CULTURE ENDPOINT =========================
 app.MapPost("/set-culture/{culture}", (string culture, HttpContext ctx) =>
 {
     if (!supportedCultures.Any(item =>
@@ -110,6 +113,7 @@ app.MapPost("/set-culture/{culture}", (string culture, HttpContext ctx) =>
     return Results.Redirect(refererUri.PathAndQuery);
 }).AllowAnonymous();
 
+// ========================= PAGE ROUTES & HOST =========================
 app.MapRazorPages();
 
 app.Run();

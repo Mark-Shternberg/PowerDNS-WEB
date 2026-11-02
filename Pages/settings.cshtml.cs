@@ -7,12 +7,15 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
 
+using PowerDNS_Web.Models.Settings;
+
 namespace PowerDNS_Web.Pages
 {
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Administrator")]
     public class SettingsModel : PageModel
     {
+        // ========================= DEPENDENCIES =========================
         private readonly IConfiguration _configuration;
         private readonly ILogger<SettingsModel> _logger;
         private readonly IStringLocalizer _L;
@@ -20,6 +23,7 @@ namespace PowerDNS_Web.Pages
         [BindProperty]
         public AppSettingsModel Settings { get; set; }
 
+        // ========================= CONSTRUCTION =========================
         public SettingsModel(ILogger<SettingsModel> logger, IConfiguration configuration, IStringLocalizerFactory factory)
         {
             _logger = logger;
@@ -36,9 +40,10 @@ namespace PowerDNS_Web.Pages
             };
         }
 
+        // ========================= PAGE LOAD =========================
         public void OnGet() { }
 
-        // ===== SAVE SETTINGS =====
+        // ========================= SAVE SETTINGS =========================
         public async Task<IActionResult> OnPostSaveSettings([FromBody] AppSettingsModel model)
         {
             try
@@ -46,7 +51,7 @@ namespace PowerDNS_Web.Pages
                 if (model is null)
                     return new JsonResult(new { success = false, message = _L["Err_Save"].Value });
 
-                // --- BASIC VALIDATION ---
+                // ========================= BASIC VALIDATION =========================
                 if (string.IsNullOrWhiteSpace(model.MySQL.Server) ||
                     string.IsNullOrWhiteSpace(model.MySQL.User) ||
                     string.IsNullOrWhiteSpace(model.MySQL.Database))
@@ -67,7 +72,7 @@ namespace PowerDNS_Web.Pages
                     return new JsonResult(new { success = false, message = _L["Err_Recursor_Required"].Value });
                 }
 
-                // --- CHECK MYSQL CONNECTION ---
+                // ========================= CHECK MYSQL CONNECTION =========================
                 string connectionString =
                     $"Server={model.MySQL.Server};User ID={model.MySQL.User};Password={model.MySQL.Password};Database={model.MySQL.Database};";
                 try
@@ -81,7 +86,7 @@ namespace PowerDNS_Web.Pages
                     return new JsonResult(new { success = false, message = string.Format(_L["Err_MySqlConnection"].Value, ex.Message) });
                 }
 
-                // --- WRITE appsettings.json ---
+                // ========================= WRITE APPSETTINGS.JSON =========================
                 string appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
                 if (!System.IO.File.Exists(appSettingsPath))
                 {
@@ -104,7 +109,7 @@ namespace PowerDNS_Web.Pages
                 // Write back
                 await System.IO.File.WriteAllTextAsync(appSettingsPath, updatedJson);
 
-                // --- APPLY SYSTEM CHANGES (recursor/pdns) ---
+                // ========================= APPLY SYSTEM CHANGES (RECURSOR/PDNS) =========================
                 await UpdateRecursorStatus(recEnabled);
 
                 return new JsonResult(new { success = true, message = _L["Msg_SettingsSaved"].Value });
@@ -116,7 +121,7 @@ namespace PowerDNS_Web.Pages
             }
         }
 
-        // ===== RECUSROR/PDNS SERVICE CHANGES =====
+        // ========================= RECURSOR/PDNS SERVICE CHANGES =========================
         private async Task UpdateRecursorStatus(bool enable)
         {
             try
@@ -198,43 +203,5 @@ namespace PowerDNS_Web.Pages
                 _logger.LogError("Failed to execute command '{Command}': {Message}", command, ex.Message);
             }
         }
-    }
-
-    // ===== DTOs =====
-
-    public class AppSettingsModel
-    {
-        public MySQLConnectionSettings MySQL { get; set; } = new();
-        public PowerDNSSettings PowerDNS { get; set; } = new();
-        public RecursorSettings Recursor { get; set; } = new();
-    }
-
-    public class MySQLConnectionSettings
-    {
-        public string Server { get; set; } = string.Empty;
-        public string User { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public string Database { get; set; } = string.Empty;
-    }
-
-    public class PowerDNSSettings
-    {
-        public string Url { get; set; } = string.Empty;
-        public string Api_Key { get; set; } = string.Empty;
-        public string Default_A { get; set; } = string.Empty;
-        public SOASettings SOA { get; set; } = new();
-    }
-
-    public class SOASettings
-    {
-        public string Ns { get; set; } = string.Empty;
-        public string Mail { get; set; } = string.Empty;
-    }
-
-    public class RecursorSettings
-    {
-        public string Url { get; set; } = string.Empty;
-        public string Api_Key { get; set; } = string.Empty;
-        public string Enabled { get; set; } = "Disabled";
     }
 }

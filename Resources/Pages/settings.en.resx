@@ -1,51 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-    <xsd:element name="root" msdata:IsDataSet="true">
-      <xsd:complexType>
-        <xsd:choice maxOccurs="unbounded">
-          <xsd:element name="metadata">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" />
-              </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="assembly">
-            <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="data">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="resheader">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-            </xsd:complexType>
-          </xsd:element>
-        </xsd:choice>
-      </xsd:complexType>
-    </xsd:element>
-  </xsd:schema>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
@@ -59,67 +13,155 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-  <!-- Titles / Sections -->
-  <data name="Settings_Title"><value>Settings</value></data>
-  <data name="Section_MySQL"><value>MySQL Settings</value></data>
-  <data name="Section_PowerDNS"><value>PowerDNS Settings</value></data>
-  <data name="Section_Recursor"><value>Recursor Settings</value></data>
+  <!-- ========================= BTN ========================= -->
+  <data name="Btn_SaveSettings" xml:space="preserve">
+    <value>Save Settings</value>
+  </data>
 
-  <!-- Labels -->
-  <data name="Label_Server"><value>Server</value></data>
-  <data name="Label_User"><value>User</value></data>
-  <data name="Label_Password"><value>Password</value></data>
-  <data name="Label_Database"><value>Database</value></data>
-  <data name="Label_ApiUrl"><value>API URL</value></data>
-  <data name="Label_ApiKey"><value>API Key</value></data>
-  <data name="Label_DefaultA"><value>Default A Record</value></data>
-  <data name="Heading_SOA"><value>SOA Configuration</value></data>
-  <data name="Label_SoaNs"><value>Primary NS</value></data>
-  <data name="Label_SoaMail"><value>Admin Email</value></data>
-  <data name="Label_RecursorStatus"><value>Recursor Status</value></data>
-  <data name="Label_RecursorUrl"><value>Recursor URL</value></data>
+  <!-- ========================= ERR ========================= -->
+  <data name="Err_ConfigNotFound" xml:space="preserve">
+    <value>Configuration file not found.</value>
+  </data>
+  <data name="Err_MySQL_Required" xml:space="preserve">
+    <value>MySQL: server, user and database are required.</value>
+  </data>
+  <data name="Err_MySqlConnection" xml:space="preserve">
+    <value>MySQL connection error: {0}</value>
+  </data>
+  <data name="Err_PowerDNS_Required" xml:space="preserve">
+    <value>PowerDNS: API URL and API Key are required.</value>
+  </data>
+  <data name="Err_Recursor_Required" xml:space="preserve">
+    <value>Recursor: URL and API Key are required when Recursor is Enabled.</value>
+  </data>
+  <data name="Err_Save" xml:space="preserve">
+    <value>Save settings error.</value>
+  </data>
+  <data name="Err_SaveDetailed" xml:space="preserve">
+    <value>Save settings error: {0}</value>
+  </data>
 
-  <!-- Options -->
-  <data name="Option_Enabled"><value>Enabled</value></data>
-  <data name="Option_Disabled"><value>Disabled</value></data>
+  <!-- ========================= HEADING ========================= -->
+  <data name="Heading_SOA" xml:space="preserve">
+    <value>SOA Configuration</value>
+  </data>
 
-  <!-- Buttons / tips -->
-  <data name="Btn_SaveSettings"><value>Save Settings</value></data>
-  <data name="Title_ShowHide"><value>Show/Hide</value></data>
-  <data name="Tip_RecursorAuthoritativeHint"><value>Tip: you can point some zones to authoritative via</value></data>
+  <!-- ========================= LABEL ========================= -->
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>API Key</value>
+  </data>
+  <data name="Label_ApiUrl" xml:space="preserve">
+    <value>API URL</value>
+  </data>
+  <data name="Label_Database" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="Label_DefaultA" xml:space="preserve">
+    <value>Default A Record</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Label_RecursorStatus" xml:space="preserve">
+    <value>Recursor Status</value>
+  </data>
+  <data name="Label_RecursorUrl" xml:space="preserve">
+    <value>Recursor URL</value>
+  </data>
+  <data name="Label_Server" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="Label_SoaMail" xml:space="preserve">
+    <value>Admin Email</value>
+  </data>
+  <data name="Label_SoaNs" xml:space="preserve">
+    <value>Primary NS</value>
+  </data>
+  <data name="Label_User" xml:space="preserve">
+    <value>User</value>
+  </data>
 
-  <!-- Placeholders -->
-  <data name="Placeholder_MySQLServer"><value>127.0.0.1 or host</value></data>
-  <data name="Placeholder_PowerDNSUrl"><value>http://127.0.0.1:8081/api/v1</value></data>
-  <data name="Placeholder_DefaultA"><value>A record IPv4 (e.g., 203.0.113.10)</value></data>
-  <data name="Placeholder_SoaNs"><value>ns1.example.com</value></data>
-  <data name="Placeholder_SoaMail"><value>admin@example.com</value></data>
+  <!-- ========================= MSG ========================= -->
+  <data name="Msg_SettingsSaved" xml:space="preserve">
+    <value>Settings saved.</value>
+  </data>
 
-  <!-- Validation / Toast messages -->
-  <data name="Validation_MySQL_Required"><value>MySQL: server, user and database are required.</value></data>
-  <data name="Validation_PowerDNS_Url"><value>PowerDNS: API URL must be http(s)://…</value></data>
-  <data name="Validation_DefaultA_Invalid"><value>Default A Record: invalid IPv4.</value></data>
-  <data name="Validation_SoaNs_Invalid"><value>SOA Primary NS: invalid host name.</value></data>
-  <data name="Validation_SoaEmail_Invalid"><value>SOA Admin Email: invalid email.</value></data>
-  <data name="Validation_Recursor_Url"><value>Recursor: URL must be http(s)://…</value></data>
+  <!-- ========================= OPTION ========================= -->
+  <data name="Option_Disabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="Option_Enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
 
-  <!-- Save results -->
-  <data name="Save_Success"><value>Settings saved.</value></data>
-  <data name="Save_Failed"><value>Save failed.</value></data>
+  <!-- ========================= PLACEHOLDER ========================= -->
+  <data name="Placeholder_DefaultA" xml:space="preserve">
+    <value>A record IPv4 (e.g., 203.0.113.10)</value>
+  </data>
+  <data name="Placeholder_MySQLServer" xml:space="preserve">
+    <value>127.0.0.1 or host</value>
+  </data>
+  <data name="Placeholder_PowerDNSUrl" xml:space="preserve">
+    <value>http://127.0.0.1:8081/api/v1</value>
+  </data>
+  <data name="Placeholder_SoaMail" xml:space="preserve">
+    <value>admin@example.com</value>
+  </data>
+  <data name="Placeholder_SoaNs" xml:space="preserve">
+    <value>ns1.example.com</value>
+  </data>
 
-   <!-- Success -->
-  <data name="Msg_SettingsSaved"><value>Settings saved.</value></data>
+  <!-- ========================= SAVE ========================= -->
+  <data name="Save_Failed" xml:space="preserve">
+    <value>Save failed.</value>
+  </data>
+  <data name="Save_Success" xml:space="preserve">
+    <value>Settings saved.</value>
+  </data>
 
-  <!-- Generic errors -->
-  <data name="Err_Save"><value>Save settings error.</value></data>
-  <data name="Err_SaveDetailed"><value>Save settings error: {0}</value></data>
-  <data name="Err_ConfigNotFound"><value>Configuration file not found.</value></data>
+  <!-- ========================= SECTION ========================= -->
+  <data name="Section_MySQL" xml:space="preserve">
+    <value>MySQL Settings</value>
+  </data>
+  <data name="Section_PowerDNS" xml:space="preserve">
+    <value>PowerDNS Settings</value>
+  </data>
+  <data name="Section_Recursor" xml:space="preserve">
+    <value>Recursor Settings</value>
+  </data>
 
-  <!-- Validation errors -->
-  <data name="Err_MySQL_Required"><value>MySQL: server, user and database are required.</value></data>
-  <data name="Err_PowerDNS_Required"><value>PowerDNS: API URL and API Key are required.</value></data>
-  <data name="Err_Recursor_Required"><value>Recursor: URL and API Key are required when Recursor is Enabled.</value></data>
+  <!-- ========================= SETTINGS ========================= -->
+  <data name="Settings_Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
 
-  <!-- External errors -->
-  <data name="Err_MySqlConnection"><value>MySQL connection error: {0}</value></data>
+  <!-- ========================= TIP ========================= -->
+  <data name="Tip_RecursorAuthoritativeHint" xml:space="preserve">
+    <value>Tip: you can point some zones to authoritative via</value>
+  </data>
+
+  <!-- ========================= TITLE ========================= -->
+  <data name="Title_ShowHide" xml:space="preserve">
+    <value>Show/Hide</value>
+  </data>
+
+  <!-- ========================= VALIDATION ========================= -->
+  <data name="Validation_DefaultA_Invalid" xml:space="preserve">
+    <value>Default A Record: invalid IPv4.</value>
+  </data>
+  <data name="Validation_MySQL_Required" xml:space="preserve">
+    <value>MySQL: server, user and database are required.</value>
+  </data>
+  <data name="Validation_PowerDNS_Url" xml:space="preserve">
+    <value>PowerDNS: API URL must be http(s)://…</value>
+  </data>
+  <data name="Validation_Recursor_Url" xml:space="preserve">
+    <value>Recursor: URL must be http(s)://…</value>
+  </data>
+  <data name="Validation_SoaEmail_Invalid" xml:space="preserve">
+    <value>SOA Admin Email: invalid email.</value>
+  </data>
+  <data name="Validation_SoaNs_Invalid" xml:space="preserve">
+    <value>SOA Primary NS: invalid host name.</value>
+  </data>
 </root>

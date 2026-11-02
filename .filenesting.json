@@ -1,0 +1,19 @@
+{
+  "dependentFileProviders": {
+    "add": {
+      "pathSegment": {
+        "add": {
+          ".*": [ ".cshtml", ".widgets", ".vm", ".cs" ]
+        }
+      },
+      "extensionToExtension": {
+        "add": {
+          ".Api.cs": [ ".cshtml" ],
+          ".Models.cs": [ ".cshtml" ],
+          ".Operations.cs": [ ".cshtml" ],
+          ".Forms.cs": [ ".cshtml" ]
+        }
+      }
+    }
+  }
+}

@@ -10,11 +10,11 @@ const PAT = {
 
 const encoder = new TextEncoder();
 
-// ===== Helpers =====
+// ========================= HELPERS =========================
 function _isEmpty(s) { return !s || !String(s).trim(); }
 function _t(path) { return (window.t ? window.t(path) : path); }
 
-// ===== Forward zone (FQDN) =====
+// ========================= FORWARD ZONE (FQDN) =========================
 function validateForwardZoneName(zoneName) {
     if (_isEmpty(zoneName)) return _t('Validation.ForwardZone.Required');
     if (zoneName.length > 255) return _t('Validation.ForwardZone.TooLong');
@@ -23,7 +23,7 @@ function validateForwardZoneName(zoneName) {
     return '';
 }
 
-// ===== Reverse prefix (e.g., 192.168.0.) =====
+// ========================= REVERSE PREFIX (E.G., 192.168.0.) =========================
 function validateReverseZoneName(prefix) {
     if (_isEmpty(prefix)) return _t('Validation.ReverseZone.Required');
     if (prefix.length > 255) return _t('Validation.ReverseZone.TooLong');
@@ -32,7 +32,7 @@ function validateReverseZoneName(prefix) {
     return '';
 }
 
-// ===== IPv4 / IPv6 =====
+// ========================= IPV4 / IPV6 =========================
 function validateIPv4(ip) {
     if (_isEmpty(ip)) return _t('Validation.IPv4.Required');
     if (!PAT.IPv4.test(ip)) return _t('Validation.IPv4.Invalid');
@@ -45,14 +45,14 @@ function validateIPv6(ip) {
     return '';
 }
 
-// ===== Subdomain =====
+// ========================= SUBDOMAIN =========================
 function validateSubdomain(subdomain) {
     if (_isEmpty(subdomain)) return _t('Validation.Subdomain.Required');
     if (!PAT.Subdomain.test(subdomain)) return _t('Validation.Subdomain.Invalid');
     return '';
 }
 
-// ===== IPv4:Port =====
+// ========================= IPV4:PORT =========================
 function validateIPv4withPort(ip) {
     const v = (ip || '').trim();
     if (!v) return _t('Validation.IPv4Port.Required');
@@ -63,7 +63,7 @@ function validateIPv4withPort(ip) {
     return '';
 }
 
-// ===== TXT =====
+// ========================= TXT =========================
 function validateTXT(value) {
     const v = (value || '');
     if (!v.trim()) return _t('Validation.TXT.Required');

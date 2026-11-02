@@ -6,10 +6,13 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using PowerDNS_Web.Models.Dashboard;
+
 namespace PowerDNS_Web.Pages
 {
     public class IndexModel : PageModel
     {
+        // ========================= DEPENDENCIES =========================
         private readonly ILogger<IndexModel> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _apiUrl;
@@ -18,6 +21,7 @@ namespace PowerDNS_Web.Pages
         private readonly string _recursorApiKey;
         private readonly IConfiguration _configuration;
 
+        // ========================= CONSTRUCTION =========================
         public IndexModel(ILogger<IndexModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _logger = logger;
@@ -29,6 +33,7 @@ namespace PowerDNS_Web.Pages
             _recursorApiKey = configuration["recursor:api_key"] ?? "";
         }
 
+        // ========================= PAGE LOAD =========================
         public void OnGet()
         {
             ViewData["RecursorEnabled"] = _configuration["recursor:Enabled"] ?? "Disabled";
@@ -40,13 +45,13 @@ namespace PowerDNS_Web.Pages
             {
                 using var client = _httpClientFactory.CreateClient();
 
-                // === FETCH AUTHORITATIVE SERVER STATS ===
+                // ========================= FETCH AUTHORITATIVE SERVER STATS =========================
                 client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Add("X-API-Key", _apiKey);
                 var authResponse = await client.GetAsync($"{_apiUrl}/api/v1/servers/localhost/statistics");
                 var authStats = await DeserializeAuthStatsAsync(authResponse);
 
-                // === FETCH RECURSOR STATS IF ENABLED ===
+                // ========================= FETCH RECURSOR STATS IF ENABLED =========================
                 Dictionary<string, long> recursorStats = new();
                 List<string> topQueries = new();
                 List<string> topRemotes = new();
@@ -88,7 +93,7 @@ namespace PowerDNS_Web.Pages
             }
         }
 
-        // === FUNCTION TO DESERIALIZE QUERY STATS FROM AUTHORITATIVE SERVER ===
+        // ========================= FUNCTION TO DESERIALIZE QUERY STATS FROM AUTHORITATIVE SERVER =========================
         private async Task<List<QueryDetail>> DeserializeQueryStatsAsync(HttpResponseMessage response, string statName)
         {
             if (!response.IsSuccessStatusCode)
@@ -128,7 +133,7 @@ namespace PowerDNS_Web.Pages
             return new List<QueryDetail>();
         }
 
-        // === FUNCTION TO DESERIALIZE AUTHORITATIVE SERVER STATS ===
+        // ========================= FUNCTION TO DESERIALIZE AUTHORITATIVE SERVER STATS =========================
         private async Task<Dictionary<string, long>> DeserializeAuthStatsAsync(HttpResponseMessage response)
         {
             if (!response.IsSuccessStatusCode)
@@ -154,7 +159,7 @@ namespace PowerDNS_Web.Pages
             }
         }
 
-        // === FUNCTION TO DESERIALIZE RECURSOR STATS ===
+        // ========================= FUNCTION TO DESERIALIZE RECURSOR STATS =========================
         private async Task<Dictionary<string, long>> DeserializeRecursorStatsAsync(HttpResponseMessage response)
         {
             if (!response.IsSuccessStatusCode)
@@ -187,7 +192,7 @@ namespace PowerDNS_Web.Pages
                 .ToDictionary(group => group.Key, group => group.Last().GetValueAsLong(), StringComparer.Ordinal)
                ?? new Dictionary<string, long>(StringComparer.Ordinal);
 
-        // === FUNCTION TO FETCH TOP QUERIES AND REMOTES FROM RECURSOR ===
+        // ========================= FUNCTION TO FETCH TOP QUERIES AND REMOTES FROM RECURSOR =========================
         private List<string> GetRecursorTopStats(string command)
         {
             List<string> result = new();
@@ -228,7 +233,7 @@ namespace PowerDNS_Web.Pages
             return result;
         }
 
-        // === PARSE TOP QUERIES AND REMOTES FROM RECURSOR ===
+        // ========================= PARSE TOP QUERIES AND REMOTES FROM RECURSOR =========================
         private List<QueryDetail> ParseTopStats(List<string> rawData)
         {
             var result = new List<QueryDetail>();
@@ -293,35 +298,6 @@ namespace PowerDNS_Web.Pages
             }
 
             return result;
-        }
-    }
-
-    public class QueryDetail
-    {
-        public string? Name { get; set; }
-        public string? Value { get; set; }
-    }
-
-    public class StatEntry
-    {
-        public string? Name { get; set; }
-        public string? Type { get; set; }
-        public JsonElement Value { get; set; }
-
-        public long GetValueAsLong()
-        {
-            try
-            {
-                if (Value.ValueKind == JsonValueKind.Number)
-                    return Value.GetInt64();
-                if (Value.ValueKind == JsonValueKind.String && long.TryParse(Value.GetString(), out long result))
-                    return result;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error parsing statistic value for {Name}: {ex.Message}");
-            }
-            return 0;
         }
     }
 }

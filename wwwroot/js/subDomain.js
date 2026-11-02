@@ -1,7 +1,6 @@
 ﻿// =====================================
 // SUBDOMAIN DIALOG
-// =====================================
-
+// =========================  =========================
 function showAddSubdomainModal() {
     const el = document.getElementById("addSubdomainModal");
     if (!el) return;
