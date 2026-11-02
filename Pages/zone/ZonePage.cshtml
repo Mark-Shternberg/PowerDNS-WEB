@@ -356,12 +356,13 @@
 @section Scripts {
     <script src="~/js/record-validation.js" asp-append-version="true"></script>
     <script>
-        // локализованные строки в JS
-        window.i18n = {
-            CopySuccess: "@L["Copy.Success"].Value",
-            CopyFail: "@L["Copy.Fail"].Value",
-            DelConfirm: "@L["Del.ConfirmTpl"].Value"
-        };
+        // ========================= LOCALIZATION =========================
+        window.i18n = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+        {
+            CopySuccess = L["Copy.Success"].Value,
+            CopyFail = L["Copy.Fail"].Value,
+            DelConfirm = L["Del.ConfirmTpl"].Value
+        }));
     </script>
     <script src="~/js/pages/records.js" asp-append-version="true"></script>
 }
