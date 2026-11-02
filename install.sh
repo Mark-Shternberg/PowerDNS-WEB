@@ -281,6 +281,8 @@ PDNS_PORT=53
 
 cat > "${PDNS_CONFIG}" <<EOF
 launch=gmysql
+primary=yes
+secondary=yes
 gmysql-host=127.0.0.1
 gmysql-dbname=powerdns
 gmysql-user=powerdns

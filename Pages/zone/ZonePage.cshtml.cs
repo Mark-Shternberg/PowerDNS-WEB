@@ -44,6 +44,8 @@ namespace PowerDNS_Web.Pages.zone
         [BindProperty(SupportsGet = true)]
         public string? ZoneName { get; set; }
 
+        public bool IsReadOnly { get; private set; }
+
         public Dictionary<string, List<DnsRecord>> GroupedRecords { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
@@ -68,6 +70,7 @@ namespace PowerDNS_Web.Pages.zone
                     PropertyNameCaseInsensitive = true
                 });
 
+                IsReadOnly = Services.DnsValidation.IsSecondary(zoneData?.Kind);
                 if (zoneData?.Rrsets != null)
                 {
                     GroupedRecords = zoneData.Rrsets
@@ -97,16 +100,16 @@ namespace PowerDNS_Web.Pages.zone
         private string GetSubdomain(string fullRecordName)
         {
             var zn = ZoneName ?? string.Empty;
-            if (fullRecordName.EndsWith(zn + ".", StringComparison.Ordinal))
+            if (fullRecordName.EndsWith(zn + ".", StringComparison.OrdinalIgnoreCase))
             {
                 string subdomain = fullRecordName.Substring(0, fullRecordName.Length - zn.Length - 1);
-                return string.IsNullOrEmpty(subdomain) ? "@" : subdomain;
+                return string.IsNullOrEmpty(subdomain) ? "@" : subdomain.TrimEnd('.');
             }
             return fullRecordName;
         }
 
         // ---------- DTOs ----------
-        public class ZoneData { public List<Rrset> Rrsets { get; set; } = new(); }
+        public class ZoneData { public string Kind { get; set; } = ""; public List<Rrset> Rrsets { get; set; } = new(); }
         public class Rrset { public string? Name { get; set; } public string? Type { get; set; } public int Ttl { get; set; } public List<Record> Records { get; set; } = new(); }
         public class Record { public string? Content { get; set; } public bool Disabled { get; set; } }
         public class DnsRecord { public string Name { get; set; } = string.Empty; public string Type { get; set; } = string.Empty; public List<string> Content { get; set; } = new(); public int Ttl { get; set; } }
@@ -150,7 +153,7 @@ namespace PowerDNS_Web.Pages.zone
             string.IsNullOrWhiteSpace(s) ? s : (s.EndsWith(".", StringComparison.Ordinal) ? s : s + ".");
 
         // CANONICAL ZONE ID WITH TRAILING DOT
-        private string ZoneId => EnsureDot((ZoneName ?? string.Empty).Trim());
+        private string ZoneId => Uri.EscapeDataString(EnsureDot((ZoneName ?? string.Empty).Trim()));
 
         // === ADD RECORD (TempData + Redirect) ===
         public async Task<IActionResult> OnPostAddRecordAsync()
@@ -183,10 +186,10 @@ namespace PowerDNS_Web.Pages.zone
                 }
 
                 var subdomain = (request.Subdomain ?? "@").TrimEnd('.');
-                var fullDomain = subdomain == "@" ? ZoneName! : $"{subdomain}.{ZoneName}";
+                var fullDomain = EnsureDot(subdomain == "@" || subdomain == "" ? ZoneName!.TrimEnd('.') : $"{subdomain}.{ZoneName!.TrimEnd('.')}");
 
                 // fetch zone
-                var getReq = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}");
+                var getReq = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneId}");
                 getReq.Headers.Add("X-API-Key", _apiKey);
                 var getResp = await _httpClient.SendAsync(getReq);
                 if (!getResp.IsSuccessStatusCode)
@@ -198,20 +201,21 @@ namespace PowerDNS_Web.Pages.zone
 
                 var zoneJson = await getResp.Content.ReadAsStringAsync();
                 var zoneData = JsonSerializer.Deserialize<ZoneData>(zoneJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                if (zoneData?.Rrsets == null)
+                if (zoneData?.Rrsets == null || Services.DnsValidation.IsSecondary(zoneData.Kind))
                 {
-                    TempData["NoteError"] = _L["Err.ZoneEmpty"].Value;
+                    TempData["NoteError"] = Services.DnsValidation.IsSecondary(zoneData?.Kind)
+                        ? _L["Err.SecondaryReadOnly"].Value : _L["Err.ZoneEmpty"].Value;
                     return RedirectToPage(new { ZoneName });
                 }
 
                 var recordType = request.RecordType!;
-                var existing = zoneData.Rrsets.FirstOrDefault(r => r.Name == fullDomain && r.Type == recordType);
+                var existing = zoneData.Rrsets.FirstOrDefault(r => string.Equals(r.Name, fullDomain, StringComparison.OrdinalIgnoreCase) && r.Type == recordType);
                 var updated = existing?.Records?.ToList() ?? new List<Record>();
 
                 // normalize & build content
                 var rawVal = request.Value ?? string.Empty;
 
-                if (recordType == "NS")
+                if (recordType is "NS" or "CNAME" or "PTR")
                     rawVal = rawVal.TrimEnd('.') + ".";
 
                 string content = rawVal;
@@ -242,7 +246,14 @@ namespace PowerDNS_Web.Pages.zone
 
                 updated.Add(new Record { Content = content, Disabled = false });
 
-                int ttl = request.Ttl is >= 300 and <= 604800 ? request.Ttl.Value : 3600;
+                int ttl = request.Ttl ?? existing?.Ttl ?? 3600;
+                var validationError = Services.DnsValidation.RecordError(fullDomain, EnsureDot(ZoneName!), recordType, content, ttl);
+                if (validationError != null || (recordType == "CNAME" && zoneData.Rrsets.Any(r => string.Equals(r.Name, fullDomain, StringComparison.OrdinalIgnoreCase))) ||
+                    (recordType != "CNAME" && zoneData.Rrsets.Any(r => string.Equals(r.Name, fullDomain, StringComparison.OrdinalIgnoreCase) && r.Type == "CNAME")))
+                {
+                    TempData["NoteError"] = validationError ?? "CNAME cannot coexist with other records.";
+                    return RedirectToPage(new { ZoneName });
+                }
 
                 var patch = new
                 {
@@ -252,7 +263,7 @@ namespace PowerDNS_Web.Pages.zone
                 };
 
                 var json = JsonSerializer.Serialize(patch, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-                var patchReq = new HttpRequestMessage(HttpMethod.Patch, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}")
+                var patchReq = new HttpRequestMessage(HttpMethod.Patch, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneId}")
                 {
                     Content = new StringContent(json, Encoding.UTF8, "application/json")
                 };
@@ -302,7 +313,7 @@ namespace PowerDNS_Web.Pages.zone
                 string fqdn = name.TrimEnd('.') + ".";
 
                 // fetch current
-                var getRequest = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}");
+                var getRequest = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneId}");
                 getRequest.Headers.Add("X-API-Key", _apiKey);
                 var getResponse = await _httpClient.SendAsync(getRequest);
                 if (!getResponse.IsSuccessStatusCode)
@@ -314,9 +325,10 @@ namespace PowerDNS_Web.Pages.zone
 
                 var jsonResponse = await getResponse.Content.ReadAsStringAsync();
                 var zoneData = JsonSerializer.Deserialize<ZoneData>(jsonResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                if (zoneData?.Rrsets == null)
+                if (zoneData?.Rrsets == null || Services.DnsValidation.IsSecondary(zoneData.Kind))
                 {
-                    TempData["NoteError"] = _L["Err.ZoneEmpty"].Value;
+                    TempData["NoteError"] = Services.DnsValidation.IsSecondary(zoneData?.Kind)
+                        ? _L["Err.SecondaryReadOnly"].Value : _L["Err.ZoneEmpty"].Value;
                     return RedirectToPage(new { ZoneName });
                 }
 
@@ -324,6 +336,12 @@ namespace PowerDNS_Web.Pages.zone
                 if (recordSet == null || recordSet.Records == null || recordSet.Records.Count == 0)
                 {
                     TempData["NoteError"] = _L["Err.RecordNotFound"].Value;
+                    return RedirectToPage(new { ZoneName });
+                }
+
+                if (type == "SOA")
+                {
+                    TempData["NoteError"] = "The zone SOA cannot be deleted.";
                     return RedirectToPage(new { ZoneName });
                 }
 
@@ -340,14 +358,14 @@ namespace PowerDNS_Web.Pages.zone
                             type = type,
                             ttl = recordSet.Ttl,
                             changetype = changeType,
-                            records = updatedRecords.Select(r => new { content = r.Content ?? string.Empty, disabled = false }).ToArray()
+                            records = updatedRecords.Select(r => new { content = r.Content ?? string.Empty, disabled = r.Disabled }).ToArray()
                         }
                     }
                 };
 
                 var json = JsonSerializer.Serialize(deleteRecord, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
-                var requestMessage = new HttpRequestMessage(HttpMethod.Patch, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}")
+                var requestMessage = new HttpRequestMessage(HttpMethod.Patch, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneId}")
                 {
                     Content = new StringContent(json, Encoding.UTF8, "application/json")
                 };
@@ -361,7 +379,7 @@ namespace PowerDNS_Web.Pages.zone
                     return RedirectToPage(new { ZoneName });
                 }
 
-                if (_recursor_Enabled == "Enabled") ExecuteBashCommand("rec_control reload-zones");
+
 
                 TempData["NoteSuccess"] = _L["Ans.Record.Deleted"].Value;
                 return RedirectToPage(new { ZoneName });
@@ -387,7 +405,7 @@ namespace PowerDNS_Web.Pages.zone
             {
                 var req = ParseEditRecordFromForm();
 
-                if (string.IsNullOrWhiteSpace(req.Name) || string.IsNullOrWhiteSpace(req.Type) || string.IsNullOrWhiteSpace(req.Value))
+                if (string.IsNullOrWhiteSpace(req.Name) || string.IsNullOrWhiteSpace(req.Type) || (req.Type != "SOA" && string.IsNullOrWhiteSpace(req.Value)))
                 {
                     TempData["NoteError"] = _L["Err.InvalidRequest"].Value;
                     return RedirectToPage(new { ZoneName });
@@ -396,7 +414,7 @@ namespace PowerDNS_Web.Pages.zone
                 string fqdn = req.Name.TrimEnd('.') + ".";
 
                 // fetch
-                var getRequest = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}");
+                var getRequest = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneId}");
                 getRequest.Headers.Add("X-API-Key", _apiKey);
                 var getResponse = await _httpClient.SendAsync(getRequest);
                 if (!getResponse.IsSuccessStatusCode)
@@ -408,9 +426,10 @@ namespace PowerDNS_Web.Pages.zone
 
                 var jsonResponse = await getResponse.Content.ReadAsStringAsync();
                 var zoneData = JsonSerializer.Deserialize<ZoneData>(jsonResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                if (zoneData?.Rrsets == null)
+                if (zoneData?.Rrsets == null || Services.DnsValidation.IsSecondary(zoneData.Kind))
                 {
-                    TempData["NoteError"] = _L["Err.ZoneEmpty"].Value;
+                    TempData["NoteError"] = Services.DnsValidation.IsSecondary(zoneData?.Kind)
+                        ? _L["Err.SecondaryReadOnly"].Value : _L["Err.ZoneEmpty"].Value;
                     return RedirectToPage(new { ZoneName });
                 }
 
@@ -423,10 +442,11 @@ namespace PowerDNS_Web.Pages.zone
 
                 var remainingRecords = recordSet.Records
                     .Where(r => (r.Content ?? string.Empty) != (req.OldValue ?? string.Empty))
-                    .Select(r => new { content = r.Content ?? string.Empty, disabled = false })
+                    .Select(r => new { content = r.Content ?? string.Empty, disabled = r.Disabled })
                     .ToList();
 
-                string newRecordContent = (req.Value ?? string.Empty).TrimEnd('.');
+                string newRecordContent = (req.Value ?? string.Empty).Trim();
+                if (req.Type is "NS" or "CNAME" or "PTR") newRecordContent = EnsureDot(newRecordContent);
 
                 if (req.Type == "MX")
                 {
@@ -448,7 +468,7 @@ namespace PowerDNS_Web.Pages.zone
                 {
                     string soaNs = ((req.SoaNs ?? string.Empty).TrimEnd('.')) + ".";
                     string soaEmail = ((req.SoaEmail ?? string.Empty).TrimEnd('.')) + ".";
-                    long soaSerial = 0; // серийник обновит PowerDNS
+                    var soaSerial = recordSet.Records[0].Content?.Split(' ', StringSplitOptions.RemoveEmptyEntries).ElementAtOrDefault(2) ?? "0";
                     int soaRefresh = req.SoaRefresh ?? 10800;
                     int soaRetry = req.SoaRetry ?? 3600;
                     int soaExpire = req.SoaExpire ?? 604800;
@@ -460,7 +480,18 @@ namespace PowerDNS_Web.Pages.zone
                     newRecordContent = FormatTxtForPowerDNS(req.Value ?? string.Empty);
                 }
 
-                remainingRecords.Add(new { content = newRecordContent, disabled = false });
+                if (!recordSet.Records.Any(r => r.Content == req.OldValue))
+                {
+                    TempData["NoteError"] = "Record changed or was removed. Refresh the page.";
+                    return RedirectToPage(new { ZoneName });
+                }
+                var validationError = Services.DnsValidation.RecordError(fqdn, EnsureDot(ZoneName!), req.Type!, newRecordContent, req.Ttl ?? recordSet.Ttl);
+                if (validationError != null || remainingRecords.Any(r => r.content == newRecordContent))
+                {
+                    TempData["NoteError"] = validationError ?? _L["Err.RecordExists"].Value;
+                    return RedirectToPage(new { ZoneName });
+                }
+                remainingRecords.Add(new { content = newRecordContent, disabled = recordSet.Records.First(r => r.Content == req.OldValue).Disabled });
 
                 var updateRecord = new
                 {
@@ -476,7 +507,7 @@ namespace PowerDNS_Web.Pages.zone
                 };
 
                 var json = JsonSerializer.Serialize(updateRecord, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-                var requestMessage = new HttpRequestMessage(HttpMethod.Patch, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneName}")
+                var requestMessage = new HttpRequestMessage(HttpMethod.Patch, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneId}")
                 {
                     Content = new StringContent(json, Encoding.UTF8, "application/json")
                 };
@@ -490,7 +521,6 @@ namespace PowerDNS_Web.Pages.zone
                     return RedirectToPage(new { ZoneName });
                 }
 
-                if (_recursor_Enabled == "Enabled") ExecuteBashCommand("rec_control reload-zones");
 
                 TempData["NoteSuccess"] = _L["Ans.Record.Updated"].Value;
                 return RedirectToPage(new { ZoneName });
@@ -531,6 +561,22 @@ namespace PowerDNS_Web.Pages.zone
 
                 // NORMALIZE: ONLY LABELS, NO ZONE APPENDED BY USER
                 var label = raw.Trim('.');
+                if (!Services.DnsValidation.IsName(label, true) || !System.Net.IPAddress.TryParse(_default_IP, out var defaultAddress) || defaultAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    TempData["NoteError"] = _L["Err.InvalidRequest"].Value;
+                    return RedirectToPage(new { ZoneName });
+                }
+                using var zoneRequest = new HttpRequestMessage(HttpMethod.Get, $"{_apiUrl}/api/v1/servers/localhost/zones/{ZoneId}");
+                zoneRequest.Headers.Add("X-API-Key", _apiKey);
+                using var zoneResponse = await _httpClient.SendAsync(zoneRequest);
+                if (!zoneResponse.IsSuccessStatusCode) return StatusCode((int)zoneResponse.StatusCode);
+                var currentZone = JsonSerializer.Deserialize<ZoneData>(await zoneResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (currentZone == null || Services.DnsValidation.IsSecondary(currentZone.Kind) ||
+                    currentZone.Rrsets.Any(r => string.Equals(r.Name, EnsureDot($"{label}.{ZoneName!.TrimEnd('.')}"), StringComparison.OrdinalIgnoreCase)))
+                {
+                    TempData["NoteError"] = "This name already exists or the zone is read-only.";
+                    return RedirectToPage(new { ZoneName });
+                }
 
                 // FORBID ACCIDENTAL ROOT/WHOLE-ZONE INPUTS
                 if (label == "@" ||
@@ -575,8 +621,7 @@ namespace PowerDNS_Web.Pages.zone
                     return RedirectToPage(new { ZoneName });
                 }
 
-                if (_recursor_Enabled == "Enabled")
-                    ExecuteBashCommand("rec_control reload-zones");
+
 
                 TempData["NoteSuccess"] = _L["Ans.Subdomain.Added"].Value;
                 return RedirectToPage(new { ZoneName });
@@ -590,52 +635,41 @@ namespace PowerDNS_Web.Pages.zone
         }
 
         // ---------- helpers ----------
-        private void ExecuteBashCommand(string command)
-        {
-            try
-            {
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "/bin/bash",
-                    Arguments = $"-c \"{command}\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                var process = Process.Start(psi);
-                if (process == null)
-                {
-                    _logger.LogError("Failed to start process for '{Cmd}'", command);
-                    return;
-                }
-
-                using (process)
-                {
-                    process.WaitForExit();
-                    var err = process.StandardError.ReadToEnd();
-                    if (!string.IsNullOrEmpty(err))
-                        _logger.LogError("Command '{Cmd}' error: {Err}", command, err);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to execute command '{Cmd}'", command);
-            }
-        }
-
         private static string FormatTxtForPowerDNS(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw)) return "\"\"";
-            raw = raw.Trim();
-            if (raw.StartsWith("\"")) raw = raw[1..];
-            if (raw.EndsWith("\"")) raw = raw[..^1];
-            return $"\"{raw}\"";
+            var chunks = new List<string>();
+            var chunk = new StringBuilder();
+            int bytes = 0;
+            foreach (var rune in raw.EnumerateRunes())
+            {
+                if (bytes + rune.Utf8SequenceLength > 255)
+                {
+                    chunks.Add(chunk.ToString());
+                    chunk.Clear();
+                    bytes = 0;
+                }
+                chunk.Append(rune.ToString());
+                bytes += rune.Utf8SequenceLength;
+            }
+            chunks.Add(chunk.ToString());
+            return string.Join(" ", chunks.Select(c => "\"" + c.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\""));
+        }
+
+        private void ValidateNumericForm()
+        {
+            foreach (var field in new[] { "Ttl", "MxPriority", "SrvPriority", "SrvWeight", "SrvPort", "SoaRefresh", "SoaRetry", "SoaExpire", "SoaMinimumTtl" })
+            {
+                var value = Request.Form[field].ToString();
+                if (value.Length > 0 && (!int.TryParse(value, out var number) || number < 0 ||
+                    (field is "MxPriority" or "SrvPriority" or "SrvWeight" or "SrvPort" && number > 65535)))
+                    throw new FormatException("Invalid numeric field: " + field);
+            }
         }
 
         private AddRecordRequest ParseAddRecordFromForm()
         {
+            ValidateNumericForm();
             var type = Request.Form["RecordType"].ToString();
             string value = Request.Form["Value"].ToString();
             if (type == "TXT") value = Request.Form["TxtValue"].ToString();
@@ -657,6 +691,7 @@ namespace PowerDNS_Web.Pages.zone
 
         private EditRecordRequest ParseEditRecordFromForm()
         {
+            ValidateNumericForm();
             return new EditRecordRequest
             {
                 Name = Request.Form["Name"].ToString(),

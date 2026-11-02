@@ -156,4 +156,5 @@
   <data name="Ans.Record.Deleted"><value>Record deleted successfully!</value></data>
   <data name="Ans.Record.Updated"><value>Record updated successfully!</value></data>
   <data name="Ans.Subdomain.Added"><value>Subdomain added successfully!</value></data>
+  <data name="Err.SecondaryReadOnly" xml:space="preserve"><value>Secondary zones are read-only. Edit records on the primary server.</value></data>
 </root>

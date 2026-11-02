@@ -137,4 +137,5 @@
   <!-- JS toasts -->
   <data name="Copy.Success"><value>Скопировано в буфер обмена</value></data>
   <data name="Copy.Fail"><value>Не удалось скопировать</value></data>
+  <data name="Err.SecondaryReadOnly" xml:space="preserve"><value>Slave-зона доступна только для чтения. Изменяйте записи на primary-сервере.</value></data>
 </root>

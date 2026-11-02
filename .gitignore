@@ -368,3 +368,4 @@ FodyWeavers.xsd
 *.ps1
 *.psd
 /appsettings.Development.json
+tests/

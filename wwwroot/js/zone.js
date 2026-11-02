@@ -56,6 +56,8 @@
             if (revEl) { revEl.removeAttribute('required'); revEl.value = ''; }
         }
 
+        const dnssecEl = $('#zone-dnssec');
+        if (dnssecEl) dnssecEl.disabled = kind === 'Slave';
         const slaveBlock = $('#slave-block');
         const masterEl = $('#zone-master');
 
@@ -186,7 +188,7 @@
         // edit state: no reverse, lock name+type визуально
         $('#forward-block').classList.remove('d-none');
         $('#reverse-block').classList.add('d-none');
-        $('#zone-kind').disabled = true;   // disabled — но hidden "kind" унесёт реальное значение
+        $('#zone-kind').disabled = false;   // disabled — но hidden "kind" унесёт реальное значение
         $('#zone-name').readOnly = true;
 
         applyConditionalRequireds();

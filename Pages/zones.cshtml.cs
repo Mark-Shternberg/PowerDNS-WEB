@@ -107,6 +107,8 @@ namespace PowerDNS_Web.Pages
             public string? kind { get; set; }
             public bool dnssec { get; set; }
             public long serial { get; set; }
+            public string? Master { get; set; }
+            public List<string>? masters { get; set; }
         }
 
         // -------------------- Helpers --------------------
@@ -166,20 +168,27 @@ namespace PowerDNS_Web.Pages
 
             using var client = NewClientWithPdnsKey();
 
-            var masters = (kind == "Slave" && !string.IsNullOrWhiteSpace(masterSingle))
-                ? new List<string> { masterSingle }
-                : null;
+            if (!Services.DnsValidation.IsName(name) || kind is not ("Native" or "Master" or "Slave"))
+                return (false, _L["Err.InvalidParams"].Value);
+            var masters = Services.DnsValidation.Masters(masterSingle);
+            if (kind == "Slave" && (masters.Length == 0 || masters.Any(m => !Services.DnsValidation.IsEndpoint(m))))
+                return (false, _L["Err.InvalidParams"].Value);
+            if (kind != "Slave") masters = Array.Empty<string>();
+            if (kind == "Slave") dnssec = false;
 
             var zonePayload = new
             {
                 name,
                 kind,
                 dnssec,
+                soa_edit_api = "DEFAULT",
+                nameservers = kind == "Slave" ? null : new[] { EnsureTrailingDot(_configuration["pdns:soa:ns"] ?? "ns1.default.com.") },
                 masters
             };
 
             var content = new StringContent(JsonSerializer.Serialize(zonePayload, new JsonSerializerOptions
             {
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             }), Encoding.UTF8, "application/json");
 
@@ -190,30 +199,6 @@ namespace PowerDNS_Web.Pages
             {
                 _logger.LogError("Create zone failed: {Code} {Body}", createResp.StatusCode, createBody);
                 return (false, _L["Err.PowerDnsApi", createBody].Value);
-            }
-
-            // 2) DNSSEC keys (if enabled)
-            if (dnssec)
-            {
-                var dnssecPayload = new
-                {
-                    active = true,
-                    keytype = "ksk",
-                    algorithm = "ECDSAP256SHA256"
-                };
-
-                var dnssecContent = new StringContent(JsonSerializer.Serialize(dnssecPayload, new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                }), Encoding.UTF8, "application/json");
-
-                var dnssecResp = await client.PostAsync($"{apiBase}/api/v1/servers/localhost/zones/{name}/cryptokeys", dnssecContent);
-                var dnssecBody = await dnssecResp.Content.ReadAsStringAsync();
-                if (!dnssecResp.IsSuccessStatusCode)
-                {
-                    _logger.LogError("Failed to create DNSSEC keys: {Body}", dnssecBody);
-                    return (false, _L["Err.CreateDnssecKeys", dnssecBody].Value);
-                }
             }
 
             // 3) Add SOA (not for Slave)
@@ -260,6 +245,9 @@ namespace PowerDNS_Web.Pages
                     return (false, _L["Err.AddSoa", soaBody].Value);
                 }
 
+            }
+
+                // Forward secondary zones too.
                 // 4) Recursor (if enabled)
                 if (_configuration["recursor:Enabled"] == "Enabled")
                 {
@@ -288,12 +276,11 @@ namespace PowerDNS_Web.Pages
                         }
                     }
                 }
-            }
 
             return (true, _L["Msg.ZoneAdded"].Value);
         }
 
-        private async Task<(bool ok, string message)> UpdateZoneAsync(string nameRaw, string kind, bool dnssec, long serial)
+        private async Task<(bool ok, string message)> UpdateZoneAsync(string nameRaw, string kind, bool dnssec, long serial, string? masterInput)
         {
             var name = EnsureTrailingDot(nameRaw?.Trim());
             var apiBase = _configuration["pdns:url"];
@@ -319,8 +306,13 @@ namespace PowerDNS_Web.Pages
             });
             if (currentZone == null) return (false, _L["Err.ParseZoneData"].Value);
 
-            bool wasDnssec = currentZone.dnssec;
-            bool isDnssec = dnssec;
+            if (!Services.DnsValidation.IsName(name) || kind is not ("Native" or "Master" or "Slave"))
+                return (false, _L["Err.InvalidParams"].Value);
+            var masters = masterInput == null ? currentZone.masters.ToArray() : Services.DnsValidation.Masters(masterInput);
+            if (kind == "Slave" && (masters.Length == 0 || masters.Any(m => !Services.DnsValidation.IsEndpoint(m))))
+                return (false, _L["Err.InvalidParams"].Value);
+            if (kind != "Slave") masters = Array.Empty<string>();
+            bool isDnssec = kind == "Slave" ? currentZone.dnssec : dnssec;
 
             // 2) Update
             var updatePayload = new
@@ -328,7 +320,8 @@ namespace PowerDNS_Web.Pages
                 name,
                 kind,
                 dnssec = isDnssec,
-                serial = serial > 0 ? serial : 0
+                masters,
+                soa_edit_api = "DEFAULT"
             };
 
             var content = new StringContent(JsonSerializer.Serialize(updatePayload, new JsonSerializerOptions
@@ -342,42 +335,6 @@ namespace PowerDNS_Web.Pages
             {
                 _logger.LogError("PowerDNS API error on update: {Code} {Body}", putResp.StatusCode, putBody);
                 return (false, _L["Err.PowerDnsApi", putBody].Value);
-            }
-
-            // 3) DNSSEC transitions
-            if (!wasDnssec && isDnssec)
-            {
-                var key = new { keytype = "ksk", active = true, algorithm = "ECDSAP256SHA256", bits = 256 };
-                var keyContent = new StringContent(JsonSerializer.Serialize(key), Encoding.UTF8, "application/json");
-                var kResp = await client.PostAsync($"{apiUrl}/cryptokeys", keyContent);
-                if (!kResp.IsSuccessStatusCode)
-                {
-                    var err = await kResp.Content.ReadAsStringAsync();
-                    _logger.LogError("Failed to create DNSSEC key for '{Zone}': {Err}", name, err);
-                    return (false, _L["Err.CreateDnssecKeyGeneric", err].Value);
-                }
-            }
-            else if (wasDnssec && !isDnssec)
-            {
-                var ks = await client.GetAsync($"{apiUrl}/cryptokeys");
-                if (ks.IsSuccessStatusCode)
-                {
-                    var j = await ks.Content.ReadAsStringAsync();
-                    var keys = JsonSerializer.Deserialize<List<DnssecKey>>(j, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    }) ?? new();
-
-                    foreach (var k in keys)
-                    {
-                        var del = await client.DeleteAsync($"{apiUrl}/cryptokeys/{k.Id}");
-                        if (!del.IsSuccessStatusCode)
-                        {
-                            var err = await del.Content.ReadAsStringAsync();
-                            _logger.LogError("Failed to delete DNSSEC key {KeyId} for '{Zone}': {Err}", k.Id, name, err);
-                        }
-                    }
-                }
             }
 
             return (true, _L["Msg.ZoneUpdated"].Value);
@@ -487,7 +444,7 @@ namespace PowerDNS_Web.Pages
                 }
 
                 var masterFromJson = !string.IsNullOrWhiteSpace(req.Master) ? req.Master
-                                  : (req.masters != null && req.masters.Count > 0 ? req.masters[0] : null);
+                                  : (req.masters != null && req.masters.Count > 0 ? string.Join(",", req.masters) : null);
 
                 var (ok2, msg2) = await CreateZoneAsync(nameJson, req.kind, req.dnssec, masterFromJson);
                 if (!ok2) return new JsonResult(new { success = false, message = msg2 }) { StatusCode = 400 };
@@ -526,7 +483,7 @@ namespace PowerDNS_Web.Pages
                         return RedirectToPage();
                     }
 
-                    var (ok, msg) = await UpdateZoneAsync(name, kind, dnssec, serial);
+                    var (ok, msg) = await UpdateZoneAsync(name, kind, dnssec, serial, form["Master"].ToString());
                     TempData[ok ? "NoteSuccess" : "NoteError"] = msg;
                     return RedirectToPage();
                 }
@@ -541,7 +498,7 @@ namespace PowerDNS_Web.Pages
                 if (req == null || string.IsNullOrWhiteSpace(req.name) || string.IsNullOrWhiteSpace(req.kind))
                     return new JsonResult(new { success = false, message = _L["Err.InvalidParams"].ToString() }) { StatusCode = 400 };
 
-                var (ok2, msg2) = await UpdateZoneAsync(req.name, req.kind, req.dnssec, req.serial);
+                var (ok2, msg2) = await UpdateZoneAsync(req.name, req.kind, req.dnssec, req.serial, req.Master ?? (req.masters == null ? null : string.Join(",", req.masters)));
                 if (!ok2) return new JsonResult(new { success = false, message = msg2 }) { StatusCode = 400 };
                 return new JsonResult(new { success = true, message = msg2 });
             }

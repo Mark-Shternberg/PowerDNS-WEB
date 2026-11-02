@@ -8,6 +8,10 @@
     ViewData["Title"] = L["Title.ManageZone", Model.ZoneName ?? ""];
 }
 
+@if (Model.IsReadOnly)
+{
+    <div class="alert alert-info" role="status">@(System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ru" ? "Slave-зона: записи обновляются с primary-сервера. Локальное редактирование отключено." : "Secondary zone: records are transferred from its primary. Local editing is disabled.")</div>
+}
 <div class="container mt-4">
 
     <!-- Header -->
@@ -30,18 +34,20 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h5 class="card-title mb-3"><i class="fa fa-plus-circle me-2"></i>@L["AddRecord.Title"].Value</h5>
-            <form method="post" asp-page-handler="AddRecord" class="row g-3 needs-validation" novalidate>
+            <form method="post" asp-page-handler="AddRecord" class="needs-validation" novalidate>
+                <fieldset class="row g-3" disabled="@Model.IsReadOnly">
                 <div class="col-md-3">
                     <label class="form-label">@L["Form.Subdomain"].Value</label>
                     <div class="input-group">
-                        <select id="subdomainSelect" name="Subdomain"
-                                class="form-select rounded-end-0" required>
-                            <option value="@@" selected>@L["Form.Root"].Value</option>
+                        <input id="subdomainSelect" name="Subdomain" list="existingOwners"
+                               class="form-control rounded-end-0" value="@@" placeholder="@@, www, _sip._tcp" required autocomplete="off">
+                        <datalist id="existingOwners">
+                            <option value="@@">@L["Form.Root"].Value</option>
                             @foreach (var subdomain in Model.GroupedRecords.Keys.Where(k => k != "@"))
                             {
                                 <option value="@subdomain">@subdomain</option>
                             }
-                        </select>
+                        </datalist>
                         <button type="button"
                                 class="btn btn-primary rounded-start-0 rounded-end border-start-0"
                                 data-bs-toggle="modal"
@@ -70,7 +76,7 @@
 
                 <div class="col-md-2">
                     <label class="form-label">TTL</label>
-                    <input type="number" name="Ttl" id="addTtl" class="form-control" min="300" max="604800" step="1" value="3600" required>
+                    <input type="number" name="Ttl" id="addTtl" class="form-control" min="0" max="2147483647" step="1" value="3600" required>
                     <div class="invalid-feedback">300…604800.</div>
                 </div>
 
@@ -107,7 +113,7 @@
                 <!-- MX -->
                 <div class="col-md-2 d-none" id="mxPriorityField">
                     <label class="form-label">@L["Form.Priority"].Value</label>
-                    <input type="number" id="mxPriority" name="MxPriority" class="form-control" min="1" max="1000" step="1" value="10">
+                    <input type="number" id="mxPriority" name="MxPriority" class="form-control" min="0" max="65535" step="1" value="10">
                     <div class="invalid-feedback">@L["Val.MxPriority"].Value</div>
                 </div>
 
@@ -130,6 +136,7 @@
                 </div>
 
                 @Html.AntiForgeryToken()
+                </fieldset>
             </form>
         </div>
     </div>
@@ -184,14 +191,14 @@
                                 <td class="text-nowrap">
                                     <button type="button" class="btn btn-warning btn-sm"
                                             title="@L["Btn.Edit"].Value"
-                                            onclick="openEdit('@record.Name','@record.Type','@value','@record.Ttl')">
+                                            data-record-action="edit" data-name="@record.Name" data-type="@record.Type" data-value="@value" data-ttl="@record.Ttl" disabled="@Model.IsReadOnly">
                                         <i class="fa fa-edit"></i>
                                     </button>
                                     @if (record.Type != "SOA")
                                     {
                                         <button type="button" class="btn btn-danger btn-sm"
                                                 title="@L["Btn.Delete"].Value"
-                                                onclick="openDelete('@record.Name','@record.Type','@value')">
+                                                data-record-action="delete" data-name="@record.Name" data-type="@record.Type" data-value="@value" disabled="@Model.IsReadOnly">
                                             <i class="fa fa-trash"></i>
                                         </button>
                                     }
@@ -236,7 +243,7 @@
                     <!-- MX -->
                     <div class="mb-3 d-none" id="editMxPriorityField">
                         <label class="form-label">@L["Form.Priority"].Value</label>
-                        <input type="number" id="editMxPriority" name="MxPriority" class="form-control" min="1" max="1000" step="1" value="10">
+                        <input type="number" id="editMxPriority" name="MxPriority" class="form-control" min="0" max="65535" step="1" value="10">
                     </div>
 
                     <!-- SRV -->
@@ -284,7 +291,7 @@
 
                     <div class="mb-3">
                         <label class="form-label">TTL</label>
-                        <input type="number" id="editRecordTtl" name="Ttl" class="form-control" min="300" max="604800" step="1" value="3600" required>
+                        <input type="number" id="editRecordTtl" name="Ttl" class="form-control" min="0" max="2147483647" step="1" value="3600" required>
                         <div class="invalid-feedback">300…604800.</div>
                     </div>
 
@@ -347,6 +354,7 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/record-validation.js" asp-append-version="true"></script>
     <script>
         // локализованные строки в JS
         window.i18n = {
@@ -392,6 +400,10 @@
           else if (t === 'MX') { show('mxPriorityField'); val.required = true; help.classList.remove('d-none'); }
           else if (t === 'SRV') { ['srvPriorityField','srvWeightField','srvPortField'].forEach(show); val.required = true; help.classList.remove('d-none'); }
           else { val.required = true; if (t==='CNAME' || t==='AAAA' || t==='A') help.classList.remove('d-none'); }
+          document.querySelectorAll('#recordValue, #txtValue, #nsTarget, #httpsValue, #mxPriority, #srvPriority, #srvWeight, #srvPort').forEach(input => {
+            input.disabled = !!input.closest('.d-none');
+            input.setCustomValidity('');
+          });
         }
         toggleAddRequired();
 
@@ -463,6 +475,14 @@
             }
         });
 
+        document.addEventListener('click', event => {
+          const button = event.target.closest('[data-record-action]');
+          if (!button || button.disabled) return;
+          const d = button.dataset;
+          if (d.recordAction === 'edit') openEdit(d.name, d.type, d.value, d.ttl);
+          else openDelete(d.name, d.type, d.value);
+        });
+
         // Edit modal open
         function openEdit(name, type, value, ttl) {
           document.getElementById('editRecordName').value = name;
@@ -477,7 +497,8 @@
           document.getElementById('editValueField').classList.remove('d-none');
 
           if (type === 'TXT') {
-            const t = value.trim().replace(/^"/,'').replace(/"$/,'');
+            const chunks = Array.from(value.matchAll(/"((?:\\.|[^"\\])*)"/g));
+            const t = chunks.length ? chunks.map(c => c[1].replace(/\\(["\\])/g, '$1')).join('') : value;
             document.getElementById('editTXTValue').value = t;
             document.getElementById('editTXTField').classList.remove('d-none');
             document.getElementById('editValueField').classList.add('d-none');
@@ -512,6 +533,11 @@
             document.getElementById('editValueField').classList.add('d-none');
           }
 
+          document.getElementById('editRecordValue').disabled = type === 'TXT' || type === 'SOA';
+          document.getElementById('editTXTValue').disabled = type !== 'TXT';
+          document.querySelectorAll('#editRecordModal input[type="number"]').forEach(input => {
+            input.disabled = !!input.closest('.d-none');
+          });
           new bootstrap.Modal(document.getElementById('editRecordModal'), { backdrop: false }).show();
         }
 
