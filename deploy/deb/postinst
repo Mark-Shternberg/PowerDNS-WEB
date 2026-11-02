@@ -1,0 +1,17 @@
+#!/bin/bash
+set -eu
+[ "${1:-}" = configure ] || exit 0
+install -d -m 0700 /var/lib/powerdns-web
+chmod 0600 /opt/medvedev-it/powerdns-web/appsettings.json
+# Existing installations retain their configured database/API.
+if jq -e '.MySQLConnection.Password != null and .MySQLConnection.Password != "" and ((.pdns.Api_Key // .pdns.api_key // "") != "")' /opt/medvedev-it/powerdns-web/appsettings.json >/dev/null; then
+  touch /var/lib/powerdns-web/configured
+fi
+if [ -d /run/systemd/system ]; then
+  systemctl daemon-reload
+  deb-systemd-helper enable powerdns-web.service >/dev/null
+  if [ -f /var/lib/powerdns-web/configured ]; then
+    deb-systemd-invoke restart powerdns-web.service
+  fi
+fi
+echo "PowerDNS Web installed. Initial configuration: sudo powerdns-web-setup"

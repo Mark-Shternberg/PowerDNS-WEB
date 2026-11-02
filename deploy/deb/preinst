@@ -1,0 +1,21 @@
+#!/bin/bash
+set -eu
+case "${1:-}" in
+  install|upgrade)
+    if [ -f /etc/systemd/system/powerdns-web.service ]; then
+      echo "Legacy unit /etc/systemd/system/powerdns-web.service overrides the package. Back it up and remove the override before installing." >&2
+      exit 1
+    fi
+    if [ -d /run/systemd/system ] && systemctl is-active --quiet powerdnsweb.service; then
+      echo "Stop and disable the legacy powerdnsweb.service before installing." >&2
+      exit 1
+    fi
+    # Snapshot legacy configuration before dpkg's conffile handling.
+    if [ -f /opt/medvedev-it/powerdns-web/appsettings.json ]; then
+      install -d -m 0700 /var/lib/powerdns-web/backups
+      backup="$(mktemp -d /var/lib/powerdns-web/backups/upgrade.XXXXXX)"
+      cp -p /opt/medvedev-it/powerdns-web/appsettings.json "$backup/appsettings.json"
+      chmod 0600 "$backup/appsettings.json"
+    fi
+    ;;
+esac

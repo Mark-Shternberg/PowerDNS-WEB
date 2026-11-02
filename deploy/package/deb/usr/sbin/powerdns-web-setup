@@ -1,0 +1,62 @@
+#!/bin/bash
+set -euo pipefail
+[[ "$(id -u)" == 0 ]] || { echo "Run as root." >&2; exit 1; }
+config=/opt/medvedev-it/powerdns-web/appsettings.json
+[[ -f "$config" ]] || { echo "Install powerdns-web first." >&2; exit 1; }
+umask 077
+install -d -m 0700 /var/lib/powerdns-web/backups
+backup="$(mktemp -d /var/lib/powerdns-web/backups/setup.XXXXXX)"
+cp -p "$config" "$backup/appsettings.json"
+chmod 0600 "$backup/appsettings.json"
+read -r -p "Create a local MariaDB database/user powerdnsweb? [y/N]: " create_db
+if [[ "$create_db" =~ ^[Yy]$ ]]; then
+  # Refuse to rotate an existing account or take ownership of an existing DB.
+  existing="$(mariadb --batch --skip-column-names -e "SELECT COUNT(*) FROM mysql.user WHERE User='powerdnsweb'; SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='powerdnsweb';")"
+  [[ "$existing" == $'0\n0' ]] || { echo "Database/account exists. Rerun and select N to reuse its credentials." >&2; exit 1; }
+  export PDNSWEB_DB_SERVER=localhost PDNSWEB_DB_USER=powerdnsweb PDNSWEB_DB_NAME=powerdnsweb
+  PDNSWEB_DB_PASSWORD="$(openssl rand -hex 24)"
+  export PDNSWEB_DB_PASSWORD
+  mariadb <<SQL
+CREATE DATABASE powerdnsweb CHARACTER SET utf8mb4;
+CREATE USER 'powerdnsweb'@'localhost' IDENTIFIED BY '$PDNSWEB_DB_PASSWORD';
+GRANT ALL PRIVILEGES ON powerdnsweb.* TO 'powerdnsweb'@'localhost';
+SQL
+  # Save generated credentials immediately so a later interrupted prompt is recoverable.
+  temporary="$(mktemp /opt/medvedev-it/powerdns-web/.settings.XXXXXX)"
+  trap 'rm -f "$temporary"' EXIT
+  jq '.MySQLConnection = {Server:env.PDNSWEB_DB_SERVER, User:env.PDNSWEB_DB_USER, Password:env.PDNSWEB_DB_PASSWORD, Database:env.PDNSWEB_DB_NAME}' "$config" > "$temporary"
+  chmod 0600 "$temporary"
+  mv "$temporary" "$config"
+else
+  read -r -p "Database server [localhost]: " PDNSWEB_DB_SERVER
+  read -r -p "Database user [powerdnsweb]: " PDNSWEB_DB_USER
+  read -r -p "Database name [powerdnsweb]: " PDNSWEB_DB_NAME
+  read -r -s -p "Database password (empty = keep current): " PDNSWEB_DB_PASSWORD
+  echo
+  PDNSWEB_DB_SERVER="${PDNSWEB_DB_SERVER:-localhost}"
+  PDNSWEB_DB_USER="${PDNSWEB_DB_USER:-powerdnsweb}"
+  PDNSWEB_DB_NAME="${PDNSWEB_DB_NAME:-powerdnsweb}"
+  PDNSWEB_DB_PASSWORD="${PDNSWEB_DB_PASSWORD:-$(jq -r '.MySQLConnection.Password // ""' "$config")}"
+  export PDNSWEB_DB_SERVER PDNSWEB_DB_USER PDNSWEB_DB_NAME PDNSWEB_DB_PASSWORD
+fi
+read -r -p "Authoritative API URL [http://127.0.0.1:8081]: " PDNSWEB_API_URL
+PDNSWEB_API_URL="${PDNSWEB_API_URL:-http://127.0.0.1:8081}"
+read -r -s -p "Authoritative API key (empty = keep current): " PDNSWEB_API_KEY
+echo
+PDNSWEB_API_KEY="${PDNSWEB_API_KEY:-$(jq -r '.pdns.Api_Key // .pdns.api_key // ""' "$config")}"
+[[ "$PDNSWEB_API_URL" =~ ^https?://[^[:space:]]+$ && -n "$PDNSWEB_API_KEY" ]] || { echo "Valid API URL and key required." >&2; exit 1; }
+export PDNSWEB_API_URL PDNSWEB_API_KEY
+MYSQL_PWD="$PDNSWEB_DB_PASSWORD" mariadb --connect-timeout=10 --host="$PDNSWEB_DB_SERVER" --user="$PDNSWEB_DB_USER" --database="$PDNSWEB_DB_NAME" --batch --skip-column-names -e 'SELECT 1' >/dev/null
+temporary="$(mktemp /opt/medvedev-it/powerdns-web/.settings.XXXXXX)"
+trap 'rm -f "$temporary"' EXIT
+jq '.MySQLConnection = {Server:env.PDNSWEB_DB_SERVER, User:env.PDNSWEB_DB_USER, Password:env.PDNSWEB_DB_PASSWORD, Database:env.PDNSWEB_DB_NAME} |
+    .pdns = ((.pdns // {}) | del(.url,.api_key) | .Url=env.PDNSWEB_API_URL | .Api_Key=env.PDNSWEB_API_KEY)' "$config" > "$temporary"
+chmod 0600 "$temporary"
+mv "$temporary" "$config"
+touch /var/lib/powerdns-web/configured
+if [[ -d /run/systemd/system ]]; then
+  systemctl enable powerdns-web.service
+  systemctl restart powerdns-web.service
+fi
+echo "Configured. Web listens on 127.0.0.1:5000. Configure your reverse proxy; example: /usr/share/doc/powerdns-web/nginx.conf.example"
+echo "PowerDNS/Recursor configs and zone databases were not modified."

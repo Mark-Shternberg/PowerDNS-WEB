@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "profile": "powerdns-web",
+  "build": {
+    "validateTag": true,
+    "restoreLockedMode": true,
+    "properties": {
+      "Deterministic": "true",
+      "PublishSingleFile": "false",
+      "DebugType": "None"
+    }
+  },
+  "service": {
+    "name": "powerdns-web.service",
+    "unitFile": "deploy/systemd/powerdns-web.service"
+  },
+  "deb": {
+    "section": "admin",
+    "priority": "optional",
+    "depends": ["systemd", "init-system-helpers", "jq", "openssl", "mariadb-client", "ca-certificates", "libc6 (>= 2.31)", "libgcc-s1", "libstdc++6", "libssl3 | libssl3t64", "zlib1g", "libicu72 | libicu74 | libicu76 | libicu78"],
+    "recommends": ["mariadb-server", "nginx", "pdns-server", "pdns-backend-mysql", "pdns-recursor"],
+    "longDescription": ["PowerDNS web administration panel. Self-contained .NET application.", "Run powerdns-web-setup once to configure the database and PowerDNS API."],
+    "rootDirectory": "deploy/package/deb",
+    "removePublishFiles": ["appsettings*.json"],
+    "conffiles": ["{{INSTALL_PATH}}/appsettings.json"],
+    "scripts": {
+      "preinst": "deploy/deb/preinst",
+      "postinst": "deploy/deb/postinst",
+      "prerm": "deploy/deb/prerm",
+      "postrm": "deploy/deb/postrm"
+    },
+    "modes": [
+      {"path": "{{INSTALL_PATH}}/PowerDNS_Web", "mode": "0755"},
+      {"path": "{{INSTALL_PATH}}/appsettings.json", "mode": "0600"},
+      {"path": "/usr/sbin/powerdns-web-setup", "mode": "0750"}
+    ],
+    "requiredFiles": ["{{INSTALL_PATH}}/PowerDNS_Web", "{{INSTALL_PATH}}/wwwroot/css/site.css", "{{INSTALL_PATH}}/appsettings.json", "/lib/systemd/system/powerdns-web.service", "/usr/sbin/powerdns-web-setup"]
+  }
+}

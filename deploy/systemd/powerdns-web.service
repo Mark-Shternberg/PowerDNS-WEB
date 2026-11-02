@@ -1,0 +1,18 @@
+[Unit]
+Description=PowerDNS Web administration
+After=network.target mariadb.service pdns.service
+ConditionPathExists=/var/lib/powerdns-web/configured
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory={{INSTALL_PATH}}
+ExecStart={{INSTALL_PATH}}/{{EXECUTABLE}}
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
+Environment=ASPNETCORE_ENVIRONMENT=Production
+UMask=0077
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+#!/bin/bash
+set -eu
+if [ "${1:-}" = purge ]; then
+  deb-systemd-helper purge powerdns-web.service >/dev/null
+  # Databases, DNS configuration and backups intentionally remain recoverable.
+  rm -f /var/lib/powerdns-web/configured
+fi
+if [ -d /run/systemd/system ]; then systemctl daemon-reload; fi

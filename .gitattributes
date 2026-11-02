@@ -61,3 +61,9 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+*.sh text eol=lf
+deploy/deb/* text eol=lf
+deploy/package/deb/usr/sbin/* text eol=lf
+*.service text eol=lf
+*.json text eol=lf
